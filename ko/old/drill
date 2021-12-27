@@ -1,0 +1,6 @@
+#!/bin/sh
+if [ $# != 2 ] ; then
+	echo "usage: drill <plot=1-18> <pos=1-12>"
+	exit
+fi
+awk -f drill.awk players board plot_in=$1 pos_in=$2

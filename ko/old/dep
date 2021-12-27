@@ -1,0 +1,6 @@
+#!/bin/sh
+if [ $# != 0 ] ; then
+	echo "usage: dep"
+	exit
+fi
+awk -f depletion.awk players

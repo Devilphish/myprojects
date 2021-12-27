@@ -1,0 +1,6 @@
+#!/bin/sh
+if [ $# != 3 ] ; then
+	echo "usage: makeboard <d1> <d2> <d3>"
+	exit
+fi
+awk -f mapplots.awk disc1 disc2 disc3 plots d1=$1 d2=$2 d3=$3 > board

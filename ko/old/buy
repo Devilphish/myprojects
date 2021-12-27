@@ -1,0 +1,6 @@
+#!/bin/sh
+if [ $# != 1 ] ; then
+	echo "usage: buy <p=1-18>"
+	exit
+fi
+awk -f buy.awk players plots pnum=$1

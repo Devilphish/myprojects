@@ -1,0 +1,2 @@
+#!/bin/sh
+awk -f drawboard.awk players board map dots

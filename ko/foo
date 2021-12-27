@@ -1,0 +1,48 @@
+      \ 2 $8          S S     | 3 $9          | 4 $11                 / 5 $9
+ 1 $12 \         S S  D,D    / S S    S S  S S| S S       S S      /
+        \   S S  D,D   S S   | D,D    D,D  D,D/ D,D  S S  D,D   /  S S
+   S S   \  D,D    S S D,D    | S S  S S S S / S S   D,D     /     D,D  
+   D,D    \        D,D        | D,D  D,D D,D | D,D  S S S S  |           
+            \ S S        S S   | S SS S S S  |S S   D,D D,D   |        S S
+  S S    S S \D,D   S S  D,D   | D,DD,D D,D  |D,D  S S         |   S S D,D
+  D,DS S D,D  \     D,D        /-----------------\ D,D S S     |   D,D     
+     D,D       ---------------/  S S S S| 7 $8 S S|    D,DS S  /S S       S S
+ S S    S S   | 6 $9 S S         D,D D,D|S S   D,D \  S S D,D/  D,D    S SD,D
+ D,D S SD,D   /S S   D,D      S S       |D,D S S     \D,D   /          D,D
+     D,D     / D,D     S S    D,D S S   |    D,D  S S ------ S S   S S      S S
+S S      S S |  S S    D,D  S S   D,D   |     S S D,D |      D,D   D,D      D,D
+D,DS S   D,D /  D,D         D,D         | S S D,D     |
+   D,D S S  /---------------\           | D,D    S S  |------------------------
+       D,D  | 10 $10 S S     \          |        D,D  | 8 $8      S S     S S
+ S S        /        D,D      /-------------\         | S S  S S  D,D     D,D
+ D,D       /      S S  S S   /               \    S S | D,D  D,DS S     S S
+           |      D,D  D,D  |                 |   D,D |    S S  D,DS S  D,D
+           |         S S    |                 \       |    D,D     D,D    /----
+-------------\       D,D    |      KING        |--------------------------
+ 9S SS SS SS S| S S S S     \                  | 11 $9 S SS S    S S    | 12 $8
+  D,DD,DD,DD,D| D,D D,D S S  |        OIL      |   S S D,DD,D    D,D   /
+$10           \         D,D  |                 |   D,D       S S       |  S S
+  S SS SS S   |              |                 |       S SS SD,D       |  D,D
+  D,DD,DD,D   /     S S  S S |                 |\      D,DD,D          |
+             |  S S D,D  D,D |                 | -                     |  S S
+  S S  S SS S | D,D           \               /   \      S S           |  D,D
+  D,D  D,DD,D -----------------\             /     \----\D,D   S S     |
+-----------/      |  14 $10     \           /  15 $8 S S ----\ D,D     |  S S
+ 13 $8   S S      |S S           -----------         D,D      ----\    /  D,D
+ S S     D,DS S   |D,DS S                 |           S S      |   ----     S S
+ D,D        D,DS S|   D,D  S SS S      S S| S S S S   D,DS S    | S S       D,D
+     S S       D,D|        D,DD,D  S S D,D| D,D D,D      D,DS S  |D,D  S S
+     D,D S S S S  | S SS S     S S D,D     |      S S       D,D  |  S SD,D S S
+         D,D D,D  | D,DD,D     D,D    S S  |      D,D  S S        | D,D    D,D
+             ------------------------\D,D  /----       D,D     ----------------
+            / 16 $8     S S     |     ----/  S S---------------
+       S S | S S   S S  D,DS S  | 17 $12S S  D,D     | 18 $12 S S    S S    S S
+       D,D | D,D   D,D     D,D  |  S S  D,DS S S SS S|    S S D,D    D,D    D,D
+           |                    |  D,D     D,D D,DD,D|    D,D      S S    S S
+----------/              S S    | S S   S S          |         S S D,D    D,D
+                    S S  D,D    | D,D   D,D      S S |    S S  D,D
+              S S   D,D         |                D,D |S S D,D        S S
+              D,D      S S      |S S    S S S S     | D,D  S S  S S  D,D
+                       D,D      |D,D    D,D D,D     |      D,D  D,D
+ *ROB: $52000  #wells 6 plots 3 1 13
+  DON: $39000  #wells 2 plots 4 8 11

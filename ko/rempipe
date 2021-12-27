@@ -1,0 +1,6 @@
+#!/bin/sh
+if [ $# != 2 ] ; then
+	echo "usage: rempipe <p_from=1-18> <p_to=1-18>"
+	exit
+fi
+awk -f rempipe.awk players board plot_fr=$1 plot_to=$2
