@@ -1,0 +1,10 @@
+#!/bin/bash
+
+cat header.html > foo.html
+echo "{" > foo.js
+echo "{" >> winners.html
+grep -o -e "\"scoreStripGames\".*\"schema\"" scores.html >> foo.js
+grep -o -e "\"scoreStripGames\".*\"schema\"" scores.html >> foo.html
+echo "}" > foo.js
+echo "}" >> foo.html
+cat makewinners.js footer.html >> foo.html

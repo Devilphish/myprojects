@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<body>
+<p style="font-family: courier">
+<script type="text/javascript">
+
+var opmLS = 
+{"alert":{},"games":{"nfl":["NFL_SEA@ARI","NFL_NO@BUF","NFL_PIT@IND","NFL_CLE@DET","NFL_LAC@JAC","NFL_GB@CHI","NFL_NYJ@TB","NFL_MIN@WAS","NFL_CIN@TEN","NFL_HOU@LAR","NFL_NYG@SF","NFL_DAL@ATL","NFL_NE@DEN","NFL_MIA@CAR"]},"teams":[{"snsWeeksPlayed":9,"snsGameValue":0,"name":"+7 Coinflip","id":"48","snsScore":73},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"Adam Bennett","id":"46","snsScore":87,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510272308","NFL_DAL@ATL":{"winner":"DAL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"MIN"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"SF"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"53","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"BigD","id":"17","snsScore":85,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510330326","NFL_DAL@ATL":{"winner":"DAL"},"NFL_NYJ@TB":{"winner":"TB"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"MIN"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"SF"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"48","NFL_SEA@ARI":{"winner":""},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"Boiler Up","id":"37","snsScore":86,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"BUF"},"time":"1510276744","NFL_DAL@ATL":{"winner":"DAL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"MIN"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"NYG"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":49,"NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"Christian Hegarty","id":"36","snsScore":75,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510253665","NFL_DAL@ATL":{"winner":"DAL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"WAS"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"SF"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"41","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"CU","id":"19","snsScore":85,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"BUF"},"time":"1510263602","NFL_DAL@ATL":{"winner":"DAL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"WAS"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"SF"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"52","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"LAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"David Nelson","id":"22","snsScore":82,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"BUF"},"time":"1510420641","NFL_DAL@ATL":{"winner":"DAL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"WAS"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"NYG"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"49","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"David Wgstaffe","id":"14","snsScore":83,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"BUF"},"time":"1510238977","NFL_DAL@ATL":{"winner":"ATL"},"NFL_NYJ@TB":{"winner":"TB"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"WAS"},"NFL_GB@CHI":{"winner":"GB"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"SF"},"NFL_MIA@CAR":{"winner":"MIA"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"41","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"Dom&amp;Nicho DellaValle","id":"8","snsScore":79,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"BUF"},"time":"1510186496","NFL_DAL@ATL":{"winner":"DAL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"MIN"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"NYG"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"42","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"I'm Not Kneeling","id":"6","snsScore":91,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510502705","NFL_DAL@ATL":{"winner":"DAL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"MIN"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"NYG"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":39,"NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"James Wagstaffe","id":"21","snsScore":68,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510238924","NFL_DAL@ATL":{"winner":"ATL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"MIN"},"NFL_GB@CHI":{"winner":"GB"},"NFL_HOU@LAR":{"winner":"HOU"},"NFL_NYG@SF":{"winner":"SF"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"51","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"IND"},"NFL_LAC@JAC":{"winner":"LAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"Jay Shobe","id":"32","snsScore":84,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510507252","NFL_DAL@ATL":{"winner":"ATL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"MIN"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"NYG"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"37","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"Joe Lawrence","id":"4","snsScore":73,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"BUF"},"time":"1510171914","NFL_DAL@ATL":{"winner":"ATL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"MIN"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"SF"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"33","NFL_SEA@ARI":{"winner":"ARI"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"John Galvin","id":"43","snsScore":82,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"BUF"},"time":"1510240449","NFL_DAL@ATL":{"winner":"ATL"},"NFL_NYJ@TB":{"winner":"TB"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"MIN"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"SF"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"CLE"},"NFL_NE@DEN":{"winner":"NE"},"mnf":44,"NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"John Salzillo","id":"13","snsScore":70,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510271011","NFL_DAL@ATL":{"winner":"DAL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"WAS"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"HOU"},"NFL_NYG@SF":{"winner":"NYG"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"48","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"LAC"}}},{"snsWeeksPlayed":8,"snsGameValue":0,"name":"john sullivan","id":"12","snsScore":72,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"BUF"},"time":"1510414340","NFL_DAL@ATL":{"winner":"ATL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"WAS"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"SF"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"44","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"Junx","id":"23","snsScore":78,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510499227","NFL_DAL@ATL":{"winner":"ATL"},"NFL_NYJ@TB":{"winner":"TB"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"WAS"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"SF"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"41","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"kevin schott","id":"11","snsScore":84,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510352767","NFL_DAL@ATL":{"winner":"ATL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"WAS"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"NYG"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"48","NFL_SEA@ARI":{"winner":"ARI"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"LAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"Lawney Falloon","id":"9","snsScore":80,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510419936","NFL_DAL@ATL":{"winner":"ATL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"WAS"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"NYG"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"52","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"LAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"Luke Rawlings","id":"47","snsScore":77,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"BUF"},"time":"1510081162","NFL_DAL@ATL":{"winner":"ATL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"WAS"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"NYG"},"NFL_MIA@CAR":{"winner":"MIA"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"45","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"LAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"maryanna gundal","id":"38","snsScore":71,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510120499","NFL_DAL@ATL":{"winner":"ATL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"MIN"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"NYG"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":50,"NFL_SEA@ARI":{"winner":"ARI"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"Mike Swisher","id":"24","snsScore":76,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510250228","NFL_DAL@ATL":{"winner":"ATL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"WAS"},"NFL_GB@CHI":{"winner":"GB"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"NYG"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"39","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"Paul Souza","id":"3","snsScore":86,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510347374","NFL_DAL@ATL":{"winner":"ATL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"MIN"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"NYG"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"40","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":8,"snsGameValue":0,"name":"POPS","id":"20","snsScore":78,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510173411","NFL_DAL@ATL":{"winner":"DAL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"MIN"},"NFL_GB@CHI":{"winner":"GB"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"SF"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"43","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"Ray Wagstaffe","id":"1","snsScore":82,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510238877","NFL_DAL@ATL":{"winner":"ATL"},"NFL_NYJ@TB":{"winner":"TB"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"MIN"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"NYG"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"59","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"myTeam":1,"snsWeeksPlayed":9,"snsGameValue":0,"name":"RT","id":"2","snsScore":77,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"BUF"},"time":"1510508090","NFL_DAL@ATL":{"winner":"ATL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"WAS"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"SF"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"48","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"LAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"sahana chandra","id":"44","snsScore":73,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510446076","NFL_DAL@ATL":{"winner":"DAL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"MIN"},"NFL_GB@CHI":{"winner":"GB"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"NYG"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":32,"NFL_SEA@ARI":{"winner":""},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"Shawn Waymire","id":"16","snsScore":79,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510173879","NFL_DAL@ATL":{"winner":"DAL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"MIN"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"NYG"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":49,"NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"Steve M","id":"26","snsScore":80,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"NO"},"time":"1510155866","NFL_DAL@ATL":{"winner":"DAL"},"NFL_NYJ@TB":{"winner":"TB"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"WAS"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"SF"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"45","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}},{"snsWeeksPlayed":9,"snsGameValue":0,"name":"Thomas Dempsey","id":"35","snsScore":83,"numGames":14,"picks":{"NFL_NO@BUF":{"winner":"BUF"},"time":"1510247162","NFL_DAL@ATL":{"winner":"DAL"},"NFL_NYJ@TB":{"winner":"NYJ"},"NFL_CIN@TEN":{"winner":"TEN"},"NFL_MIN@WAS":{"winner":"WAS"},"NFL_GB@CHI":{"winner":"CHI"},"NFL_HOU@LAR":{"winner":"LAR"},"NFL_NYG@SF":{"winner":"NYG"},"NFL_MIA@CAR":{"winner":"CAR"},"NFL_CLE@DET":{"winner":"DET"},"NFL_NE@DEN":{"winner":"NE"},"mnf":"31","NFL_SEA@ARI":{"winner":"SEA"},"NFL_PIT@IND":{"winner":"PIT"},"NFL_LAC@JAC":{"winner":"JAC"}}}],"mnfGameId":"NFL_MIA@CAR","week":"10","name":"2017 Pick 'em Pool","rules":{"minimumWeeks":"17","tiebreaker":"mnf","weights":0,"standingsTiebreaker":"total","tiesAreWins":null,"missedweek":"lowest_correct"},"myTeamId":"2","hide_mnf":0,"locks":{"NFL_NE@DEN":1,"NFL_CLE@DET":1,"NFL_NO@BUF":1,"NFL_DAL@ATL":1,"NFL_NYJ@TB":1,"NFL_SEA@ARI":1,"NFL_PIT@IND":1,"NFL_CIN@TEN":1,"NFL_MIN@WAS":1,"NFL_GB@CHI":1,"NFL_HOU@LAR":1,"NFL_NYG@SF":1,"NFL_LAC@JAC":1,"all_games_locked":1,"NFL_MIA@CAR":1},"spreads":{},"id":"rjwrjwpool","type":"pickem"}
+
+function awayteam(gamestr)
+{
+	return gamestr.substring(4, gamestr.search("@"));
+};
+function hometeam(gamestr)
+{
+	return gamestr.substring(gamestr.search("@") + 1, gamestr.length);
+};
+function ishome(teamstr)
+{
+	for (var g in opmLS.games.nfl) {
+		var game = opmLS.games.nfl[g];
+		if (teamstr == hometeam(game)) {
+			return true;
+		}
+	};
+
+	return false;
+};
+
+var showPicks = function() {
+
+document.write("Away&nbsp&nbsp&nbsp&nbsp&nbsp");
+for (var g in opmLS.games.nfl) {
+	var game = opmLS.games.nfl[g];
+	var a = awayteam(game); 
+	document.write(a + "&nbsp");
+	if (a.length == 2) {
+		document.write("&nbsp");
+	}
+};
+document.write("<br>");
+document.write("Home&nbsp&nbsp&nbsp&nbsp&nbsp");
+for (var g in opmLS.games.nfl) {
+	var game = opmLS.games.nfl[g];
+	var h = hometeam(game); 
+	document.write(h + "&nbsp");
+	if (h.length == 2) {
+		document.write("&nbsp");
+	}
+};
+document.write("<br><br>");
+document.write("WINNERS |");
+for (var i = 0; i < opmLS.games.nfl.length; i++) {
+	document.write("&nbsp&nbsp&nbsp|");
+}
+document.write("<br><br>");
+
+for (var i in opmLS.teams) {
+	var mnf;
+	var t = opmLS.teams[i].name;
+	var team = t.replace("&amp;", "&");
+	document.write(team.substring(0, 7));
+	for (var l = 0; l < (7 - team.length); l++) {
+		document.write("&nbsp");
+	}
+	document.write("&nbsp|");
+
+	for (var g in opmLS.games.nfl) {
+		var game = opmLS.games.nfl[g];
+		var winner;
+		if (opmLS.teams[i].picks == undefined) {
+			winner = "";
+		}
+		else {
+			winner = opmLS.teams[i].picks[game].winner;
+		}
+
+		if (ishome(winner)) {
+			document.write("&nbsp&nbsp" + winner.substring(0, 1));
+			if (winner == "") {
+				document.write("&nbsp");
+			}
+		}
+		else {
+			if (winner == "") {
+				document.write("&nbsp");
+			}
+			document.write(winner.substring(0, 1) + "&nbsp&nbsp");
+		}
+		document.write("|");
+	}
+
+	if (opmLS.teams[i].picks == undefined) {
+		mnf = "";
+	}
+	else {
+		for (var j in opmLS.teams[i].picks) {
+			if (j == "mnf") {
+				mnf = opmLS.teams[i].picks[j];
+			}
+		};
+	};
+	document.write("&nbsp");
+	document.write(mnf);
+	document.write("<br>");
+};
+
+}
+
+var showWinners = function() {
+
+document.write("team = {<br>");
+document.write("&nbsp&nbsp&nbsp&nbsp\"name\": \"WINNERS\",<br>");
+document.write("&nbsp&nbsp&nbsp&nbsp\"picks\": {<br>");
+
+for (var i in opmLS.scoreStripGames) {
+	if (opmLS.scoreStripGames[i].homeTeam.scores == undefined) {
+		continue;
+	}
+	if (opmLS.scoreStripGames[i].status.currentGameTime != "FINAL") {
+		continue;
+	}
+
+	var a = opmLS.scoreStripGames[i].awayTeam.abbr;
+	var as = opmLS.scoreStripGames[i].awayTeam.scores.pointTotal;
+	var h = opmLS.scoreStripGames[i].homeTeam.abbr;
+	var hs = opmLS.scoreStripGames[i].homeTeam.scores.pointTotal;
+	document.write("&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp\"NFL_" + a + "@" + h + "\":{");
+
+	if (hs > as) {
+		document.write("\"winner\": \"" + h + "\"},<br>",);
+	}
+	else {
+		document.write("\"winner\": \"" + a + "\"},<br>",);
+	}
+}
+
+document.write("&nbsp&nbsp&nbsp&nbsp}<br>");
+document.write("}");
+
+}
+
+showPicks()
+
+fetch("http://www.nfl.com/scores")
+	.then(function(data) {
+		data.text().then(function(str) {
+			var start = str.indexOf("scoreStripGames");
+			var end = str.indexOf("schema");
+			var games = '{"' + str.substr(start, end - start - 2) + '}'
+			gameObj = JSON.parse(games);
+			for (var i in gameObj.scoreStripGames) {
+				var a = gameObj.scoreStripGames[i].awayTeam.abbr;
+				var h = gameObj.scoreStripGames[i].homeTeam.abbr;
+				document.write(a + "@" + h + "&nbsp");
+			}
+			document.write("<br><br>")
+
+			showPicks();
+		})
+	})
+
+</script>
+</body>
+</html>

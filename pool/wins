@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cat header.html > picks.html
+grep -o -e "\{\"alert\".*pickem\"\}" crap.html > picks.js
+grep -o -e "\{\"alert\".*pickem\"\}" crap.html >> picks.html
+cat wins.js footer.html >> picks.html
