@@ -4,3 +4,5 @@ if [ $# != 3 ] ; then
 	exit
 fi
 awk -f makeboard.awk plots d1=$1 d2=$2 d3=$3
+cp players.init players
+./dbd

@@ -138,7 +138,7 @@ END {
 	}
 	printf("turn %d (%s)\n", turn, pname[turn]) > "players"
 
-	printf("board.%d:%d:%d\n", d1, d2, d3) > "board"
+	printf("board.%d.%d.%d\n", d1, d2, d3) > "board"
 	for (plot = 1; plot <= nplots; plot++) {
 		printf("plot.%d\n", plot) > "board"
 		for (pos = 1; pos <= nwells[plot]; pos++) {

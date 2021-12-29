@@ -51,7 +51,7 @@ if (0) {
 }
 END {
 	if (plot_in < 1 || plot_in > nplots) {
-		printf("plot %s out of range\n", plot_in)
+		printf("===  plot %s out of range  ===\n", plot_in)
 		exit
 	}
 	isowned = 0
@@ -67,7 +67,7 @@ END {
 		}
 	}
 	if (isowned == 1) {
-		printf("plot %d already owned\n", plot_in, pname[turn])
+		printf("===  plot %d already owned  ===\n", plot_in, pname[turn])
 		exit
 	}
 
@@ -77,8 +77,7 @@ END {
 	pplots[turn, pnplots[turn]] = plot_in
 	pnplots[turn]++
 
-	printf("    %s buy plot %d for %d\n", pname[turn], plot_in, cost)
-	printf("       $%d - $%d = $%d\n", m, cost, pmoney[turn])
+	printf("===  %s buys plot %d for %d  ===\n", pname[turn], plot_in, cost)
 
 
 	for (p = 1; p <= nplayers; p++) {

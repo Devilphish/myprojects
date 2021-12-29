@@ -94,14 +94,14 @@ if (0) {
 }
 END {
 	if (length(plotpos) < 2) {
-		printf("enter plot # and well letter\n")
+		printf("===  enter plot # and well letter  ====\n")
 		exit
 	}
 	plot_tok = substr(plotpos, 1, length(plotpos)-1)
 	plot_in = plot_tok + 0
 	pos_in = substr(plotpos, length(plotpos), 1)
 	if (plot_in < 1 || plot_in > nplots) {
-		printf("plot %s out of range\n", plot_tok)
+		printf("===  plot %s out of range  ====\n", plot_tok)
 		exit
 	}
 	isowner = 0
@@ -112,23 +112,23 @@ END {
 		}
 	}
 	if (isowner == 0) {
-		printf("plot %d not owned by %s\n", plot_in, pname[turn])
+		printf("===  plot %d not owned by %s  ====\n", plot_in, pname[turn])
 		exit
 	}
 	pos_num = num[pos_in]
 	if (pos_num < 1 || pos_num > nwells[plot_in]) {
-		printf("plot %d well %s out of range\n", plot_in, pos_in)
+		printf("===  plot %d well %s out of range  ====\n", plot_in, pos_in)
 		exit
 	}
 	if (boardwell[plot_in, pos_num] != ",") {
-		printf("well %d.%s already drilled\n", plot_in, pos_in)
+		printf("===  well %d.%s already drilled  ====\n", plot_in, pos_in)
 		exit
 	}
 
 	rot[1] = d1 * 4
 	rot[2] = d2 * 4
 	rot[3] = d3 * 4
-print "rot" rot[1] rot[2] rot[3]
+print "rot" rot[1] ":" rot[2] ":" rot[3]
 	for (plot = 1; plot <= nplots; plot ++) {
 		for (pos = 1; pos <= nwells[plot]; pos++) {
 			spoke = wellspoke[plot, pos]
@@ -153,22 +153,22 @@ print "rot" rot[1] rot[2] rot[3]
 	if (well[plot_in, pos_num] == 3) {
 		iswell = 1
 		cost = 2000
-		printf("GUSHER $2K\n")
+		printf("===  GUSHER $2000  ===\n")
 	}
 	else if (well[plot_in, pos_num] == 2) {
 		iswell = 1
 		cost = 4000
-		printf("NICE WELL $4K\n")
+		printf("===  NICE WELL $4000  ===\n")
 	}
 	else if (well[plot_in, pos_num] == 1) {
 		iswell = 1
 		cost = 6000
-		printf("DEEP WELL $6K\n")
+		printf("===  DEEP WELL $6000  ===\n")
 	}
 	else if (well[plot_in, pos_num] == 0) {
 		iswell = 0
 		cost = 6000
-		printf("DRY - CAP $6K\n")
+		printf("===  DRY - CAP $6000  ===\n")
 	}
 	else {
 		printf("ERROR\n")
@@ -184,11 +184,6 @@ print "rot" rot[1] rot[2] rot[3]
 	pmoney[turn] -= cost
 	pnwells[turn] += iswell
 
-	printf("    %s $%d - $%d = $%d  %d well%s\n",
-			pname[turn], m, cost, pmoney[turn], pnwells[turn],
-			pnwells[turn] > 1 ? "s" : "")
-
-
 	for (p = 1; p <= nplayers; p++) {
 		printf("player %s money %d nwells %d plots",
 				pname[p], pmoney[p], pnwells[p]) > "players"
@@ -202,7 +197,7 @@ print "rot" rot[1] rot[2] rot[3]
 	}
 	printf("turn %d (%s)\n", turn, pname[turn]) > "players"
 
-	printf("board.%d:%d:%d\n", d1, d2, d3) > "board"
+	printf("board.%d.%d.%d\n", d1, d2, d3) > "board"
 	for (plot = 1; plot <= nplots; plot++) {
 		printf("plot.%d\n", plot) > "board"
 		for (pos = 1; pos <= nwells[plot]; pos++) {

@@ -3,4 +3,6 @@ if [ $# != 1 ] ; then
 	echo "usage: dr <plotpos=[1-18][a-l]>"
 	exit
 fi
-awk -f drill.awk players disc1 disc2 disc3 plots board plotpos=$1
+awk -f drill.awk players disc1 disc2 disc3 plots board plotpos=$1 > msg
+./dbd
+cat msg
