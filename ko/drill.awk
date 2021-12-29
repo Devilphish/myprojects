@@ -117,7 +117,7 @@ END {
 	}
 	pos_num = num[pos_in]
 	if (pos_num < 1 || pos_num > nwells[plot_in]) {
-		printf("===  plot %d well %s out of range  ====\n", plot_in, pos_in)
+		printf("===  well %d.%s out of range  ====\n", plot_in, pos_in)
 		exit
 	}
 	if (boardwell[plot_in, pos_num] != ",") {
@@ -128,7 +128,6 @@ END {
 	rot[1] = d1 * 4
 	rot[2] = d2 * 4
 	rot[3] = d3 * 4
-print "rot" rot[1] ":" rot[2] ":" rot[3]
 	for (plot = 1; plot <= nplots; plot ++) {
 		for (pos = 1; pos <= nwells[plot]; pos++) {
 			spoke = wellspoke[plot, pos]

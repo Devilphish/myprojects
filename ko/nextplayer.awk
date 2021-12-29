@@ -116,7 +116,7 @@ END {
 				pname[turn], pname[owner], cost, pfr, pto)
 	}
 
-	printf("    %s NEXT\n", pname[turn])
+	printf("===  %s NEXT  ===\n", pname[turn])
 
 
 	for (p = 1; p <= nplayers; p++) {
