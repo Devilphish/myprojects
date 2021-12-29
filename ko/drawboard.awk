@@ -133,7 +133,7 @@ END {
 	}
 
 	for (p = 1; p <= nplayers; p++) {
-		format1 = " %s%s: $%s  #wells %d plots"
+		format1 = " %s%8s: $%s  #wells %d plots"
 		printf(format1, p == turn ? "*" : " ",
 			pname[p], pmoney[p], pnwells[p])
 		for (plot = 0; plot < pnplots[p]; plot++) {
