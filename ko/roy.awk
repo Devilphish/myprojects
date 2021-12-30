@@ -50,10 +50,9 @@ END {
 	rtotal = pnwells[turn] * royalty
 	pmoney[turn] += rtotal
 
-	printf("    %s   %d well%s * %d = %d\n", pname[turn], pnwells[turn],
-			pnwells[turn] > 1 ? "s" : "", royalty, rtotal)
-	printf("         $%d + $%d = $%d\n", m, rtotal, pmoney[turn])
-
+	printf("===  %s   %d well%s * %d = %d  ===\n", pname[turn],
+			pnwells[turn], pnwells[turn] > 1 ? "s" : "",
+			royalty, rtotal)
 
 	for (p = 1; p <= nplayers; p++) {
 		printf("player %s money %d nwells %d plots",

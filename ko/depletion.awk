@@ -41,7 +41,7 @@ END {
 	m = pmoney[turn]
 	pmoney[turn] += allow
 
-	printf("    %s  $%d + $%d = $%d\n", pname[turn], m, allow, pmoney[turn])
+	printf("===  %s  $%d + $%d = $%d  ===\n", pname[turn], m, allow, pmoney[turn])
 
 
 	for (p = 1; p <= nplayers; p++) {

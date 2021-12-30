@@ -1,6 +1,6 @@
 BEGIN {
 if (0) {
-    usage = "awk -f drill.awk players disc1 disc2 disc3 plots board plotpos=<[1-18][a-l]>"
+    usage = "awk -f drill.awk players disc1 disc2 disc3 plots board curcard plotpos=<[1-18][a-l]>"
 }
 	num["a"] = 1; num["b"] = 2; num["c"] = 3; num["d"] = 4; num["e"] = 5
 	num["f"] = 6; num["g"] = 7; num["h"] = 8; num["i"] = 9; num["j"] = 10
@@ -12,10 +12,29 @@ if (0) {
 	disc = -1
 	plot = -1
 	fplot = -1
+        card = 0
+	roy = 0
+	wellsallowed = 0
+	prop = 0
+	ndrills = 0
 }
 {
 	if (NF < 1) {
 		next
+	}
+	if ($1 == "fire") {
+		card = 1
+	}
+	if ($1 == "depletion") {
+		card = 2
+		ndrills = $2
+	}
+	if ($1 == "prod") {
+		card = 3
+		roy = $2
+		wellsallowed = $3
+		prop = $4
+		ndrills = $5
 	}
 	if ($1 == "turn") {
 		turn = $2
@@ -93,6 +112,14 @@ if (0) {
 	}
 }
 END {
+	if (!card) {
+		printf("===  must draw wildcat card first  ===\n");
+		exit
+	}
+	if (!ndrills) {
+		printf("===  no more wells allowed to be drilled  ===\n");
+		exit
+	}
 	if (length(plotpos) < 2) {
 		printf("===  enter plot # and well letter  ====\n")
 		exit
@@ -203,5 +230,15 @@ END {
 			printf("%s", boardwell[plot, pos]) > "board"
 		}
 		printf("\n") > "board"
+	}
+
+	if (card == 1) {
+		printf("fire\n") > "curcard"
+	}
+	if (card == 2) {
+		printf("depletion.0\n") > "curcard"
+	}
+	if (card == 3) {
+		printf("prod.%d.%d.%d.%d\n", roy, wellsallowed, prop, ndrills - 1) > "curcard"
 	}
 }
