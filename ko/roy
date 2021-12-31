@@ -1,8 +1,0 @@
-#!/bin/sh
-if [ $# != 1 ] ; then
-	echo "usage: roy <r=1-5>"
-	exit
-fi
-awk -f roy.awk players r=$1 > msg
-./dbd
-cat msg
