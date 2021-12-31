@@ -1,6 +1,6 @@
 BEGIN {
 if (0) {
-    usage = "awk -f drawboard.awk players board map dots" 
+    usage = "awk -f drawboard.awk players board map dots curcard" 
 }
 	nplots = 0
 	nplayers = 0
@@ -11,10 +11,30 @@ if (0) {
 	plot = -1
 	map = -1
 	dot = -1
+        card = 0
+	roy = 0
+	wellsallowed = 0
+	prop = 0
+	ndrills = 0
 }
 {
 	if (NF < 1) {
 		next
+	}
+	if ($1 == "fire") {
+		card = 1
+	}
+	if ($1 == "depletion") {
+		card = 2
+		wellsallowed = 1
+		ndrills = $2
+	}
+	if ($1 == "prod") {
+		card = 3
+		roy = $2
+		wellsallowed = $3
+		prop = $4
+		ndrills = $5
 	}
 	if ($1 == "turn") {
 		turn = $2
@@ -145,5 +165,20 @@ END {
 			}
 		}
 		printf("\n")
+	}
+
+	if (card == 1) {
+		printf("FIRE\n")
+	}
+	if (card == 2) {
+		printf("DEPLETION - %d drills allowed (%d used)\n", wellsallowed, wellsallowed - ndrills)
+	}
+	if (card == 3) {
+		if (roy == 5)
+			royalty = 500
+		else
+			royalty = roy * 1000
+
+		printf("PRODUCTION - royaly %d, %d drills allowed (%d used), %s buy a plot\n", royalty, wellsallowed, wellsallowed - ndrills, prop == 1 ? "can" : "cannot")
 	}
 }

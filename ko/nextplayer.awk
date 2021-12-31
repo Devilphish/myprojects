@@ -1,16 +1,36 @@
 BEGIN {
 if (0) {
-    usage = "awk -f nextplayer.awk players board"
+    usage = "awk -f nextplayer.awk players board curcard"
 }
 	nplayers = 0
 	npipes = 0
 	nplots = 0
 	player = 1
 	plot = -1
+        card = 0
+	roy = 0
+	wellsallowed = 0
+	prop = 0
+	ndrills = 0
 }
 {
 	if (NF < 1) {
 		next
+	}
+	if ($1 == "fire") {
+		card = 1
+	}
+	if ($1 == "depletion") {
+		card = 2
+		wellsallowed = 1
+		ndrills = $2
+	}
+	if ($1 == "prod") {
+		card = 3
+		roy = $2
+		wellsallowed = $3
+		prop = $4
+		ndrills = $5
 	}
 	if ($1 == "turn") {
 		turn = $2
@@ -56,6 +76,12 @@ if (0) {
 	}
 }
 END {
+	if (card == 2 || card == 3) {
+		if (wellsallowed == ndrills) {
+			printf("===  you must drill before ending turn  ===\n")
+			exit 1
+		}
+	}
 	oldturn = turn
 	turn++
 	if (turn > nplayers) {

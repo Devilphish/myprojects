@@ -3,6 +3,11 @@ if [ $# != 1 ] ; then
 	echo "usage: dr <plotpos=[1-18][a-l]>"
 	exit
 fi
+if [ ! -e curcard  ] ; then
+	./dbd
+	echo "===  must draw wildcat card  ==="
+	exit
+fi
 awk -f drill.awk players disc1 disc2 disc3 plots board curcard plotpos=$1 > msg
 ./dbd
 cat msg

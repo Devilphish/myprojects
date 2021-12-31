@@ -5,4 +5,8 @@ if [ $# != 3 ] ; then
 fi
 awk -f makeboard.awk plots d1=$1 d2=$2 d3=$3
 cp players.init players
+cp cards.init cards
+rm -f curcard
 ./dbd
+echo "init.1" > curcard
+echo "===  each player must now buy a plot  ==="

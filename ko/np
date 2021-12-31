@@ -3,6 +3,10 @@ if [ $# != 0 ] ; then
 	echo "usage: np"
 	exit
 fi
-awk -f nextplayer.awk players board > msg
+awk -f nextplayer.awk players board curcard > msg
+awkexitcode=$?
+if [ $awkexitcode == 0 ] ; then
+	rm curcard
+fi
 ./dbd
 cat msg

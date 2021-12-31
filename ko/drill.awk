@@ -27,6 +27,7 @@ if (0) {
 	}
 	if ($1 == "depletion") {
 		card = 2
+		wellsallowed = 1
 		ndrills = $2
 	}
 	if ($1 == "prod") {

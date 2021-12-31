@@ -7,10 +7,36 @@ if (0) {
 	nplots = 0
 	player = 1
 	plot = -1
+        card = 0
+	roy = 0
+	wellsallowed = 0
+	prop = 0
+	ndrills = 0
+	initplayer = 0
 }
 {
 	if (NF < 1) {
 		next
+	}
+	if ($1 == "init") {
+		card = 4
+		prop = 1
+		initplayer = $2
+	}
+	if ($1 == "fire") {
+		card = 1
+	}
+	if ($1 == "depletion") {
+		card = 2
+		wellsallowed = 1
+		ndrills = $2
+	}
+	if ($1 == "prod") {
+		card = 3
+		roy = $2
+		wellsallowed = $3
+		prop = $4
+		ndrills = $5
 	}
 	if ($1 == "turn") {
 		turn = $2
@@ -50,6 +76,20 @@ if (0) {
 	}
 }
 END {
+	if (initplayer > nplayers) {
+		printf("===  all players already bought initial plots  ===\n")
+		exit
+	}
+	if (!prop) {
+		printf("===  no more properties can be bought  ===\n")
+		exit
+	}
+	if (card == 2 || card == 3) {
+		if (wellsallowed == ndrills) {
+			printf("===  you must drill before buying a plot  ===\n")
+			exit
+		}
+	}
 	if (plot_in < 1 || plot_in > nplots) {
 		printf("===  plot %s out of range  ===\n", plot_in)
 		exit
@@ -91,5 +131,17 @@ END {
 	for (pipe = 0; pipe < npipes; pipe++) {
 		printf("pipeline %s %s\n", pipefr[pipe], pipeto[pipe]) > "players"
 	}
+	if (card == 4) {
+		turn++
+		initplayer++
+		if (turn > nplayers) {
+			turn = 1
+		}
+		printf("init.%d\n", initplayer) > "curcard"
+	}
 	printf("turn %d (%s)\n", turn, pname[turn]) > "players"
+
+	if (card == 3) {
+		printf("prod.%d.%d.%d.%d\n", roy, wellsallowed, prop - 1, ndrills) > "curcard"
+	}
 }
