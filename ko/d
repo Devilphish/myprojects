@@ -1,0 +1,11 @@
+#!/bin/sh
+if [ -e curcard ] ; then
+	./dbd
+	echo "===  wildcat card already drawn  ==="
+	exit
+fi
+line=`expr $RANDOM % 32 + 1`
+sed "${line}q;d" cards > curcard
+awk -f roy.awk players curcard > msg
+./dbd
+cat msg
