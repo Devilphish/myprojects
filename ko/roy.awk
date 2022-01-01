@@ -58,14 +58,19 @@ if (0) {
 }
 END {
 	if (card == 1) {
-		printf("===  fire, must cap %d wells  ===\n", pnwells[turn])
+		nwells = pnwells[turn]
+		ncap = 0
+		if (nwells > 0 && nwells < 6) ncap = 1
+		if (nwells > 5 && nwells < 11) ncap = 2
+		if (nwells > 10) ncap = 3
+		printf("===  fire, must cap %d wells  ===\n", ncap)
 	}
 	if (card == 2) {
 		allow = 500
 		m = pmoney[turn]
 		pmoney[turn] += allow
 
-		printf("===  depletion %s  $%d + $%d = $%d  ===\n", pname[turn], m, allow, pmoney[turn])
+		printf("===  depletion  $%d + $%d = $%d  ===\n", m, allow, pmoney[turn])
 	}
 	if (card == 3) {
 		if (roy >= 1 && roy <= 4) {
@@ -78,7 +83,7 @@ END {
 		rtotal = pnwells[turn] * royalty
 		pmoney[turn] += rtotal
 
-		printf("===  royalty %s   %d well%s * %d = %d  ===\n", pname[turn],
+		printf("===  royalty  %d well%s * %d = %d  ===\n",
 				pnwells[turn], pnwells[turn] > 1 ? "s" : "",
 				royalty, rtotal)
 	}
@@ -97,7 +102,7 @@ END {
 	printf("turn %d (%s)\n", turn, pname[turn]) > "players"
 
 	if (card == 1) {
-		printf("fire.%d\n", pnwells[turn]) > "curcard"
+		printf("fire.%d\n", ncap) > "curcard"
 	}
 	if (card == 2) {
 		printf("depletion.1\n") > "curcard"

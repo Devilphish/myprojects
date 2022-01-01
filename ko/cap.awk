@@ -10,10 +10,31 @@ if (0) {
 	npipes = 0
 	player = 1
 	plot = -1
+        card = 0
+	roy = 0
+	wellsallowed = 0
+	prop = 0
+	ndrills = 0
+	ncap = 0
 }
 {
 	if (NF < 1) {
 		next
+	}
+	if ($1 == "fire") {
+		card = 1
+		ncap = $2
+	}
+	if ($1 == "depletion") {
+		card = 2
+		ndrills = $2
+	}
+	if ($1 == "prod") {
+		card = 3
+		roy = $2
+		wellsallowed = $3
+		prop = $4
+		ndrills = $5
 	}
 	if ($1 == "turn") {
 		turn = $2
@@ -102,14 +123,17 @@ END {
 		exit
 	}
 
+	if (card == 1) {
+		if (ncap == 0) {
+			printf("===  no more caps needed  ===\n");
+			exit
+		}
+	}
+
 	printf("CAP well %d.%s\n", plot_in, pos_in)
 
 	boardwell[plot_in, pos_num] = "X"
 	pnwells[turn]--
-
-	printf("    %s %d - 1 = %d well%s\n",
-			pname[turn], pnwells[turn]+1, pnwells[turn],
-			pnwells[turn] > 1 ? "s" : "")
 
 	for (pipe = 0; pipe < npipes; pipe++) {
 		pfr = pipefr[pipe]
@@ -145,5 +169,15 @@ END {
 			printf("%s", boardwell[plot, pos]) > "board"
 		}
 		printf("\n") > "board"
+	}
+
+	if (card == 1) {
+		printf("fire.%d\n", ncap - 1) > "curcard"
+	}
+	if (card == 2) {
+		printf("depletion.1\n") > "curcard"
+	}
+	if (card == 3) {
+		printf("prod.%d.%d.%d.%d\n", roy, wellsallowed, prop, ndrills) > "curcard"
 	}
 }

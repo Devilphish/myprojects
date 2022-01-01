@@ -12,6 +12,7 @@ if (0) {
 	wellsallowed = 0
 	prop = 0
 	ndrills = 0
+	ncap = 0
 }
 {
 	if (NF < 1) {
@@ -19,6 +20,7 @@ if (0) {
 	}
 	if ($1 == "fire") {
 		card = 1
+		ncap = $2
 	}
 	if ($1 == "depletion") {
 		card = 2
@@ -82,6 +84,14 @@ END {
 			exit 1
 		}
 	}
+
+	if (card == 1) {
+		if (ncap > 0) {
+			printf("===  you must cap %d more wells before ending turn  ===\n", ncap)
+			exit 1
+		}
+	}
+
 	oldturn = turn
 	turn++
 	if (turn > nplayers) {

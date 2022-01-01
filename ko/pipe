@@ -1,6 +1,8 @@
 #!/bin/sh
 if [ $# != 2 ] ; then
-	echo "usage: pipe <p_from=1-18> <p_to=1-18>"
+	echo "usage: pipe <from=1-18> <to=1-18>"
 	exit
 fi
-awk -f pipe.awk players board plot_fr=$1 plot_to=$2
+awk -f pipe.awk players board plot_fr=$1 plot_to=$2 > msg
+./dbd
+cat msg

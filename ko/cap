@@ -1,6 +1,6 @@
 #!/bin/sh
 if [ $# != 1 ] ; then
-	echo "usage: cap <plotpos=[1-18][a-l]>"
+	echo "usage: cap <[1-18][a-l]>"
 	exit
 fi
-awk -f cap.awk players board plotpos=$1
+awk -f cap.awk players board curcard plotpos=$1
