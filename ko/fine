@@ -1,0 +1,13 @@
+#!/bin/sh
+if [ $# != 0 ] ; then
+	echo "usage: fine"
+	exit
+fi
+if [ ! -e curcard  ] ; then
+	./dbd
+	echo "===  must draw wildcat card  ==="
+	exit
+fi
+awk -f fine.awk players board curcard > msg
+./dbd
+cat msg

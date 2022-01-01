@@ -13,6 +13,7 @@ if (0) {
 	prop = 0
 	ndrills = 0
 	initplayer = 0
+	fined = 0
 }
 {
 	if (NF < 1) {
@@ -37,6 +38,9 @@ if (0) {
 		wellsallowed = $3
 		prop = $4
 		ndrills = $5
+	}
+	if ($1 == "fined") {
+		fined = 1
 	}
 	if ($1 == "turn") {
 		turn = $2
@@ -85,9 +89,23 @@ END {
 		exit
 	}
 	if (card == 2 || card == 3) {
+		drillable = 0
+		for (p = 0; p < pnplots[turn]; p++) {
+			for (w = 0; w < pplots[turn, p]; w++) {
+				if (boardwell[p, w] == ",") {
+					drillable = 1
+				}
+			}
+		}
 		if (wellsallowed == ndrills) {
-			printf("===  you must drill before buying a plot  ===\n")
-			exit
+			if (!drillable && !fined) {
+				printf("===  you must pay fine before buying a plot  ====\n")
+				exit 1
+			}
+			if (drillable) {
+				printf("===  you must drill before buying a plot  ===\n")
+				exit 1
+			}
 		}
 	}
 	if (plot_in < 1 || plot_in > nplots) {
@@ -143,5 +161,9 @@ END {
 
 	if (card == 3) {
 		printf("prod.%d.%d.%d.%d\n", roy, wellsallowed, prop - 1, ndrills) > "curcard"
+		if (fined) {
+			printf("fined\n") > "curcard"
+		}
+		printf("bought\n") > "curcard"
 	}
 }

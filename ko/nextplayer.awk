@@ -13,6 +13,7 @@ if (0) {
 	prop = 0
 	ndrills = 0
 	ncap = 0
+	fined = 0
 }
 {
 	if (NF < 1) {
@@ -33,6 +34,9 @@ if (0) {
 		wellsallowed = $3
 		prop = $4
 		ndrills = $5
+	}
+	if ($1 == "fined") {
+		fined = 1
 	}
 	if ($1 == "turn") {
 		turn = $2
@@ -79,9 +83,23 @@ if (0) {
 }
 END {
 	if (card == 2 || card == 3) {
+		drillable = 0
+		for (p = 0; p < pnplots[turn]; p++) {
+			for (w = 0; w < pplots[turn, p]; w++) {
+				if (boardwell[p, w] == ",") {
+					drillable = 1
+				}
+			}
+		}
 		if (wellsallowed == ndrills) {
-			printf("===  you must drill before ending turn  ===\n")
-			exit 1
+			if (!drillable && !fined) {
+				printf("===  you must pay fine before ending turn  ====\n")
+				exit 1
+			}
+			if (drillable) {
+				printf("===  you must drill before ending turn  ===\n")
+				exit 1
+			}
 		}
 	}
 

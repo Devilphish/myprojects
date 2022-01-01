@@ -17,6 +17,8 @@ if (0) {
 	wellsallowed = 0
 	prop = 0
 	ndrills = 0
+	ncap = 0
+	bought = 0
 }
 {
 	if (NF < 1) {
@@ -24,6 +26,7 @@ if (0) {
 	}
 	if ($1 == "fire") {
 		card = 1
+		ncap = $2
 	}
 	if ($1 == "depletion") {
 		card = 2
@@ -36,6 +39,9 @@ if (0) {
 		wellsallowed = $3
 		prop = $4
 		ndrills = $5
+	}
+	if ($1 == "bought") {
+		bought = 1
 	}
 	if ($1 == "turn") {
 		turn = $2
@@ -115,6 +121,10 @@ if (0) {
 END {
 	if (!card) {
 		printf("===  must draw wildcat card first  ===\n");
+		exit
+	}
+	if (bought) {
+		printf("===  can't drill after buying a plot  ===\n")
 		exit
 	}
 	if (!ndrills) {
@@ -234,7 +244,7 @@ END {
 	}
 
 	if (card == 1) {
-		printf("fire\n") > "curcard"
+		printf("fire.%d\n", ncap) > "curcard"
 	}
 	if (card == 2) {
 		printf("depletion.0\n") > "curcard"
