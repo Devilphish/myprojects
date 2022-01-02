@@ -24,10 +24,12 @@ if (0) {
 	if ($1 == "fire") {
 		card = 1
 		ncap = $2
+		next
 	}
 	if ($1 == "depletion") {
 		card = 2
 		ndrills = $2
+		next
 	}
 	if ($1 == "prod") {
 		card = 3
@@ -35,6 +37,7 @@ if (0) {
 		wellsallowed = $3
 		prop = $4
 		ndrills = $5
+		next
 	}
 	if ($1 == "turn") {
 		turn = $2
@@ -52,7 +55,7 @@ if (0) {
 		pmoney[player] = $4
 		pnwells[player] = $6
 		pnplots[player] = 0
-		p = 0
+		p = 1
 		for (tok = 8; tok <= NF; tok++) {
 			pplots[player, p] = $tok
 			p++
@@ -87,6 +90,13 @@ if (0) {
 	}
 }
 END {
+	if (card == 1) {
+		if (ncap == 0) {
+			printf("===  no more caps needed  ===\n");
+			exit
+		}
+	}
+
 	if (length(plotpos) < 2) {
 		printf("enter plot # and well letter\n")
 		exit
@@ -99,7 +109,7 @@ END {
 		exit
 	}
 	isowner = 0
-	for (p = 0; p < pnplots[turn]; p++) {
+	for (p = 1; p <= pnplots[turn]; p++) {
 		if (plot_in == pplots[turn, p]) {
 			isowner = 1
 			break
@@ -121,13 +131,6 @@ END {
 	if (boardwell[plot_in, pos_num] == "X") {
 		printf("well %d.%s already capped\n", plot_in, pos_in)
 		exit
-	}
-
-	if (card == 1) {
-		if (ncap == 0) {
-			printf("===  no more caps needed  ===\n");
-			exit
-		}
 	}
 
 	printf("CAP well %d.%s\n", plot_in, pos_in)
@@ -152,7 +155,7 @@ END {
 	for (p = 1; p <= nplayers; p++) {
 		printf("player %s money %d nwells %d plots",
 				pname[p], pmoney[p], pnwells[p]) > "players"
-		for (plot = 0; plot < pnplots[p]; plot++) {
+		for (plot = 1; plot <= pnplots[p]; plot++) {
 			printf(" %d", pplots[p, plot]) > "players"
 		}
 		printf("\n") > "players"

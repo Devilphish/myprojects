@@ -13,7 +13,7 @@ if (0) {
 	if ($1 == "fieldplot") {
 		fplot = $2
 		disc = -1
-		nwells[plot] = 0
+		nwells[fplot] = 0
 		nplots++
 		next
 	}
@@ -39,7 +39,7 @@ END {
 		exit
 	}
 	printf("board.%d.%d.%d\n", d1, d2, d3) > "board"
-	for (plot = 1; plot <= nplots; plot ++) {
+	for (plot = 1; plot <= nplots; plot++) {
 		printf("plot.%d\n", plot) > "board"
 		for (i = 1; i <= nwells[plot]; i++) {
 			printf(",") > "board"

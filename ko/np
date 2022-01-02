@@ -3,6 +3,11 @@ if [ $# != 0 ] ; then
 	echo "usage: np"
 	exit
 fi
+if [ ! -e curcard  ] ; then
+	./dbd
+	echo "===  must draw wildcat card  ==="
+	exit
+fi
 awk -f nextplayer.awk players board curcard > msg
 awkexitcode=$?
 if [ $awkexitcode == 0 ] ; then

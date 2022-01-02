@@ -23,11 +23,13 @@ if (0) {
 	}
 	if ($1 == "fire") {
 		card = 1
+		next
 	}
 	if ($1 == "depletion") {
 		card = 2
 		wellsallowed = 1
 		ndrills = $2
+		next
 	}
 	if ($1 == "prod") {
 		card = 3
@@ -35,6 +37,7 @@ if (0) {
 		wellsallowed = $3
 		prop = $4
 		ndrills = $5
+		next
 	}
 	if ($1 == "turn") {
 		turn = $2
@@ -46,7 +49,7 @@ if (0) {
 		pmoney[player] = $4
 		pnwells[player] = $6
 		pnplots[player] = 0
-		p = 0
+		p = 1
 		for (tok = 8; tok <= NF; tok++) {
 			pplots[player, p] = $tok
 			p++
@@ -122,7 +125,7 @@ END {
 					letpos = welltokenpos[letdot]
 					letdot++
 					isowner = 0
-					for (p = 0; p < pnplots[turn]; p++) {
+					for (p = 1; p <= pnplots[turn]; p++) {
 						if (pplots[turn, p] == letplot) {
 							isowner = 1
 						}
@@ -156,7 +159,7 @@ END {
 		format1 = " %s%8s: $%s  #wells %d plots"
 		printf(format1, p == turn ? "*" : " ",
 			pname[p], pmoney[p], pnwells[p])
-		for (plot = 0; plot < pnplots[p]; plot++) {
+		for (plot = 1; plot <= pnplots[p]; plot++) {
 			printf(" %d", pplots[p, plot])
 			for (pipe = 0; pipe < npipes; pipe++) {
 				if (pipefr[pipe] == pplots[p, plot]) {

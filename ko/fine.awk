@@ -1,6 +1,6 @@
 BEGIN {
 if (0) {
-    usage = "awk -f cap.awk players board plotpos=<[1-18][a-l]>"
+    usage = "awk -f cap.awk players board curcard plotpos=<[1-18][a-l]>"
 }
 	num["a"] = 1; num["b"] = 2; num["c"] = 3; num["d"] = 4; num["e"] = 5
 	num["f"] = 6; num["g"] = 7; num["h"] = 8; num["i"] = 9; num["j"] = 10
@@ -26,10 +26,12 @@ if (0) {
 	if ($1 == "fire") {
 		card = 1
 		ncap = $2
+		next
 	}
 	if ($1 == "depletion") {
 		card = 2
 		ndrills = $2
+		next
 	}
 	if ($1 == "prod") {
 		card = 3
@@ -37,12 +39,15 @@ if (0) {
 		wellsallowed = $3
 		prop = $4
 		ndrills = $5
+		next
 	}
 	if ($1 == "fined") {
 		fined = 1
+		next
 	}
 	if ($1 == "bought") {
 		bought = 1
+		next
 	}
 	if ($1 == "turn") {
 		turn = $2
@@ -60,7 +65,7 @@ if (0) {
 		pmoney[player] = $4
 		pnwells[player] = $6
 		pnplots[player] = 0
-		p = 0
+		p = 1
 		for (tok = 8; tok <= NF; tok++) {
 			pplots[player, p] = $tok
 			p++
@@ -112,9 +117,10 @@ END {
 	}
 
 	drillable = 0
-	for (p = 0; p < pnplots[turn]; p++) {
-		for (w = 0; w < pplots[turn, p]; w++) {
-			if (boardwell[p, w] == ",") {
+	for (p = 1; p <= pnplots[turn]; p++) {
+		plot = pplots[turn, p]
+		for (w = 1; w <= nwells[plot]; w++) {
+			if (boardwell[plot, w] == ",") {
 				drillable = 1
 			}
 		}
@@ -131,7 +137,7 @@ END {
 	for (p = 1; p <= nplayers; p++) {
 		printf("player %s money %d nwells %d plots",
 				pname[p], pmoney[p], pnwells[p]) > "players"
-		for (plot = 0; plot < pnplots[p]; plot++) {
+		for (plot = 1; plot <= pnplots[p]; plot++) {
 			printf(" %d", pplots[p, plot]) > "players"
 		}
 		printf("\n") > "players"

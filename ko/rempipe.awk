@@ -22,7 +22,7 @@ if (0) {
 		pmoney[player] = $4
 		pnwells[player] = $6
 		pnplots[player] = 0
-		p = 0
+		p = 1
 		for (tok = 8; tok <= NF; tok++) {
 			pplots[player, p] = $tok
 			p++
@@ -65,7 +65,7 @@ END {
 		exit
 	}
 	isowned = 0
-	for (plot = 0; plot < pnplots[turn]; plot++) {
+	for (plot = 1; plot <= pnplots[turn]; plot++) {
 		if (plot_fr == pplots[turn, plot]) {
 			isowned = 1
 			break
@@ -102,7 +102,7 @@ END {
 	for (p = 1; p <= nplayers; p++) {
 		printf("player %s money %d nwells %d plots",
 				pname[p], pmoney[p], pnwells[p]) > "players"
-		for (plot = 0; plot < pnplots[p]; plot++) {
+		for (plot = 1; plot <= pnplots[p]; plot++) {
 			printf(" %d", pplots[p, plot]) > "players"
 		}
 		printf("\n") > "players"
