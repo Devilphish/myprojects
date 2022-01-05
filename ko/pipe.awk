@@ -22,7 +22,7 @@ if (0) {
 		pmoney[player] = $4
 		pnwells[player] = $6
 		pnplots[player] = 0
-		p = 0
+		p = 1
 		for (tok = 8; tok <= NF; tok++) {
 			pplots[player, p] = $tok
 			p++
