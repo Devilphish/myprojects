@@ -102,7 +102,7 @@ END {
 				printf("===  you must pay fine before ending turn  ====\n")
 				exit 1
 			}
-			if (drillable) {
+			if (drillable && !fined) {
 				printf("===  you must drill before ending turn  ===\n")
 				exit 1
 			}
