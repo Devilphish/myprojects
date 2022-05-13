@@ -318,8 +318,14 @@ int main(int argc, char *argv[])
     int nshow;
     unsigned int i, j;
 
+    n_games = sizeof (games) / sizeof (struct game);
+
     if (argc < 3) {
         printf("usage: %s <game_num> <num_loops>\n", argv[0]);
+        printf("       game_num:\n");
+        for (i = 0; i < n_games; i++) {
+            printf("           %d = %s\n", i, games[i].name);
+        }
         return 1;
     }
 
@@ -331,7 +337,6 @@ int main(int argc, char *argv[])
     game_num = (unsigned int)atoi(argv[1]);
     nloops = (unsigned int)atoi(argv[2]);
 
-    n_games = sizeof (games) / sizeof (struct game);
     if (game_num >= n_games) {
         printf("game number too high (%d available)\n", n_games);
         return 2;
