@@ -288,18 +288,6 @@ void shuffle(struct card *d, int n)
     }
 }
 
-int compare(const void *v1, const void *v2)
-{
-    int n1, n2;
-
-    n1 = *(int *)v1;
-    n2 = *(int *)v2;
-    if (n1 > n2)
-        return 1;
-    /* don't bother with ==, same as < for sort */
-    return -1;
-}
-
 void print_deck(struct card *d, int n)
 {
     int i;
