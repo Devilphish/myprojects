@@ -253,7 +253,7 @@ int check_lo(struct card *d)
 
         for (c = 0; c < game->playset[i].n_pos; c++) {
             card = d[game->playset[i].card_pos[c] - 1];
-            cardval_scoreboard[card.val - 1] |= 1;
+            cardval_scoreboard[card.val - 1] = 1;
         }
 
         num_lo = 0;
