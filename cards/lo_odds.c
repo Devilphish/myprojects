@@ -243,17 +243,11 @@ void print_deck_pattern(struct card *d, char *pattern)
 		c++;
             }
 
-            if (tty) {
-                if (d[card - 1].val < 9) {
-                    printf(ANSI_COLOR_RED);
-                    printf("%s%s", num_str[d[card - 1].val],
-                                   suit_str[d[card - 1].suit]);
-                    printf(ANSI_COLOR_RESET);
-                }
-                else {
-                    printf("%s%s", num_str[d[card - 1].val],
-                                   suit_str[d[card - 1].suit]);
-                }
+            if (tty && (d[card - 1].val < 9)) {
+                printf(ANSI_COLOR_RED);
+                printf("%s%s", num_str[d[card - 1].val],
+                               suit_str[d[card - 1].suit]);
+                printf(ANSI_COLOR_RESET);
             }
             else {
                 printf("%s%s", num_str[d[card - 1].val],
@@ -288,6 +282,7 @@ int check_lo(struct card *d)
         for (j = 0; j < 8; j++) {
             num_lo += cardval_scoreboard[j];
         }
+
 	if (num_lo > 2) {
             return 1;
         }
