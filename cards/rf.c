@@ -201,10 +201,10 @@ int main(int argc, char *argv[])
     gettimeofday(&tv, NULL);
     srand((unsigned)(tv.tv_sec + tv.tv_usec));
 
-    hand = malloc(nshow * sizeof (*hand));
-
     nloops = (unsigned int)atoi(argv[1]);
     nshow = atoi(argv[2]);
+
+    hand = malloc(nshow * sizeof (*hand));
 
     for (i = 0; i < 52; i++) {
         deck[i] = cards[i];

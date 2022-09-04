@@ -167,6 +167,27 @@ struct playset omaha_playset[] = {
     { { 1, 2, 3, 4, 5 }, 5 },
 };
 
+#define SIXPACK_NCARDS_BOARD 18
+char sixpack_name[] = "SIXPACK";
+
+char sixpack_board_pattern[] = "\
+1  2  3     \n\
+4  5  6     \n\
+7  8  9     \n\
+10  11  12  \n\
+13  14  15  \n\
+16  17  18  \n\
+";
+
+struct playset sixpack_playset[] = {
+    { { 1, 2, 3 }, 3 },
+    { { 4, 5, 6 }, 3 },
+    { { 7, 8, 9 }, 3 },
+    { { 10, 11, 12 }, 3 },
+    { { 13, 14, 15 }, 3 },
+    { { 16, 17, 18 }, 3 },
+};
+
 struct game {
     char *name;
     int ncards_board;
@@ -196,6 +217,13 @@ struct game games[] = {
         omaha_board_pattern,
         omaha_playset,
         sizeof (omaha_playset) / sizeof (struct playset)
+    },
+    {  /* 3 */
+        sixpack_name,
+        SIXPACK_NCARDS_BOARD,
+        sixpack_board_pattern,
+        sixpack_playset,
+        sizeof (sixpack_playset) / sizeof (struct playset)
     },
 };
 
