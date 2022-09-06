@@ -1,3 +1,25 @@
+/*
+ * ======== Low odds calculator ========
+ *
+ * Calculates if there is a possible 8-or-lower low hand for a given Omaha
+ * board.  The caculation only determines if there are at least 3
+ * non-matching cards on a given board that are 8 or lower.  There are no
+ * player hands dealt, as they are irrelevant to the board contents.
+ *
+ * 8-or-lower (8-to-the-low) in Ohmaha is defined as 5 non-matching cards
+ * in the hand that are 8 or lower (Ace is low).  Straights and flushes
+ * don't apply to the low hand.  A hand is comprised of 3 board cards and
+ * 2 cards from the player hand (usually 4 or 5 cards in your hand).
+ * Therefore, the calculator need consider only the possibility of 3 or
+ * more board cards in order to assess the viability of a low hand being
+ * made by any player.  It doesn't matter if a low hand is actually
+ * achieved or not by any particular player hand since we're only concerned
+ * with the board possibility.
+ *
+ * Multiple Omaha board variants are supported.  Any possible Omaha board
+ * layout can be implemented.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
