@@ -178,6 +178,27 @@ struct playset h_bomb_playset[] = {
     { { 1, 2, 12, 11 }, 4 },
 };
 
+#define DOUBLE_BONE_NCARDS_BOARD 12
+char double_bone_name[] = "DOUBLE-BONE";
+
+char double_bone_board_pattern[] = "\
+1      2  7      8    \n\
+  3  4      9  10     \n\
+5      6  11      12  \n\
+";
+
+struct playset double_bone_playset[] = {
+    { { 1, 3, 4, 2 }, 4 },
+    { { 1, 3, 4, 6 }, 4 },
+    { { 5, 3, 4, 2 }, 4 },
+    { { 5, 3, 4, 6 }, 4 },
+    { { 7, 9, 10, 8 }, 4 },
+    { { 7, 9, 10, 12 }, 4 },
+    { { 11, 9, 10, 8 }, 4 },
+    { { 11, 9, 10, 12 }, 4 },
+    { { 2, 6, 7, 11 }, 4 },
+};
+
 #define OMAHA_NCARDS_BOARD 5
 char omaha_name[] = "OMAHA";
 
@@ -208,6 +229,66 @@ struct playset sixpack_playset[] = {
     { { 10, 11, 12 }, 3 },
     { { 13, 14, 15 }, 3 },
     { { 16, 17, 18 }, 3 },
+};
+
+#define TWELVEANGRY_NCARDS_BOARD 12
+char twelveangry_name[] = "12ANGRY";
+
+char twelveangry_board_pattern[] = "\
+1  2  3  4  \n\
+5  6  7  8  \n\
+9  10  11  12    \n\
+";
+
+struct playset twelveangry_playset[] = {
+    { { 1, 5, 6 }, 3 },
+    { { 1, 5, 7 }, 3 },
+    { { 1, 5, 8 }, 3 },
+    { { 1, 6, 7 }, 3 },
+    { { 1, 6, 8 }, 3 },
+    { { 1, 7, 8 }, 3 },
+    { { 1, 9, 10 }, 3 },
+    { { 1, 9, 11 }, 3 },
+    { { 1, 9, 12 }, 3 },
+    { { 1, 10, 11 }, 3 },
+    { { 1, 10, 12 }, 3 },
+    { { 1, 11, 12 }, 3 },
+    { { 2, 5, 6 }, 3 },
+    { { 2, 5, 7 }, 3 },
+    { { 2, 5, 8 }, 3 },
+    { { 2, 6, 7 }, 3 },
+    { { 2, 6, 8 }, 3 },
+    { { 2, 7, 8 }, 3 },
+    { { 2, 9, 10 }, 3 },
+    { { 2, 9, 11 }, 3 },
+    { { 2, 9, 12 }, 3 },
+    { { 2, 10, 11 }, 3 },
+    { { 2, 10, 12 }, 3 },
+    { { 2, 11, 12 }, 3 },
+    { { 3, 5, 6 }, 3 },
+    { { 3, 5, 7 }, 3 },
+    { { 3, 5, 8 }, 3 },
+    { { 3, 6, 7 }, 3 },
+    { { 3, 6, 8 }, 3 },
+    { { 3, 7, 8 }, 3 },
+    { { 3, 9, 10 }, 3 },
+    { { 3, 9, 11 }, 3 },
+    { { 3, 9, 12 }, 3 },
+    { { 3, 10, 11 }, 3 },
+    { { 3, 10, 12 }, 3 },
+    { { 3, 11, 12 }, 3 },
+    { { 4, 5, 6 }, 3 },
+    { { 4, 5, 7 }, 3 },
+    { { 4, 5, 8 }, 3 },
+    { { 4, 6, 7 }, 3 },
+    { { 4, 6, 8 }, 3 },
+    { { 4, 7, 8 }, 3 },
+    { { 4, 9, 10 }, 3 },
+    { { 4, 9, 11 }, 3 },
+    { { 4, 9, 12 }, 3 },
+    { { 4, 10, 11 }, 3 },
+    { { 4, 10, 12 }, 3 },
+    { { 4, 11, 12 }, 3 },
 };
 
 struct game {
@@ -246,6 +327,20 @@ struct game games[] = {
         sixpack_board_pattern,
         sixpack_playset,
         sizeof (sixpack_playset) / sizeof (struct playset)
+    },
+    {  /* 4 */
+        twelveangry_name,
+        TWELVEANGRY_NCARDS_BOARD,
+        twelveangry_board_pattern,
+        twelveangry_playset,
+        sizeof (twelveangry_playset) / sizeof (struct playset)
+    },
+    {  /* 5 */
+        double_bone_name,
+        DOUBLE_BONE_NCARDS_BOARD,
+        double_bone_board_pattern,
+        double_bone_playset,
+        sizeof (double_bone_playset) / sizeof (struct playset)
     },
 };
 
