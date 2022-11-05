@@ -158,7 +158,7 @@ int print_summary(struct card *d, int n)
     }
     for (i = 1; i < 14; i++) {
         switch (vals[i]) {
-        case 2:
+          case 2:
             paircard[px] = i;
             if (px == 0) {
                 summary |= PAIR;
@@ -169,15 +169,18 @@ int print_summary(struct card *d, int n)
                 summary |= TWOPAIR;
             }
             break;
-        case 3:
+
+          case 3:
             setcard = i;
             summary |= SET;
             break;
-        case 4:
+
+          case 4:
             quadcard = i;
             summary |= QUADS;
             break;
-        default:
+
+          default:
             break;
         }
 
@@ -237,7 +240,7 @@ int print_summary(struct card *d, int n)
     }
 
     switch (summary) {
-    case PAIR:
+      case PAIR:
         if (n == 2) {
             printf("pocket %ss\n", num_str[paircard[0]]);
         }
@@ -245,7 +248,8 @@ int print_summary(struct card *d, int n)
             printf("pair of %ss\n", num_str[paircard[0]]);
         }
         break;
-    case TWOPAIR:
+
+      case TWOPAIR:
         if (paircard[0] == ACE) {
             printf("As up with %ss\n", num_str[paircard[1]]);
         }
@@ -254,10 +258,12 @@ int print_summary(struct card *d, int n)
                   num_str[paircard[1]], num_str[paircard[0]]);
         }
         break;
-    case SET:
+
+      case SET:
         printf("set of %ss\n", num_str[setcard]);
         break;
-    case STRAIGHT:
+
+      case STRAIGHT:
         if (n == 2) {
             printf("connected %s\n", num_str[straightcard]);
         }
@@ -265,7 +271,8 @@ int print_summary(struct card *d, int n)
             printf("straight to the %s\n", num_str[straightcard]);
         }
         break;
-    case FLUSH:
+
+      case FLUSH:
         if (n == 2) {
             printf("%s suited\n", suit_str[flushsuit]);
         }
@@ -273,14 +280,17 @@ int print_summary(struct card *d, int n)
             printf("%s flush\n", suit_str[flushsuit]);
         }
         break;
-    case FULLBOAT:
+
+      case FULLBOAT:
         printf("%ss over %ss\n",
               num_str[setcard], num_str[paircard[0]]);
         break;
-    case QUADS:
+
+      case QUADS:
         printf("quad %ss\n", num_str[quadcard]);
         break;
-    case STRAIGHTFLUSH:
+
+      case STRAIGHTFLUSH:
         if (n == 2) {
             printf("%s suited connector %s\n",
                   suit_str[flushsuit], num_str[straightcard]);
@@ -296,7 +306,8 @@ int print_summary(struct card *d, int n)
             }
         }
         break;
-    default:
+
+      default:
         if (hand[0] == ACE) {
             printf("A high\n");
         }
