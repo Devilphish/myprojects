@@ -359,9 +359,11 @@ int main(int argc, char *argv[])
     for (j = 0; j < nloops; j++) {
         shuffle(deck, nshow);
         print_deck(&deck[52 - nshow], nshow, TRUE);
-        if ((j % 10000000) == 0) {
-            fprintf(stderr, "%dth hand\n", j);
-            fflush(stderr);
+        if ((j % 100000) == 0) {
+            if (j) {
+                fprintf(stderr, "%dth hand\n", j);
+                fflush(stderr);
+            }
         }
     }
 
