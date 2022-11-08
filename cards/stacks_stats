@@ -1,0 +1,25 @@
+			STACKS STATS
+			============
+
+1,000,000 boards of 6 3-card stacks using 6pack.c
+
+1 or more stack of:	# boards:
+-------------------	---------
+High card		995930 (99.6 %)
+Pair			669336 (66.9 %)
+Set			 14185 ( 1.4 %)
+Straight		708376 (70.8 %)
+Flush			272078 (27.2 %)
+Straightflush		 67687 ( 6.8 %)
+
+---
+
+All high card		 48310 ( 4.8 %)
+No high card		  4070 ( 0.4 %)
+
+All pair		    24
+All set			     0 (92 2-set boards)
+All straight		    40
+All flush		     0 (1 5-flush, 113 4-flush boards)
+All straightflush	     0 (36 3-straightflush boards)
+
