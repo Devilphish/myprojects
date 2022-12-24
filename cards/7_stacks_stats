@@ -1,0 +1,25 @@
+			STACKS STATS
+			============
+
+1,000,000 boards of 7 3-card stacks using stacks.c
+
+1 or more stack of:	# boards:
+-------------------	---------
+High card		998405 (99.8 %)
+Pair			724534 (72.5 %)
+Set			 16120 ( 1.6 %)
+Straight		762322 (76.2 %)
+Flush			308979 (30.9 %)
+Straightflush		 77612 ( 7.8 %)
+
+---
+
+All high card		 29134 ( 2.9 %)
+No high card		  1595 ( 0.2 %)
+
+All pair		     6
+All set			     0 (131 2-set boards)
+All straight		     4
+All flush		     0 (7 5-flush, 248 4-flush boards)
+All straightflush	     0 (2 4-straightflush, 46 3-straightflush boards)
+
