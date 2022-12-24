@@ -1,0 +1,5 @@
+#!/bin/sh
+
+token=`cat git_token`
+echo $token
+git remote set-url origin https://$token@github.com/Devilphish/myprojects
