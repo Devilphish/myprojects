@@ -116,13 +116,16 @@ END {
 	dot = 0
 	letdot = 0
 	ntoken = 0
+	color = 42
+	rando = 420
+	printf("\x1b[42m")
+	printf("\x1b[1m")
 	for (i = 0; i < nmaplines; i++) {
 		for (j = 0; j < (ntokenline[line] - 1); j++) {
 			t = token[ntoken++]
 			if (length(t) == 1) {
 				if (t == "a" || t == "b" || t == "c" || t == "d" || t == "e" || t == "f" || t == "g" || t == "h" || t == "i" || t == "j" || t == "k" || t == "l") {
 					letplot = welltokenplot[letdot]
-					letpos = welltokenpos[letdot]
 					letdot++
 					isowner = 0
 					for (p = 1; p <= pnplots[turn]; p++) {
@@ -131,7 +134,9 @@ END {
 						}
 					}
 					if (isowner == 1) {
+						printf("\x1b[30m")
 						printf(" %s ", t)
+						printf("\x1b[39m")
 					}
 					else {
 						printf("   ")
@@ -141,10 +146,45 @@ END {
 					plot = welltokenplot[dot]
 					pos = welltokenpos[dot]
 					dot++
+					isowner = 0
+					for (p = 1; p <= pnplots[turn]; p++) {
+						if (pplots[turn, p] == plot) {
+							isowner = 1
+						}
+					}
+					if (isowner == 1) {
+						printf("\x1b[34m")
+					}
 					printf(" %s ", well[plot, pos] == "," ? "." : well[plot, pos])
+					if (isowner == 1) {
+						printf("\x1b[39m")
+					}
+
+					if (((rando * plot * pos * dot * line) % 3) == 0) {
+						rando *= 7;
+						if (color == 42) {
+							color = 43
+						}
+						else {
+							color = 42
+						}
+						printf("\x1b[%dm", color)
+					}
+
 				}
 				else {
 					printf("%s", t)
+
+					if (((rando * plot * pos * dot * line) % 3) == 0) {
+						rando *= 7;
+						if (color == 42) {
+							color = 43
+						}
+						else {
+							color = 42
+						}
+						printf("\x1b[%dm", color)
+					}
 				}
 			}
 			else {
@@ -155,7 +195,12 @@ END {
 		printf("%s\n", token[ntoken++])
 	}
 
+	printf("\x1b[100m")
+
 	for (p = 1; p <= nplayers; p++) {
+		if (p == turn) {
+			printf("\x1b[96m")
+		}
 		format1 = " %s%8s: $%s  #wells %d plots"
 		printf(format1, p == turn ? "*" : " ",
 			pname[p], pmoney[p], pnwells[p])
@@ -168,6 +213,7 @@ END {
 			}
 		}
 		printf("\n")
+		printf("\x1b[39m")
 	}
 
 	if (card == 1) {
@@ -184,4 +230,6 @@ END {
 
 		printf("PRODUCTION - royaly %d, %d drills allowed (%d used), %s buy a plot\n", royalty, wellsallowed, wellsallowed - ndrills, prop == 1 ? "can" : "cannot")
 	}
+
+	printf("\x1b[0m")
 }
