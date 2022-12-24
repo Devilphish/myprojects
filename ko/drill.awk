@@ -216,10 +216,10 @@ END {
 		exit
 	}
 	if (iswell) {
-		boardwell[plot_in, pos_num] = "!"
+		boardwell[plot_in, pos_num] = "#"
 	}
 	else {
-		boardwell[plot_in, pos_num] = "X"
+		boardwell[plot_in, pos_num] = "@"
 	}
 	m = pmoney[turn]
 	pmoney[turn] -= cost

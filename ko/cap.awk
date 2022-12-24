@@ -80,7 +80,7 @@ if (0) {
 	if (plot != -1) {
 		noilers[plot] = 0
 		for (pos = 1; pos <= length($1); pos++) {
-			if (substr($1, pos, 1) == "!") {
+			if (substr($1, pos, 1) == "#") {
 				noilers[plot]++
 			}
 			boardwell[plot, pos]=substr($1, pos, 1)
@@ -128,14 +128,14 @@ END {
 		printf("well %d.%s not drilled\n", plot_in, pos_in)
 		exit
 	}
-	if (boardwell[plot_in, pos_num] == "X") {
+	if (boardwell[plot_in, pos_num] == "@") {
 		printf("well %d.%s already capped\n", plot_in, pos_in)
 		exit
 	}
 
 	printf("CAP well %d.%s\n", plot_in, pos_in)
 
-	boardwell[plot_in, pos_num] = "X"
+	boardwell[plot_in, pos_num] = "@"
 	pnwells[turn]--
 
 	for (pipe = 0; pipe < npipes; pipe++) {

@@ -77,7 +77,7 @@ if (0) {
 	if (plot != -1) {
 		noilers[plot] = 0
 		for (pos = 1; pos <= length($1); pos++) {
-			if (substr($1, pos, 1) == "!") {
+			if (substr($1, pos, 1) == "#") {
 				noilers[plot]++
 			}
 			boardwell[plot, pos]=substr($1, pos, 1)

@@ -47,7 +47,7 @@ if (0) {
 	if (plot != -1) {
 		noilers[plot] = 0
 		for (i = 1; i <= length($1); i++) {
-			if (substr($1, i, 1) == "!") {
+			if (substr($1, i, 1) == "#") {
 				noilers[plot]++
 			}
 		}
