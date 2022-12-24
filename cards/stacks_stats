@@ -1,7 +1,7 @@
 			STACKS STATS
 			============
 
-1,000,000 boards of 6 3-card stacks using 6pack.c
+1,000,000 boards of 6 3-card stacks using stacks.c
 
 1 or more stack of:	# boards:
 -------------------	---------

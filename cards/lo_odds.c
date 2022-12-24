@@ -231,6 +231,29 @@ struct playset sixpack_playset[] = {
     { { 16, 17, 18 }, 3 },
 };
 
+#define SEVENPACK_NCARDS_BOARD 21
+char sevenpack_name[] = "SEVENPACK";
+
+char sevenpack_board_pattern[] = "\
+1  2  3     \n\
+4  5  6     \n\
+7  8  9     \n\
+10  11  12  \n\
+13  14  15  \n\
+16  17  18  \n\
+19  20  21  \n\
+";
+
+struct playset sevenpack_playset[] = {
+    { { 1, 2, 3 }, 3 },
+    { { 4, 5, 6 }, 3 },
+    { { 7, 8, 9 }, 3 },
+    { { 10, 11, 12 }, 3 },
+    { { 13, 14, 15 }, 3 },
+    { { 16, 17, 18 }, 3 },
+    { { 19, 20, 21 }, 3 },
+};
+
 #define TWELVEANGRY_NCARDS_BOARD 12
 char twelveangry_name[] = "12ANGRY";
 
@@ -327,6 +350,13 @@ struct game games[] = {
         sixpack_board_pattern,
         sixpack_playset,
         sizeof (sixpack_playset) / sizeof (struct playset)
+    },
+    {  /* 3 */
+        sevenpack_name,
+        SEVENPACK_NCARDS_BOARD,
+        sevenpack_board_pattern,
+        sevenpack_playset,
+        sizeof (sevenpack_playset) / sizeof (struct playset)
     },
     {  /* 4 */
         twelveangry_name,
