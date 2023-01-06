@@ -138,14 +138,14 @@ function component(width, height, color, x, y, type) {
     this.width = width;
     this.height = height;
     this.speedX = 0;
-    this.speedY = 0;    
+    this.speedY = 0;
     this.x = x;
-    this.y = y;    
+    this.y = y;
     this.update = function() {
         ctx = myGameArea.context;
         if (this.type == "image") {
-            ctx.drawImage(this.image, 
-                this.x, 
+            ctx.drawImage(this.image,
+                this.x,
                 this.y,
                 this.width, this.height);
         } else {
@@ -155,17 +155,17 @@ function component(width, height, color, x, y, type) {
     }
     this.newPos = function() {
         this.x += this.speedX;
-        this.y += this.speedY;        
-    }    
+        this.y += this.speedY;
+    }
 }
 
 function updateGameArea() {
     myGameArea.clear();
-    myBackground.newPos();    
+    myBackground.newPos();
     myBackground.update();
     if (myGameArea.x && myGameArea.y) {
         myGamePiece.x = myGameArea.x;
-        myGamePiece.y = myGameArea.y;        
+        myGamePiece.y = myGameArea.y;
     }
 if (typeof myWell != "undefined") myWell.update();
     myGamePiece.update();
