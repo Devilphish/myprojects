@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+
+canvas {
+    border:1px solid #d3d3d3;
+    background-color: #f1f1f1;
+}
+
+</style>
+</head>
+<body onload="startGame()">
+
+<script src="discs.js"></script>
+<script src="holes.js"></script>
+
+<script>
+
+var myGamePiece;
+var myBackground;
+var myWell;
+var debug;
+
+var players = [
+  {
+    name: "ROB",
+    plots: [],
+    money: 80000,
+    nwells: 0,
+    pipelines: 0
+  },
+  {
+    name: "CHRIS",
+    plots: [],
+    money: 80000,
+    nwells: 0,
+    pipelines: 0
+  }
+];
+
+var curplayer;
+
+function wellButtonDownEvent() {
+    var h = this.hole;
+    myGamePiece.image.src = "derrick1.png";
+
+    var well = 3;
+    for (var disc = 2; disc >= 0; disc--) {
+        if (discs[disc][h.spoke][h.ring] == 1) {
+            break;
+        }
+        else {
+            well--;
+        }
+    }
+
+    debug.innerText = "DOWN WELL " + this.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring + " well: " + well;;
+}
+
+function wellButtonUpEvent() {
+    var h = this.hole;
+    debug.innerText = "UP WELL " + this.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring;;
+    myGamePiece.image.src = "derrick0.png";
+}
+
+function initButton(b) {
+    b.addEventListener("mousedown", wellButtonDownEvent);
+    b.addEventListener("mouseup", wellButtonUpEvent);
+    b.style.borderRadius = "30px";
+    b.style.width = "40px";
+    b.style.height = "40px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "0.2";
+    document.body.appendChild(b);
+}
+
+function startGame() {
+    myGamePiece = new component(200, 300, "derrick0.png", 0, 0, "image");
+    myBackground = new component(1000, 1000, "ko_board.png", 100, 0, "image");
+    debug = document.getElementById("debug");
+
+    for (var i = 0; i < holes.length; i++) {
+        var h = holes[i];
+        var x = document.createElement("BUTTON");
+        initButton(x);
+
+        x.hole = h;
+        x.id = h.id;
+        x.style.top = h.top - 18 + "px";
+        x.style.left = h.left - 20 + "px";
+    }
+
+    curplayer = players[0];;
+
+    myGameArea.start();
+}
+
+var myGameArea = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+        this.canvas.width = 1100;
+        this.canvas.height = 1000;
+//        this.canvas.style.cursor = "none"; //hide the original cursor
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.frameNo = 0;
+        this.interval = setInterval(updateGameArea, 20);
+        window.addEventListener('mousemove', function (e) {
+            myGameArea.x = e.pageX - 110;
+            myGameArea.y = e.pageY - 295;
+            debug.innerText = "X: " + e.pageX + " Y: " + e.pageY;
+        })
+//        window.addEventListener('mousedown', function (e) {
+//            myGamePiece.image.src = "derrick1.png";
+//myWell = new component(15, 50, "blue_well.png", 507, 220, "image");
+//        })
+//        window.addEventListener('mouseup', function (e) {
+//            myGamePiece.image.src = "derrick0.png";
+//        })
+    },
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    },
+    stop : function() {
+        clearInterval(this.interval);
+    }
+}
+
+function component(width, height, color, x, y, type) {
+    this.type = type;
+    if (type == "image") {
+        this.image = new Image();
+        this.image.src = color;
+    }
+    this.width = width;
+    this.height = height;
+    this.speedX = 0;
+    this.speedY = 0;    
+    this.x = x;
+    this.y = y;    
+    this.update = function() {
+        ctx = myGameArea.context;
+        if (this.type == "image") {
+            ctx.drawImage(this.image, 
+                this.x, 
+                this.y,
+                this.width, this.height);
+        } else {
+            ctx.fillStyle = color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+    }
+    this.newPos = function() {
+        this.x += this.speedX;
+        this.y += this.speedY;        
+    }    
+}
+
+function updateGameArea() {
+    myGameArea.clear();
+    myBackground.newPos();    
+    myBackground.update();
+    if (myGameArea.x && myGameArea.y) {
+        myGamePiece.x = myGameArea.x;
+        myGamePiece.y = myGameArea.y;        
+    }
+if (typeof myWell != "undefined") myWell.update();
+    myGamePiece.update();
+}
+
+function drawcard() {
+}
+
+function buyprop() {
+}
+
+function buypipe() {
+}
+
+function capwell() {
+}
+
+</script>
+
+<div style="text-align:center;width:480px;">
+  <pre id="debug"> X:  Y:  </pre>
+  <button onmousedown="drawcard()" DRAW</button><br><br>
+  <button onmousedown="buyprop()" BUY</button>
+  <button onmousedown="buypipe()" PIPE</button><br><br>
+  <button onmousedown="capwell()" CAP</button>
+</div>
+
+<p>Update the background before updating other components to make sure the other components are dispalyed on top of the background.</p>
+</body>
+</html>
