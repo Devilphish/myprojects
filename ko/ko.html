@@ -18,13 +18,15 @@ body {
 <body onload="startGame()">
 
 <script src="discs.js"></script>
-<script src="holes.js"></script>
-<script src="sheds.js"></script>
+<script src="plots.js"></script>
 
 <script>
 
 var myGamePiece;
 var myBackground;
+var myShedIcon;
+var myDerickIcon;
+var myNextIcon;
 var wells = [];
 var caps = [];
 var sheds = [];
@@ -72,7 +74,7 @@ var players = [
   },
   {
     name: "CHRIS",
-    color: "red",
+    color: "yellow",
     plots: [],
     money: 80000,
     nwells: 0,
@@ -91,23 +93,43 @@ var curplayernum;
 var curplayer;
 var curwell;
 
-var buybutton;
-var drillbutton;
-
 var drillable;
 
-function wellButtonDownEvent() {
-    drillable = 1;
+function payRoyalty()
+{
+    if (cardtype == "depletion") {
+        curplayer.money += 500;
+    }
+    else {
+        curplayer.money += curplayer.nwells * curcard.royalty;
+    }
+}
 
+function updatePlayersDisplay()
+{
+    turn.innerHTML = "PLAYERS\n";
+
+    for (var i = 0; i < players.length; i++) {
+        turn.innerHTML += players[i].name + ": $" + players[i].money + " " + players[i].nwells + " wells " + players[i].plots.length + " plots";
+        if (i == curplayernum) {
+            turn.innerHTML += " ***\n";
+        }
+        else {
+            turn.innerHTML += "\n";
+        }
+    }
+}
+
+function wellButtonDownEvent()
+{
+    drillable = 1;
     if (cursorMode != "drill") {
         drillable = 0;
     }
-
     var h = this.hole;
-    if (shedpads[h.plot - 1].owner != curplayernum) {
+    if (plots[h.plot - 1].owner != curplayernum) {
         drillable = 0;
     }
-
     if (h.drill != -1) {
         drillable = 0;
     }
@@ -147,20 +169,20 @@ function wellButtonDownEvent() {
 
         if (curwell > 0) {
             curplayer.nwells++;
-            wells[wells.length++] = new component(15, 50, "bluewell.png", h.left - 15, h.top - 50, "image");
+            wells[wells.length++] = new component(15, 50, curplayer.color + "well.png", h.left - 15, h.top - 50, "image");
         }
         else {
-            caps[caps.length++] = new component(17, 17, "bluecap.png", h.left - 17, h.top - 17, "image");
+            caps[caps.length++] = new component(17, 17, curplayer.color + "cap.png", h.left - 17, h.top - 17, "image");
         }
     }
 
     debug.innerText = "DOWN WELL " + this.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring + " well: " + h.drill + " cost: " + cost;
 
-
-    turn.innerHTML = "player: " + curplayer.name + " $" + curplayer.money + " " + curplayer.nwells + " wells " + curplayer.plots.length + " plots";
+    updatePlayersDisplay();
 }
 
-function wellButtonUpEvent() {
+function wellButtonUpEvent()
+{
     var h = this.hole;
     var cost;
 
@@ -184,42 +206,45 @@ function wellButtonUpEvent() {
     debug.innerText = "  UP WELL " + this.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring + " well: " + h.drill + " cost: " + cost;
 }
 
-function shedButtonDownEvent() {
+function shedButtonDownEvent()
+{
     var buyable = 1;
 
     if (cursorMode != "buy") {
         buyable = 0;;
     }
 
-    var s = this.shed;
-    if (s.owner != -1) {
+    var p = this.plot;
+    if (p.owner != -1) {
         buyable = 0;;
     }
 
     if (buyable) {
-        s.owner = curplayernum;
-        curplayer.plots[curplayer.plots.length] = s.plotnum;
-	curplayer.money -= s.price;
+        p.owner = curplayernum;
+        curplayer.plots[curplayer.plots.length] = p.plotnum;
+	curplayer.money -= p.price;
 
-        sheds[sheds.length++] = new component(40, 40, "blueshed.png", s.left - 28, s.top - 27, "image");
+        sheds[sheds.length++] = new component(40, 40, curplayer.color + "shed.png", p.shedpadleft - 28, p.shedpadtop - 27, "image");
 
         this.style.opacity = "0.0";
 
         drawMode();
     }
 
-    debug.innerText = "DOWN SHED " + this.id + " plot: " + s.plotnum + " $" + s.price + " owner: " + s.owner;;
+    debug.innerText = "DOWN SHED " + this.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
 
-    turn.innerHTML = "player: " + curplayer.name + " $" + curplayer.money + " " + curplayer.nwells + " wells " + curplayer.plots.length + " plots";
+    updatePlayersDisplay();
 }
 
-function shedButtonUpEvent() {
-    var s = this.shed;
+function shedButtonUpEvent()
+{
+    var p = this.plot;
 
-    debug.innerText = "  UP SHED " + this.id + " plot: " + s.plotnum + " $" + s.price + " owner: " + s.owner;;
+    debug.innerText = "  UP SHED " + this.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
 }
 
-function initWellButton(b) {
+function initWellButton(b)
+{
     b.addEventListener("mousedown", wellButtonDownEvent);
     b.addEventListener("mouseup", wellButtonUpEvent);
     b.style.borderRadius = "30px";
@@ -228,11 +253,13 @@ function initWellButton(b) {
     b.style.padding = "0px";
     b.style.position = "absolute";
     b.style.opacity = "0.2";
-    b.style.cursor = "crosshair";
+//    b.style.cursor = "crosshair";
+    b.style.cursor = "url('cursor.png'), pointer";
     document.body.appendChild(b);
 }
 
-function initShedButton(b) {
+function initShedButton(b)
+{
     b.addEventListener("mousedown", shedButtonDownEvent);
     b.addEventListener("mouseup", shedButtonUpEvent);
     b.style.border = "2px solid #4CAF50";
@@ -241,44 +268,73 @@ function initShedButton(b) {
     b.style.padding = "0px";
     b.style.position = "absolute";
     b.style.opacity = "0.5";
-    b.style.cursor = "crosshair";
+//    b.style.cursor = "crosshair";
+    b.style.cursor = "url('cursor.png'), pointer";
     document.body.appendChild(b);
 }
 
-function makeBuyButton() {
-    myShedIcon = new component(40, 40, "blueshed_button.png", 285, 807, "image", 0, 0);
-    buybutton = document.createElement("BUTTON");
-    buybutton.addEventListener("mousedown", buyMode);
-    buybutton.style.border = "0px";
-    buybutton.style.width = "40px";
-    buybutton.style.height = "40px";
-    buybutton.style.padding = "0px";
-    buybutton.style.position = "absolute";
-    buybutton.style.opacity = "0.0";
-    buybutton.style.top = 820 + "px";
-    buybutton.style.left = 293 + "px";
-    buybutton.style.cursor = "crosshair";
-    document.body.appendChild(buybutton);
+function makeBuyButton()
+{
+    myShedIcon = new component(40, 40, curplayer.color + "shed.png", 285, 807, "image", 0, 0);
+    var b = document.createElement("BUTTON");
+    b.addEventListener("mousedown", buyMode);
+    b.style.border = "0px";
+    b.style.width = "40px";
+    b.style.height = "40px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "0.0";
+    b.style.top = 820 + "px";
+    b.style.left = 293 + "px";
+//    b.style.cursor = "crosshair";
+    b.style.cursor = "url('cursor.png'), pointer";
+    document.body.appendChild(b);
 }
 
-function makeDrillButton() {
+function makeDrillButton()
+{
     myDerrickIcon = new component(200, 300, "derrick0.png", 155, 554, "image", 0, 0);
-    drillbutton = document.createElement("BUTTON");
-    drillbutton.addEventListener("mousedown", drillMode);
-    drillbutton.style.border = "0px";
-    drillbutton.style.width = "35px";
-    drillbutton.style.height = "194px";
-    drillbutton.style.padding = "0px";
-    drillbutton.style.position = "absolute";
-    drillbutton.style.opacity = "0.0";
-    drillbutton.style.top = 655 + "px";
-    drillbutton.style.left = 245 + "px";
-    drillbutton.style.cursor = "crosshair";
-    document.body.appendChild(drillbutton);
+    var b = document.createElement("BUTTON");
+    b.addEventListener("mousedown", drillMode);
+    b.style.border = "0px";
+    b.style.width = "35px";
+    b.style.height = "194px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "0.0";
+    b.style.top = 655 + "px";
+    b.style.left = 245 + "px";
+//    b.style.cursor = "crosshair";
+    b.style.cursor = "url('cursor.png'), pointer";
+    document.body.appendChild(b);
 }
 
-function startGame() {
+function makeNextButton()
+{
+    myNextIcon = new component(55, 66, "timeclock.png", 351, 802, "image", 0, 0);
+    var b = document.createElement("BUTTON");
+    b.addEventListener("mousedown", nextPlayerDownEvent);
+    b.addEventListener("mouseup", nextPlayerUpEvent);
+    b.style.border = "0px";
+    b.style.width = "55px";
+    b.style.height = "66px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "0.0";
+    b.style.top = 812 + "px";
+    b.style.left = 361 + "px";
+//    b.style.cursor = "crosshair";
+    b.style.cursor = "url('cursor.png'), pointer";
+    document.body.appendChild(b);
+}
+
+function startGame()
+{
+    curplayernum = 0;
+    curplayer = players[curplayernum];
+
     myGamePiece = new component(60, 60, "KingOilIcon.png", 0, 0, "image", 20, 20);
+    myGamePiece.enabled = 0;
     myBackground = new component(1000, 1000, "ko_board.png", 100, 0, "image", 0, 0);
 
     debug = document.getElementById("debug");
@@ -286,32 +342,31 @@ function startGame() {
 
     makeBuyButton();
     makeDrillButton();
-    for (var i = 0; i < holes.length; i++) {
-        var h = holes[i];
-        var x = document.createElement("BUTTON");
-        initWellButton(x);
+    makeNextButton();
+    for (var i = 0; i < plots.length; i++) {
+        for (var j = 0; j < plots[i].holes.length; j++) {
+            var h = plots[i].holes[j];
+            var x = document.createElement("BUTTON");
+            initWellButton(x);
 
-        x.hole = h;
-        x.id = h.id;
-        x.style.top = h.top - 18 + "px";
-        x.style.left = h.left - 20 + "px";
-    }
-    for (var i = 0; i < shedpads.length; i++) {
-        var s = shedpads[i];
-if (!s.price) continue;
+            x.hole = h;
+            x.id = h.id;
+            x.style.top = h.top - 18 + "px";
+            x.style.left = h.left - 20 + "px";
+        }
+
+        var p = plots[i];
+if (!p.price) continue;
         var x = document.createElement("BUTTON");
         initShedButton(x);
 
-        x.shed = s;
-        x.id = s.id;
-        x.style.top = s.top - 18 + "px";
-        x.style.left = s.left - 20 + "px";
+        x.plot = p;
+        x.id = p.id;
+        x.style.top = p.shedpadtop - 18 + "px";
+        x.style.left = p.shedpadleft - 20 + "px";
     }
 
-    curplayernum = 0;
-    curplayer = players[curplayernum];
-
-    turn.innerHTML = "player: " + curplayer.name + " $" + curplayer.money + " " + curplayer.nwells + " wells " + curplayer.plots.length + " plots";
+    updatePlayersDisplay();
 
     myGameArea.start();
 }
@@ -321,8 +376,7 @@ var myGameArea = {
     start : function() {
         this.canvas.width = 1100;
         this.canvas.height = 1000;
-//        this.canvas.style.cursor = "url('curs.png'), auto";
-        this.canvas.style.cursor = "pointer";
+        this.canvas.style.cursor = "url('cursor.png'), pointer";
         this.context = this.canvas.getContext("2d");
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
         this.frameNo = 0;
@@ -347,7 +401,8 @@ var myGameArea = {
     }
 }
 
-function component(width, height, image, x, y, type, xoffset, yoffset) {
+function component(width, height, image, x, y, type, xoffset, yoffset)
+{
     this.type = type;
     if (type == "image") {
         this.image = new Image();
@@ -371,11 +426,13 @@ function component(width, height, image, x, y, type, xoffset, yoffset) {
     }
 }
 
-function updateGameArea() {
+function updateGameArea()
+{
     myGameArea.clear();
     myBackground.update();
     myDerrickIcon.update();
     myShedIcon.update();
+    myNextIcon.update();
     for (var i = 0; i < wells.length; i++) {
         wells[i].update();
     }
@@ -389,16 +446,20 @@ function updateGameArea() {
         myGamePiece.x = myGameArea.x;
         myGamePiece.y = myGameArea.y;
     }
-    myGamePiece.update();
+    if (myGamePiece.enabled) {
+        myGamePiece.update();
+    }
 }
 
-function drawMode() {
+function drawMode()
+{
     setCursor(cursorKingOil);
 
     cursorMode = "draw";
 }
 
-function buyMode() {
+function buyMode()
+{
     if (cursorMode == "buy") {
         setCursor(cursorKingOil);
 
@@ -412,7 +473,8 @@ function buyMode() {
     }
 }
 
-function drillMode() {
+function drillMode()
+{
     if (cursorMode == "drill") {
         setCursor(cursorKingOil);
 
@@ -425,7 +487,14 @@ function drillMode() {
     }
 }
 
-function setCursor(cursor) {
+function setCursor(cursor)
+{
+    if (cursor == cursorKingOil) {
+        myGamePiece.enabled = 0;
+    }
+    else {
+        myGamePiece.enabled = 1;
+    }
     myGamePiece.image.src = cursor.imagesrc;
     myGamePiece.width = cursor.width;
     myGamePiece.height = cursor.height;
@@ -433,10 +502,31 @@ function setCursor(cursor) {
     myGamePiece.yoffset = cursor.yoffset;
 }
 
-function pipeMode() {
+function pipeMode()
+{
 }
 
-function capMode() {
+function capMode()
+{
+}
+
+function nextPlayerDownEvent()
+{
+    curplayernum++;
+    if (curplayernum == players.length) {
+        curplayernum = 0;
+    }
+    curplayer = players[curplayernum];
+
+    updatePlayersDisplay();
+
+    myNextIcon.image.src = "timeclockcard.png";
+    myShedIcon.image.src = curplayer.color + "shed.png";
+}
+
+function nextPlayerUpEvent()
+{
+    myNextIcon.image.src = "timeclock.png";
 }
 
 </script>
@@ -444,9 +534,8 @@ function capMode() {
 <div style="text-align:center;width:480px;">
   <pre id="debug"> X:  Y:  </pre>
   <pre id="turn"> player: </pre>
-  <button onmousedown="drawcard()"> DRAW</button><br><br>
-  <button onmousedown="buyMode()"> BUY</button>
-  <button onmousedown="pipeMode()"> PIPE</button><br><br>
+  <button onmousedown="drawcard()"> DRAW</button>
+  <button onmousedown="pipeMode()"> PIPE</button>
   <button onmousedown="capMode()"> CAP</button><br><br>
 </div>
 
