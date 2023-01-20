@@ -34,7 +34,6 @@ var sheds = [];
 var deck = [];
 var debug;
 var turn;
-var cursorMode = "action";
 var gameMode = "start";
 var errmsg = " ";
 var cardnum = 0;
@@ -46,9 +45,12 @@ var curPropertyBought = 0;
 var drillable;
 var buyable;
 var nextable;
+var toolable;
 var drawable;
+var cursor;
 
 var cursorDerrick0 = {
+    mode: "drill",
     imagesrc: "derrick0.png",
     width: 200,
     height: 300,
@@ -56,6 +58,7 @@ var cursorDerrick0 = {
     yoffset: 295
 };
 var cursorDerrick1 = {
+    mode: "drill",
     imagesrc: "derrick1.png",
     width: 200,
     height: 300,
@@ -63,6 +66,7 @@ var cursorDerrick1 = {
     yoffset: 295
 };
 var cursorKingOil = {
+    mode: "action",
     imagesrc: "KingOilIcon.png",
     width: 60,
     height: 60,
@@ -70,6 +74,7 @@ var cursorKingOil = {
     yoffset: 20
 };
 var cursorShed = {
+    mode: "buy",
     imagesrc: "blueshed.png",
     width: 40,
     height: 40,
@@ -102,6 +107,12 @@ var curcard = {
     ndrills: 0,
     plotbuy: 1
 };
+var cardNone = {
+    type: "none",
+    royalty: 0,
+    ndrills: 0,
+    plotbuy: 0
+};
 
 function updatePlayersDisplay()
 {
@@ -119,9 +130,16 @@ function updatePlayersDisplay()
             turn.innerHTML += "\n";
         }
     }
-
-    turn.innerHTML += "CARD: " + curcard.type + " royalty " + curcard.royalty + " drills allowed " + curcard.ndrills + " drills used " + curdrillsused + " plotbuy " + curcard.plotbuy;
-    turn.innerHTML += " cursorMode: " + cursorMode + " gameMode " + gameMode + "\n";
+    turn.innerHTML += "\n";
+    if (curcard.type == "none") {
+        turn.innerHTML += "CARD: " + curcard.type + "\n";
+    }
+    else {
+        turn.innerHTML += "CARD: " + curcard.type + " royalty " + curcard.royalty + " drills allowed " + curcard.ndrills + " drills used " + curdrillsused + " plotbuy " + curcard.plotbuy + "\n";
+    }
+    turn.innerHTML += "\n";
+    turn.innerHTML += "gameMode " + gameMode + " cursor.mode " + cursor.mode + "\n";
+    turn.innerHTML += "\n";
     turn.innerHTML += errmsg;
 }
 
@@ -148,15 +166,22 @@ function initDeck()
 function buyButtonDownEvent()
 {
     errmsg = " ";
+    toolable = 1;
 
-    if (cursorMode == "buy") {
-        actionMode();
+    if (cursor.mode == "drill" || cursor.mode == "cap") {
+        toolable = 0;
+        errmsg = "must put tool down to pick up new tool";
     }
-    else {
-        if (cursorMode != "drill" && cursorMode != "cap") {
-            cursorShed.imagesrc = curplayer.color + "shed.png";
-            setCursor(cursorShed);
-            cursorMode = "buy";
+
+    if (toolable) {
+        if (cursor.mode == "buy") {
+            setCursor(cursorKingOil);
+        }
+        else {
+            if (cursor.mode != "drill" && cursor.mode != "cap") {
+                cursorShed.imagesrc = curplayer.color + "shed.png";
+                setCursor(cursorShed);
+            }
         }
     }
 
@@ -170,14 +195,21 @@ function buyButtonUpEvent()
 function drillButtonDownEvent()
 {
     errmsg = " ";
+    toolable = 1;
 
-    if (cursorMode == "drill") {
-        actionMode();
+    if (cursor.mode == "buy" || cursor.mode == "cap") {
+        toolable = 0;
+        errmsg = "must put tool down to pick up new tool";
     }
-    else {
-        if (cursorMode != "buy" && cursorMode != "cap") {
-            setCursor(cursorDerrick0);
-            cursorMode = "drill";
+
+    if (toolable) {
+        if (cursor.mode == "drill") {
+            setCursor(cursorKingOil);
+        }
+        else {
+            if (cursor.mode != "buy" && cursor.mode != "cap") {
+                setCursor(cursorDerrick0);
+            }
         }
     }
 
@@ -193,37 +225,40 @@ function nextPlayerDownEvent()
     errmsg = " ";
 
     nextable = 1;
-    if (cursorMode == "draw") {
+    if (gameMode == "draw") {
         nextable = 0;
         errmsg = "must draw card";
     }
-    if (gameMode == "start" && curPropertyBought == 0) {
+    else if (gameMode == "start" && curPropertyBought == 0) {
         nextable = 0;
         errmsg = "must buy property to start game";
     }
     else if (myGamePiece.enabled) {
         nextable = 0;
-        errmsg = "must put tool down to clock-out";
+        errmsg = "must put tool down to clock out";
     }
     else if (curcard.ndrills > 0 && curdrillsused == 0) {
         nextable = 0;
-        errmsg = "must drill at least once";
+        errmsg = "must drill at least once before clocking out";
     }
 
     if (nextable) {
         curplayernum++;
         if (curplayernum == players.length) {
-            if (gameMode == "start") {
-                gameMode = "play";
-            }
             curplayernum = 0;
+
+            if (gameMode == "start") {
+                gameMode = "";
+            }
+        }
+
+        if (gameMode != "start") {
+            drawMode();
+            curcard = cardNone;
         }
         curplayer = players[curplayernum];
-
         curPropertyBought = 0;
         curdrillsused = 0;
-
-        drawMode();
 
         myNextIcon.image.src = "timeclockcard.png";
         myShedIcon.image.src = curplayer.color + "shed.png";
@@ -248,7 +283,7 @@ function drawCardDownEvent()
         drawable = 0;
         errmsg = "must buy property to start game";
     }
-    else if (cursorMode != "draw") {
+    else if (gameMode != "draw") {
         drawable = 0;
         errmsg = "cannot draw card";
     }
@@ -299,13 +334,17 @@ function wellButtonDownEvent()
     errmsg = " ";
 
     drillable = 1;
-    if (cursorMode == "draw") {
+    if (gameMode == "draw") {
         drillable = 0;
         errmsg = "must draw card";
     }
-    else if (cursorMode != "drill") {
+    else if (cursor.mode != "drill") {
         drillable = 0;
-        errmsg = "curMode != drill";
+        errmsg = "cursor.mode != drill";
+    }
+    else if (curPropertyBought) {
+        drillable = 0;
+        errmsg = "cannot drill after buying property";
     }
     else if (plots[h.plot - 1].owner != curplayernum) {
         drillable = 0;
@@ -398,25 +437,25 @@ function shedButtonDownEvent()
     errmsg = " ";
 
     buyable = 1;
-    if (cursorMode == "draw") {
+    if (gameMode == "draw") {
         buyable = 0;
         errmsg = "must draw card";
     }
-    else if (cursorMode != "buy") {
+    else if (cursor.mode != "buy") {
         buyable = 0;
-        errmsg = "cursorMode != buy";
+        errmsg = "cursor.mode != buy";
     }
-//    else if (gameMode != "start") {
-//        buyable = 0;;
-//        errmsg = "gameMode != start";
-//    }
-    else if (p.owner != -1) {
+    else if (curcard.ndrills > 0 && curdrillsused == 0) {
         buyable = 0;
-        errmsg = "plot " + p.plotnum + " already owned";
+        errmsg = "must drill at least once before buying property";
     }
     else if (curcard.plotbuy == 0) {
         buyable = 0;
-        errmsg = "cannot buy property";
+        errmsg = "no property buy permitted";
+    }
+    else if (p.owner != -1) {
+        buyable = 0;
+        errmsg = "plot " + p.plotnum + " already owned";
     }
     else if (curPropertyBought) {
         buyable = 0;
@@ -433,7 +472,12 @@ function shedButtonDownEvent()
 
         this.style.opacity = "0.0";
 
-        actionMode();
+        if (gameMode == "start") {
+            setCursor(cursorKingOil);
+        }
+        else {
+            actionMode();
+        }
     }
 
     debug.innerText = "DOWN SHED " + this.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
@@ -458,7 +502,8 @@ function initWellButton(b)
     b.style.padding = "0px";
     b.style.position = "absolute";
     b.style.opacity = "0.2";
-    b.style.cursor = "url('cursor.png'), pointer";
+//    b.style.cursor = "url('cursor.png'), pointer";
+    b.style.cursor = "auto";
     document.body.appendChild(b);
 }
 
@@ -540,6 +585,8 @@ function startGame()
     debug = document.getElementById("debug");
     turn = document.getElementById("turn");
 
+    setCursor(cursorKingOil);
+
     makeBuyButton();
     makeDrillButton();
     makeNextButton();
@@ -573,6 +620,19 @@ if (!p.price) continue;
     myGameArea.start();
 }
 
+function keyDownEvent(e)
+{
+    debug.innerHTML = "KEY DOWN " + e.code;
+
+    if (e.code == "KeyW") {
+    }
+}
+
+function keyUpEvent(e)
+{
+    debug.innerHTML = "  KEY UP " + e.code;
+}
+
 var myGameArea = {
     canvas : document.createElement("canvas"),
     start : function() {
@@ -583,6 +643,8 @@ var myGameArea = {
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
         this.frameNo = 0;
         this.interval = setInterval(updateGameArea, 20);
+        window.addEventListener('keydown', keyDownEvent);
+        window.addEventListener('keyup', keyUpEvent);
         window.addEventListener('mousemove', function (e) {
             myGameArea.x = e.pageX - myGamePiece.xoffset;
             myGameArea.y = e.pageY - myGamePiece.yoffset;
@@ -590,10 +652,10 @@ var myGameArea = {
         })
 //        window.addEventListener('mousedown', function (e) {
 //            myGamePiece.image.src = "derrick1.png";
-//        })
+//        });
 //        window.addEventListener('mouseup', function (e) {
 //            myGamePiece.image.src = "derrick0.png";
-//        })
+//        });
     },
     clear : function() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -656,7 +718,7 @@ function updateGameArea()
 function drawMode()
 {
     setCursor(cursorKingOil);
-    cursorMode = "draw";
+    gameMode = "draw";
 
     updatePlayersDisplay();
 }
@@ -664,7 +726,7 @@ function drawMode()
 function actionMode()
 {
     setCursor(cursorKingOil);
-    cursorMode = "action";
+    gameMode = "action";
 
     updatePlayersDisplay();
 }
@@ -677,19 +739,21 @@ function capMode()
 {
 }
 
-function setCursor(cursor)
+function setCursor(c)
 {
-    if (cursor == cursorKingOil) {
+    cursor = c;
+
+    if (c == cursorKingOil) {
         myGamePiece.enabled = 0;
     }
     else {
         myGamePiece.enabled = 1;
     }
-    myGamePiece.image.src = cursor.imagesrc;
-    myGamePiece.width = cursor.width;
-    myGamePiece.height = cursor.height;
-    myGamePiece.xoffset = cursor.xoffset;
-    myGamePiece.yoffset = cursor.yoffset;
+    myGamePiece.image.src = c.imagesrc;
+    myGamePiece.width = c.width;
+    myGamePiece.height = c.height;
+    myGamePiece.xoffset = c.xoffset;
+    myGamePiece.yoffset = c.yoffset;
 }
 
 </script>

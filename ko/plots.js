@@ -72,8 +72,8 @@ const plots = [
     ]
   },
   {
-    id: "p13", plotnum: 13, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 0,
+    id: "p13", plotnum: 13, shedpadtop: 576, shedpadleft: 354,
+    owner: -1, price: 8000,
     holes: [
     ]
   },
