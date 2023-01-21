@@ -1,79 +1,79 @@
 const plots = [
   {
     id: "p1", plotnum: 1, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 0,
+    owner: -1, price: 0, nwells: 0,
     holes: [
     ]
   },
   {
     id: "p2", plotnum: 2, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 0,
+    owner: -1, price: 0, nwells: 0,
     holes: [
     ]
   },
   {
     id: "p3", plotnum: 3, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 0,
+    owner: -1, price: 0, nwells: 0,
     holes: [
     ]
   },
   {
     id: "p4", plotnum: 4, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 0,
+    owner: -1, price: 0, nwells: 0,
     holes: [
     ]
   },
   {
     id: "p5", plotnum: 5, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 0,
+    owner: -1, price: 0, nwells: 0,
     holes: [
     ]
   },
   {
     id: "p6", plotnum: 6, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 0,
+    owner: -1, price: 0, nwells: 0,
     holes: [
     ]
   },
   {
     id: "p7", plotnum: 7, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 0,
+    owner: -1, price: 0, nwells: 0,
     holes: [
     ]
   },
   {
     id: "p8", plotnum: 8, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 0,
+    owner: -1, price: 0, nwells: 0,
     holes: [
     ]
   },
   {
     id: "p9", plotnum: 9, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 0,
+    owner: -1, price: 0, nwells: 0,
     holes: [
     ]
   },
   {
     id: "p10", plotnum: 10, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 0,
+    owner: -1, price: 0, nwells: 0,
     holes: [
     ]
   },
   {
     id: "p11", plotnum: 11, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 0,
+    owner: -1, price: 0, nwells: 0,
     holes: [
     ]
   },
   {
     id: "p12", plotnum: 12, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 0,
+    owner: -1, price: 0, nwells: 0,
     holes: [
     ]
   },
   {
     id: "p13", plotnum: 13, shedpadtop: 576, shedpadleft: 354,
-    owner: -1, price: 8000,
+    owner: -1, price: 8000, nwells: 0,
     holes: [
     { id: "13a", plot: 13, spoke: 43, ring: 4, top: 666, left: 422, drill: -1 },
     { id: "13b", plot: 13, spoke: 43, ring: 6, top: 703, left: 372, drill: -1 },
@@ -87,19 +87,19 @@ const plots = [
   },
   {
     id: "p14", plotnum: 14, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 0,
+    owner: -1, price: 0, nwells: 0,
     holes: [
     ]
   },
   {
     id: "p15", plotnum: 15, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 0,
+    owner: -1, price: 0, nwells: 0,
     holes: [
     ]
   },
   {
     id: "p16", plotnum: 16, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 8000,
+    owner: -1, price: 8000, nwells: 0,
     holes: [
     { id: "16a", plot: 16, spoke: 39, ring: 3, top: 722, left: 539, drill: -1 },
     { id: "16b", plot: 16, spoke: 39, ring: 4, top: 749, left: 528, drill: -1 },
@@ -113,7 +113,7 @@ const plots = [
   },
   {
     id: "p17", plotnum: 17, shedpadtop: 700, shedpadleft: 582,
-    owner: -1, price: 12000,
+    owner: -1, price: 12000, nwells: 0,
     holes: [
     { id: "17a", plot: 17, spoke: 33, ring: 3, top: 719, left: 717, drill: -1 },
     { id: "17b", plot: 17, spoke: 34, ring: 2, top: 699, left: 678, drill: -1 },

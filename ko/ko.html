@@ -19,6 +19,7 @@ body {
 
 <script src="discs.js"></script>
 <script src="plots.js"></script>
+<script src="pipepads.js"></script>
 <script src="cards.js"></script>
 
 <script>
@@ -26,10 +27,14 @@ body {
 var myGamePiece;
 var myBackground;
 var myShedIcon;
+var myCapIcon;
+var myPipeIcon;
 var myDerickIcon;
 var myNextIcon;
+var myDrawIcon;
 var wells = [];
 var caps = [];
+var pipes = [];
 var sheds = [];
 var deck = [];
 var debug;
@@ -42,7 +47,10 @@ var curplayernum;
 var curplayer;
 var curdrillsused = 0;
 var curPropertyBought = 0;
+var curcaps = 0;
 var drillable;
+var capable;
+var pipeable;
 var buyable;
 var nextable;
 var toolable;
@@ -51,6 +59,7 @@ var cursor;
 
 var cursorDerrick0 = {
     mode: "drill",
+    type: "tool",
     imagesrc: "derrick0.png",
     width: 200,
     height: 300,
@@ -59,6 +68,7 @@ var cursorDerrick0 = {
 };
 var cursorDerrick1 = {
     mode: "drill",
+    type: "tool",
     imagesrc: "derrick1.png",
     width: 200,
     height: 300,
@@ -67,6 +77,7 @@ var cursorDerrick1 = {
 };
 var cursorKingOil = {
     mode: "action",
+    type: "select",
     imagesrc: "KingOilIcon.png",
     width: 60,
     height: 60,
@@ -75,9 +86,28 @@ var cursorKingOil = {
 };
 var cursorShed = {
     mode: "buy",
+    type: "tool",
     imagesrc: "blueshed.png",
     width: 40,
     height: 40,
+    xoffset: 30,
+    yoffset: 35
+};
+var cursorCap = {
+    mode: "cap",
+    type: "tool",
+    imagesrc: "bluecap.png",
+    width: 40,
+    height: 40,
+    xoffset: 30,
+    yoffset: 35
+};
+var cursorPipe = {
+    mode: "pipe",
+    type: "tool",
+    imagesrc: "bluepipe.png",
+    width: 30,
+    height: 100,
     xoffset: 30,
     yoffset: 35
 };
@@ -168,7 +198,7 @@ function buyButtonDownEvent()
     errmsg = " ";
     toolable = 1;
 
-    if (cursor.mode == "drill" || cursor.mode == "cap") {
+    if (cursor.type == "tool" && cursor.mode != "buy") {
         toolable = 0;
         errmsg = "must put tool down to pick up new tool";
     }
@@ -176,11 +206,15 @@ function buyButtonDownEvent()
     if (toolable) {
         if (cursor.mode == "buy") {
             setCursor(cursorKingOil);
+            myShedIcon.image.src = curplayer.color + "shed.png";
+            myShedIcon.button.style.opacity = "0.0";
         }
         else {
             if (cursor.mode != "drill" && cursor.mode != "cap") {
                 cursorShed.imagesrc = curplayer.color + "shed.png";
                 setCursor(cursorShed);
+                myShedIcon.image.src = curplayer.color + "shed_outline.png";
+                myShedIcon.button.style.opacity = "0.2";
             }
         }
     }
@@ -192,12 +226,78 @@ function buyButtonUpEvent()
 {
 }
 
+function capButtonDownEvent()
+{
+    errmsg = " ";
+    toolable = 1;
+
+    if (cursor.type == "tool" && cursor.mode != "cap") {
+        toolable = 0;
+        errmsg = "must put tool down to pick up new tool";
+    }
+
+    if (toolable) {
+        if (cursor.mode == "cap") {
+            setCursor(cursorKingOil);
+            myCapIcon.image.src = curplayer.color + "cap.png";
+            myCapIcon.button.style.opacity = "0.0";
+        }
+        else {
+            if (cursor.mode != "drill" && cursor.mode != "buy") {
+                cursorCap.imagesrc = curplayer.color + "cap.png";
+                setCursor(cursorCap);
+                myCapIcon.image.src = curplayer.color + "cap_outline.png";
+                myCapIcon.button.style.opacity = "0.2";
+            }
+        }
+    }
+
+    updatePlayersDisplay();
+}
+
+function capButtonUpEvent()
+{
+}
+
+function pipeButtonDownEvent()
+{
+    errmsg = " ";
+    toolable = 1;
+
+    if (cursor.type == "tool" && cursor.mode != "pipe") {
+        toolable = 0;
+        errmsg = "must put tool down to pick up new tool";
+    }
+
+    if (toolable) {
+        if (cursor.mode == "pipe") {
+            setCursor(cursorKingOil);
+            myPipeIcon.image.src = curplayer.color + "pipe.png";
+            myPipeIcon.button.style.opacity = "0.0";
+        }
+        else {
+            if (cursor.mode != "drill" && cursor.mode != "cap") {
+                cursorPipe.imagesrc = curplayer.color + "pipe.png";
+                setCursor(cursorPipe);
+                myPipeIcon.image.src = curplayer.color + "pipe.png";
+                myPipeIcon.button.style.opacity = "0.5";
+            }
+        }
+    }
+
+    updatePlayersDisplay();
+}
+
+function pipeButtonUpEvent()
+{
+}
+
 function drillButtonDownEvent()
 {
     errmsg = " ";
     toolable = 1;
 
-    if (cursor.mode == "buy" || cursor.mode == "cap") {
+    if (cursor.type == "tool" && cursor.mode != "drill") {
         toolable = 0;
         errmsg = "must put tool down to pick up new tool";
     }
@@ -205,10 +305,14 @@ function drillButtonDownEvent()
     if (toolable) {
         if (cursor.mode == "drill") {
             setCursor(cursorKingOil);
+            myDerrickIcon.image.src = "derrick0.png";
+            myDerrickIcon.button.style.opacity = "0.0";
         }
         else {
             if (cursor.mode != "buy" && cursor.mode != "cap") {
                 setCursor(cursorDerrick0);
+                myDerrickIcon.image.src = "derrick0_outline.png";
+                myDerrickIcon.button.style.opacity = "0.2";
             }
         }
     }
@@ -233,13 +337,17 @@ function nextPlayerDownEvent()
         nextable = 0;
         errmsg = "must buy property to start game";
     }
-    else if (myGamePiece.enabled) {
+    else if (cursor.type == "tool") {
         nextable = 0;
         errmsg = "must put tool down to clock out";
     }
     else if (curcard.ndrills > 0 && curdrillsused == 0) {
         nextable = 0;
         errmsg = "must drill at least once before clocking out";
+    }
+    else if (curcaps > 0) {
+        nextable = 0;
+        errmsg = "must cap " + curcaps + " more wells before clocking out";
     }
 
     if (nextable) {
@@ -259,9 +367,27 @@ function nextPlayerDownEvent()
         curplayer = players[curplayernum];
         curPropertyBought = 0;
         curdrillsused = 0;
+        curcaps = 0;
 
         myNextIcon.image.src = "timeclockcard.png";
         myShedIcon.image.src = curplayer.color + "shed.png";
+        myCapIcon.image.src = curplayer.color + "cap.png";
+        myPipeIcon.image.src = curplayer.color + "pipe.png";
+
+errmsg = "" + curplayer.plots.length;
+
+        for (var i = 0; i < curplayer.plots.length; i++) {
+            var p = plots[curplayer.plots[i] - 1];
+errmsg += " plotnum: " + p.plotnum + " nwells: " + p.nwells;
+            var piperoyalty = p.nwells * 1000;
+            for (j = 0; j < p.pipesto.length; j++) {
+                ownerFrom = plots[p.pipesto[j].from - 1].owner;
+                players[ownerFrom].money += piperoyalty;
+                curplayer.money -= piperoyalty;
+
+errmsg += " ROYALTY $" + piperoyalty + " paid by " + curplayer.name + " to " + players[ownerFrom].name + "\n";
+            }
+        }
     }
 
     updatePlayersDisplay();
@@ -294,6 +420,11 @@ function drawCardDownEvent()
 
         cardnum = Math.floor((Math.random() * deck.length) + 1) - 1;
         curcard = deck[cardnum];
+        if (curcard.type == "fire") {
+            curcaps = 1;
+        }
+
+        payRoyalty();
 
         for (var i = cardnum; i < (deck.length - 1); i++) {
             deck[i] = deck[i + 1];
@@ -334,29 +465,58 @@ function wellButtonDownEvent()
     errmsg = " ";
 
     drillable = 1;
+    capable = 1;
     if (gameMode == "draw") {
         drillable = 0;
+        capable = 0;
         errmsg = "must draw card";
     }
-    else if (cursor.mode != "drill") {
-        drillable = 0;
-        errmsg = "cursor.mode != drill";
+    else if (cursor.mode == "drill") {
+        capable = 0;
+        if (curPropertyBought) {
+            drillable = 0;
+            errmsg = "cannot drill after buying property";
+        }
+        else if (curdrillsused == curcard.ndrills) {
+            drillable = 0;
+            errmsg = "no more drills permitted";
+        }
+        else if (plots[h.plot - 1].owner != curplayernum) {
+            drillable = 0;
+            errmsg = "don't own plot " + h.plot;
+        }
+        else if (h.drill != -1) {
+            drillable = 0;
+            errmsg = "already drilled";
+        }
     }
-    else if (curPropertyBought) {
+    else if (cursor.mode == "cap") {
         drillable = 0;
-        errmsg = "cannot drill after buying property";
+        if (curcard.type != "fire") {
+            capable = 0;
+            errmsg = "no caps permitted";
+        }
+        else if (plots[h.plot - 1].owner != curplayernum) {
+            capable = 0;
+            errmsg = "don't own plot " + h.plot;
+        }
+        else if (h.drill == -1) {
+            capable = 0;
+            errmsg = "no well to cap";
+        }
+        else if (h.drill == 0) {
+            capable = 0;
+            errmsg = "already capped";
+        }
+        else if (curcaps == 0) {
+            capable = 0;
+            errmsg = "no more caps permitted";
+        }
     }
-    else if (plots[h.plot - 1].owner != curplayernum) {
+    else {
         drillable = 0;
-        errmsg = "don't own plot " + h.plot;
-    }
-    else if (h.drill != -1) {
-        drillable = 0;
-        errmsg = "already drilled";
-    }
-    else if (curdrillsused == curcard.ndrills) {
-        drillable = 0;
-        errmsg = "no more drills permitted";
+        capable = 0;
+        errmsg = "cursor.mode != cap or drill";
     }
 
     if (drillable) {
@@ -372,6 +532,23 @@ function wellButtonDownEvent()
             }
         }
         h.drill = curwell;
+    }
+    else if (capable) {
+        h.drill = 0;
+        curplayer.nwells--;
+        plots[h.plot - 1].nwells--;
+        curcaps--;
+
+        caps[caps.length++] = new component(25, 25, curplayer.color + "cap.png", h.left - 21, h.top - 25, "image");
+
+        for (var i = wells.indexOf(h.well); i < (wells.length - 1); i++) {
+            wells[i] = wells[i + 1];
+        }
+        wells.length--;
+
+        actionMode();
+        myCapIcon.image.src = curplayer.color + "cap.png";
+        myCapIcon.button.style.opacity = "0.0";
     }
 
     var cost;
@@ -394,7 +571,9 @@ function wellButtonDownEvent()
 
         if (curwell > 0) {
             curplayer.nwells++;
-            wells[wells.length++] = new component(18, 60, curplayer.color + "well.png", h.left - 16, h.top - 60, "image");
+            plots[h.plot - 1].nwells++;
+            h.well = new component(18, 60, curplayer.color + "well.png", h.left - 16, h.top - 60, "image");
+            wells[wells.length++] = h.well;
         }
         else {
             caps[caps.length++] = new component(25, 25, curplayer.color + "cap.png", h.left - 21, h.top - 25, "image");
@@ -478,6 +657,8 @@ function shedButtonDownEvent()
         else {
             actionMode();
         }
+        myShedIcon.image.src = curplayer.color + "shed.png";
+        myShedIcon.button.style.opacity = "0.0";
     }
 
     debug.innerText = "DOWN SHED " + this.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
@@ -490,6 +671,68 @@ function shedButtonUpEvent()
     var p = this.plot;
 
     debug.innerText = "  UP SHED " + this.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
+}
+
+function layPipeButtonDownEvent()
+{
+    var p = this.pipepad;
+    errmsg = " ";
+
+    pipeable = 1;
+    if (gameMode == "draw") {
+        pipeable = 0;
+        errmsg = "must draw card";
+    }
+    else if (cursor.mode != "pipe") {
+        pipeable = 0;
+        errmsg = "cursor.mode != pipe";
+    }
+    else if (p.owner != -1 && p.owner != curplayernum) {
+        pipeable = 0;
+        errmsg = "pipe " + p.id + " already owned";
+    }
+    else if (p.count == 3) {
+        pipeable = 0;
+        errmsg = "pipe " + p.id + " maxed out";
+    }
+
+    if (pipeable) {
+        var pipeto;
+        var pipefrom;
+
+// verify pipe button plotnumA or plotnumB (not both) is owned by curplayer
+// verify enough wells on pipefrom
+        if (plots[p.plotnumA - 1].owner == curplayernum) {
+            pipeto = p.plotnumB;
+            pipefrom = p.plotnumA;
+        }
+        else {
+            pipeto = p.plotnumA;
+            pipefrom = p.plotnumB;
+        }
+
+        p.pipe = new component(30, 100, curplayer.color + "pipe.png", p.pipepadleft - 28, p.pipepadtop - 27, "image");
+        p.owner = curplayernum;
+        p.count++;
+
+        p.pipe.to = pipeto;
+        p.pipe.from = pipefrom;
+
+        pipes[pipes.length++] = p.pipe;
+
+        var pipesto = plots[p.pipe.to - 1].pipesto;
+        var pipesfrom = plots[p.pipe.from - 1].pipesfrom;
+        pipesto[pipesto.length++] = p.pipe;
+        pipesfrom[pipesfrom.length++] = p.pipe;
+    }
+
+    debug.innerText = "DOWN PIPE " + this.id + " plotnumA: " + p.plotnumA + " plotnumB: " + p.plotnumB + " count: " + p.count;
+
+    updatePlayersDisplay();
+}
+
+function layPipeButtonUpEvent()
+{
 }
 
 function initWellButton(b)
@@ -521,6 +764,20 @@ function initShedButton(b)
     document.body.appendChild(b);
 }
 
+function initLayPipeButton(b)
+{
+    b.addEventListener("mousedown", layPipeButtonDownEvent);
+    b.addEventListener("mouseup", layPipeButtonUpEvent);
+    b.style.border = "2px solid #4CAF50";
+    b.style.width = "40px";
+    b.style.height = "40px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "0.5";
+    b.style.cursor = "url('cursor.png'), pointer";
+    document.body.appendChild(b);
+}
+
 function makeBuyButton()
 {
     myShedIcon = new component(40, 40, curplayer.color + "shed.png", 285, 807, "image", 0, 0);
@@ -536,6 +793,46 @@ function makeBuyButton()
     b.style.left = 293 + "px";
     b.style.cursor = "url('cursor.png'), pointer";
     document.body.appendChild(b);
+
+    myShedIcon.button = b;
+}
+
+function makeCapButton()
+{
+    myCapIcon = new component(40, 40, curplayer.color + "cap.png", 285, 755, "image", 0, 0);
+    var b = document.createElement("BUTTON");
+    b.addEventListener("mousedown", capButtonDownEvent);
+    b.style.border = "0px";
+    b.style.width = "40px";
+    b.style.height = "40px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "0.0";
+    b.style.top = 767 + "px";
+    b.style.left = 293 + "px";
+    b.style.cursor = "url('cursor.png'), pointer";
+    document.body.appendChild(b);
+
+    myCapIcon.button = b;
+}
+
+function makePipeButton()
+{
+    myPipeIcon = new component(30, 100, curplayer.color + "pipe.png", 290, 644, "image", 0, 0);
+    var b = document.createElement("BUTTON");
+    b.addEventListener("mousedown", pipeButtonDownEvent);
+    b.style.border = "0px";
+    b.style.width = "30px";
+    b.style.height = "100px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "0.0";
+    b.style.top = 654 + "px";
+    b.style.left = 295 + "px";
+    b.style.cursor = "url('cursor.png'), pointer";
+    document.body.appendChild(b);
+
+    myPipeIcon.button = b;
 }
 
 function makeDrillButton()
@@ -553,6 +850,8 @@ function makeDrillButton()
     b.style.left = 245 + "px";
     b.style.cursor = "url('cursor.png'), pointer";
     document.body.appendChild(b);
+
+    myDerrickIcon.button = b;
 }
 
 function makeNextButton()
@@ -571,6 +870,28 @@ function makeNextButton()
     b.style.left = 361 + "px";
     b.style.cursor = "url('cursor.png'), pointer";
     document.body.appendChild(b);
+
+    myNextIcon.button = b;
+}
+
+function makeDrawButton()
+{
+    myDrawIcon = new component(55, 66, "timeclock.png", 584, 498, "image", 0, 0);
+    var b = document.createElement("BUTTON");
+    b.addEventListener("mousedown", drawCardDownEvent);
+    b.addEventListener("mouseup", drawCardUpEvent);
+    b.style.border = "0px";
+    b.style.width = "55px";
+    b.style.height = "66px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "0.5";
+    b.style.top = 508 + "px";
+    b.style.left = 594 + "px";
+    b.style.cursor = "url('cursor.png'), pointer";
+    document.body.appendChild(b);
+
+    myDrawIcon.button = b;
 }
 
 function startGame()
@@ -588,11 +909,15 @@ function startGame()
     setCursor(cursorKingOil);
 
     makeBuyButton();
+    makeCapButton();
+    makePipeButton();
     makeDrillButton();
     makeNextButton();
+    makeDrawButton();
     for (var i = 0; i < plots.length; i++) {
         for (var j = 0; j < plots[i].holes.length; j++) {
             var h = plots[i].holes[j];
+            h.well = {};
             var x = document.createElement("BUTTON");
             initWellButton(x);
 
@@ -603,14 +928,24 @@ function startGame()
         }
 
         var p = plots[i];
+        p.pipesto = [];
+        p.pipesfrom = [];
 if (!p.price) continue;
         var x = document.createElement("BUTTON");
         initShedButton(x);
-
         x.plot = p;
         x.id = p.id;
         x.style.top = p.shedpadtop - 18 + "px";
         x.style.left = p.shedpadleft - 20 + "px";
+    }
+    for (var i = 0; i < pipepads.length; i++) {
+        var p = pipepads[i];
+        var x = document.createElement("BUTTON");
+        initLayPipeButton(x);
+        x.pipepad = p;
+        x.id = p.id;
+        x.style.top = p.pipepadtop - 18 + "px";
+        x.style.left = p.pipepadleft - 20 + "px";
     }
 
     initDeck();
@@ -638,7 +973,8 @@ var myGameArea = {
     start : function() {
         this.canvas.width = 1100;
         this.canvas.height = 1000;
-        this.canvas.style.cursor = "url('cursor.png'), pointer";
+//        this.canvas.style.cursor = "url('cursor.png'), pointer";
+        this.canvas.style.cursor = "auto";
         this.context = this.canvas.getContext("2d");
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
         this.frameNo = 0;
@@ -696,12 +1032,18 @@ function updateGameArea()
     myBackground.update();
     myDerrickIcon.update();
     myShedIcon.update();
+    myCapIcon.update();
+    myPipeIcon.update();
     myNextIcon.update();
+    myDrawIcon.update();
     for (var i = 0; i < wells.length; i++) {
         wells[i].update();
     }
     for (var i = 0; i < caps.length; i++) {
         caps[i].update();
+    }
+    for (var i = 0; i < pipes.length; i++) {
+        pipes[i].update();
     }
     for (var i = 0; i < sheds.length; i++) {
         sheds[i].update();
@@ -731,14 +1073,6 @@ function actionMode()
     updatePlayersDisplay();
 }
 
-function pipeMode()
-{
-}
-
-function capMode()
-{
-}
-
 function setCursor(c)
 {
     cursor = c;
@@ -762,10 +1096,7 @@ function setCursor(c)
   <pre id="debug"> X:  Y:  </pre>
   <pre id="turn"> player: </pre>
   <button onmousedown="drawCardDownEvent()" onmouseup="drawCardUpEvent()"> DRAW</button>
-  <button onmousedown="pipeMode()"> PIPE</button>
-  <button onmousedown="capMode()"> CAP</button><br><br>
+  <button onmousedown="pipeButtonDownEvent()" onmouseup="pipeButtonUpEvent()"> PIPE</button><br><br>
 </div>
-
-<p>Update the background before updating other components to make sure the other components are dispalyed on top of the background.</p>
 </body>
 </html>
