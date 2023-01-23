@@ -87,9 +87,19 @@ const plots = [
     ]
   },
   {
-    id: "p14", plotnum: 14, shedpadtop: 752, shedpadleft: 392,
-    owner: -1, price: 0, nwells: 0,
+    id: "p14", plotnum: 14, shedpadtop: 595, shedpadleft: 543,
+    owner: -1, price: 10000, nwells: 0,
     holes: [
+    { id: "14a", plot: 14, spoke: 34, ring: 0, top: 639, left: 663, drill: -1 },
+    { id: "14b", plot: 14, spoke: 35, ring: 1, top: 674, left: 650, drill: -1 },
+    { id: "14c", plot: 14, spoke: 38, ring: 0, top: 640, left: 592, drill: -1 },
+    { id: "14d", plot: 14, spoke: 39, ring: 1, top: 663, left: 564, drill: -1 },
+    { id: "14e", plot: 14, spoke: 40, ring: 0, top: 626, left: 559, drill: -1 },
+    { id: "14f", plot: 14, spoke: 41, ring: 1, top: 640, left: 525, drill: -1 },
+    { id: "14g", plot: 14, spoke: 41, ring: 2, top: 665, left: 506, drill: -1 },
+    { id: "14h", plot: 14, spoke: 43, ring: 2, top: 629, left: 470, drill: -1 },
+    { id: "14i", plot: 14, spoke: 44, ring: 0, top: 576, left: 508, drill: -1 },
+    { id: "14j", plot: 14, spoke: 45, ring: 1, top: 572, left: 472, drill: -1 },
     ]
   },
   {

@@ -52,6 +52,7 @@ var curplayer;
 var curdrillsused = 0;
 var curPropertyBought = 0;
 var curcaps = 0;
+var curnpiperemove = 0;
 var drillable;
 var capable;
 var pipeable;
@@ -378,6 +379,10 @@ function nextPlayerDownEvent()
         nextable = 0;
         errmsg = "must cap " + curcaps + " more wells before clocking out";
     }
+    else if (curnpiperemove > 0) {
+        nextable = 0;
+        errmsg = "must remove " + curnpiperemove + " more pipelines before clocking out";
+    }
     if (sandbox) {
         nextable = 1;
     }
@@ -401,6 +406,7 @@ function nextPlayerDownEvent()
         curPropertyBought = 0;
         curdrillsused = 0;
         curcaps = 0;
+        curnpiperemove = 0;
 
         payPipeRoyalty();
 
@@ -577,9 +583,18 @@ function wellButtonDownEvent()
         curplayer.nwells--;
         curcaps--;
 
-        plots[h.plot - 1].nwells--;
-// ensure new nwells can support all existing pipes from this plot
-// require removing pipes if not
+        var plot = plots[h.plot - 1];
+        plot.nwells--;
+
+        var plotpipesfrom = 0;
+        for (i = 0; i < plot.pipepadsfrom.length; i++) {
+            plotpipesfrom += plot.pipepadsfrom[i].pipes.length;
+        }
+        var minwells = plotpipesfrom + 3;
+        if (plot.nwells < minwells) {
+            curnpiperemove = minwells - plot.nwells;
+            errmsg = "not enough wells for " + plotpipesfrom + " pipes from plot " + plot.id + ", must remove " + curnpiperemove + " pipes";
+        }
 
         caps[caps.length++] = new component(25, 25, curplayer.color + "cap.png", h.left - 21, h.top - 25, "image");
 
@@ -718,7 +733,7 @@ function shedButtonUpEvent()
     debug.innerText = "  UP SHED " + this.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
 }
 
-function layPipeButtonDownEvent()
+function pipePadButtonDownEvent()
 {
     var p = this.pipepad;
     var count = p.pipes.length;
@@ -768,9 +783,16 @@ function layPipeButtonDownEvent()
             pipefrom = p.plotnumB;
         }
 
-        var minwells = p.pipes.length + 4;
-        if (plots[pipefrom - 1].nwells < minwells) {
-            errmsg = "not enough wells for " + (p.pipes.length + 1) + " pipe" + p.pipes.length > 0 ? "s" : "";
+        var plot = plots[pipefrom - 1];
+        var plotpipesfrom = 0;
+        for (i = 0; i < plot.pipepadsfrom.length; i++) {
+            plotpipesfrom += plot.pipepadsfrom[i].pipes.length;
+        }
+        // we're about to add another pipe
+        plotpipesfrom++;
+        var minwells = plotpipesfrom + 3;
+        if (plot.nwells < minwells && sandbox == 0) {
+            errmsg = "not enough wells for " + plotpipesfrom + " pipes from plot " + plot.id;
         }
         else {
             var leftoffset;
@@ -816,7 +838,7 @@ function layPipeButtonDownEvent()
     updatePlayersDisplay();
 }
 
-function layPipeButtonUpEvent()
+function pipePadButtonUpEvent()
 {
 }
 
@@ -873,8 +895,8 @@ function initShedButton(b)
 
 function initLayPipeButton(b)
 {
-    b.addEventListener("mousedown", layPipeButtonDownEvent);
-    b.addEventListener("mouseup", layPipeButtonUpEvent);
+    b.addEventListener("mousedown", pipePadButtonDownEvent);
+    b.addEventListener("mouseup", pipePadButtonUpEvent);
     b.style.borderRadius = "30px";
     b.style.border = "2px solid #4CAF50";
     b.style.width = "40px";
@@ -1004,7 +1026,6 @@ function makeDrawButton()
 
 function makeDebugButton()
 {
-//    myDrawIcon = new component(55, 66, "wildcat.png", 126, 674, "image", 0, 0);
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", debugButtonDownEvent);
     b.addEventListener("mouseup", debugButtonUpEvent);
@@ -1021,7 +1042,6 @@ function makeDebugButton()
     document.body.appendChild(b);
 
     sandboxButton = b;
-//    myDrawIcon.button = b;
 }
 
 function makeCardDisplay()
@@ -1231,7 +1251,7 @@ function setCursor(c)
 </script>
 
 <div style="text-align:center;width:480px;">
-  <pre id="debug"> X:  Y:  </pre>
+  <pre id="debug" font-weight="bold"> X:  Y:  </pre>
   <pre id="turn"> player: </pre>
   <button onmousedown="drawCardDownEvent()" onmouseup="drawCardUpEvent()"> DRAW</button>
   <button onmousedown="pipeButtonDownEvent()" onmouseup="pipeButtonUpEvent()"> PIPE</button><br><br>
