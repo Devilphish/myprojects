@@ -25,7 +25,7 @@ body {
 <script>
 
 var sandbox = 0;
-var sandboxButton;
+var debugButton;
 
 var myGamePiece;
 var myBackground;
@@ -53,14 +53,20 @@ var curdrillsused = 0;
 var curPropertyBought = 0;
 var curcaps = 0;
 var curnpiperemove = 0;
+var curremovedpipepad = pipepadNone;
 var drillable;
 var capable;
 var pipeable;
+var removepipeable;
 var buyable;
 var nextable;
 var toolable;
 var drawable;
 var cursor;
+
+var pipepadNone = {
+    id: "none"
+}
 
 var cursorDerrick0 = {
     mode: "drill",
@@ -223,6 +229,14 @@ function initDeck()
     }
 }
 
+function arrayRemove(array, element)
+{
+        for (var i = array.indexOf(element); i < (array.length - 1); i++) {
+            array[i] = array[i + 1];
+        }
+        array.length--;
+}
+
 function buyButtonDownEvent()
 {
     errmsg = " ";
@@ -304,6 +318,7 @@ function pipeButtonDownEvent()
             setCursor(cursorKingOil);
             myPipeIcon.image.src = curplayer.color + "pipe.png";
             myPipeIcon.button.style.opacity = "0.0";
+            curremovedpipepad = pipepadNone;
         }
         else {
             if (cursor.mode != "drill" && cursor.mode != "cap") {
@@ -587,7 +602,7 @@ function wellButtonDownEvent()
         plot.nwells--;
 
         var plotpipesfrom = 0;
-        for (i = 0; i < plot.pipepadsfrom.length; i++) {
+        for (var i = 0; i < plot.pipepadsfrom.length; i++) {
             plotpipesfrom += plot.pipepadsfrom[i].pipes.length;
         }
         var minwells = plotpipesfrom + 3;
@@ -598,10 +613,11 @@ function wellButtonDownEvent()
 
         caps[caps.length++] = new component(25, 25, curplayer.color + "cap.png", h.left - 21, h.top - 25, "image");
 
-        for (var i = wells.indexOf(h.well); i < (wells.length - 1); i++) {
-            wells[i] = wells[i + 1];
-        }
-        wells.length--;
+//        for (var i = wells.indexOf(h.well); i < (wells.length - 1); i++) {
+//            wells[i] = wells[i + 1];
+//        }
+//        wells.length--;
+        arrayRemove(wells, h.well);
 
         actionMode();
         myCapIcon.image.src = curplayer.color + "cap.png";
@@ -740,34 +756,60 @@ function pipePadButtonDownEvent()
     errmsg = " ";
 
     pipeable = 1;
+    removepipeable = 1;
     if (gameMode == "draw") {
         pipeable = 0;
+        removepipeable = 0;
         errmsg = "must draw card";
     }
-    else if (cursor.mode != "pipe") {
-        pipeable = 0;
-        errmsg = "cursor.mode != pipe";
+    else if (cursor.mode == "pipe") {
+        removepipeable = 0;
+        if (curremovedpipepad != pipepadNone && curremovedpipepad != p) {
+            pipeable = 0;
+            errmsg = "can place removed pipe only on pipe pad from which pipe was removed (pipe pad " + curremovedpipepad.id + ")";
+        }
+        else if (p.owner != -1 && p.owner != curplayernum) {
+            pipeable = 0;
+            errmsg = "don't own pipe site " + p.id;
+        }
+        else if (plots[p.plotnumA - 1].owner != curplayernum &&
+                 plots[p.plotnumB - 1].owner != curplayernum) {
+            pipeable = 0;
+            errmsg = "don't own either pipe site plot of " + p.id + " (" + p.plotnumA + "," + p.plotnumB + ")";
+        }
+        else if (plots[p.plotnumA - 1].owner == curplayernum &&
+                 plots[p.plotnumB - 1].owner == curplayernum) {
+            pipeable = 0;
+            errmsg = "you own both pipe site plots of " + p.id;
+        }
+        else if (count == 3) {
+            pipeable = 0;
+            errmsg = "pipe site " + p.id + " maxed out (" + count + ")";
+        }
     }
-    else if (p.owner != -1 && p.owner != curplayernum) {
+    else if (cursor.mode == "action") {
         pipeable = 0;
-        errmsg = "don't own pipe site " + p.id;
+        if (p.pipes.length == 0) {
+            removepipeable = 0;
+            errmsg = "cursorMode != pipe";
+        }
     }
-    if (plots[p.plotnumA - 1].owner != curplayernum &&
-        plots[p.plotnumB - 1].owner != curplayernum) {
+    else {
         pipeable = 0;
-        errmsg = "don't own either pipe site plot of " + p.id + " (" + p.plotnumA + "," + p.plotnumB + ")";
-    }
-    if (plots[p.plotnumA - 1].owner == curplayernum &&
-        plots[p.plotnumB - 1].owner == curplayernum) {
-        pipeable = 0;
-        errmsg = "you own both pipe site plots of " + p.id;
-    }
-    else if (count == 3) {
-        pipeable = 0;
-        errmsg = "pipe site " + p.id + " maxed out (" + count + ")";
+        removepipeable = 0;
+        errmsg = "cursorMode != pipe";
     }
     if (sandbox) {
-        pipeable = 1;
+        if (cursor.mode == "pipe") {
+            pipeable = 1;
+            removepipeable = 0;
+        }
+        else if (cursor.mode == "action") {
+            if (p.pipes.length > 0) {
+                removepipeable = 1;
+            }
+            pipeable = 0;
+        }
     }
 
     if (pipeable) {
@@ -778,14 +820,14 @@ function pipePadButtonDownEvent()
             pipeto = p.plotnumB;
             pipefrom = p.plotnumA;
         }
-        else if (plots[p.plotnumB - 1].owner == curplayernum) {
+        else {
             pipeto = p.plotnumA;
             pipefrom = p.plotnumB;
         }
 
         var plot = plots[pipefrom - 1];
         var plotpipesfrom = 0;
-        for (i = 0; i < plot.pipepadsfrom.length; i++) {
+        for (var i = 0; i < plot.pipepadsfrom.length; i++) {
             plotpipesfrom += plot.pipepadsfrom[i].pipes.length;
         }
         // we're about to add another pipe
@@ -815,7 +857,6 @@ function pipePadButtonDownEvent()
             pipe = new component(width, height, curplayer.color + "pipe_" + p.pipeorientation + ".png", leftoffset, topoffset, "image");
 
             curplayer.money -= 25000;
-            p.owner = curplayernum;
 
             pipe.to = pipeto;
             pipe.from = pipefrom;
@@ -829,8 +870,33 @@ function pipePadButtonDownEvent()
                 var pipepadsfrom = plots[pipe.from - 1].pipepadsfrom;
                 pipepadsto[pipepadsto.length++] = p;
                 pipepadsfrom[pipepadsfrom.length++] = p;
+
+                p.owner = curplayernum;
             }
+
+            curremovedpipepad = pipepadNone;
+
+            setCursor(cursorKingOil);
+            myPipeIcon.image.src = curplayer.color + "pipe.png";
+            myPipeIcon.button.style.opacity = "0.0";
         }
+    }
+    else if (removepipeable) {
+        var pipe = p.pipes.pop();
+        arrayRemove(pipes, pipe);
+        if (p.pipes.length == 0) {
+            arrayRemove(plots[pipe.from - 1].pipepadsfrom, p);
+            arrayRemove(plots[pipe.to - 1].pipepadsto, p);
+
+            p.owner = -1;
+        }
+        curnpiperemove--;
+        curremovedpipepad = p;
+
+        cursorPipe.imagesrc = curplayer.color + "pipe.png";
+        setCursor(cursorPipe);
+        myPipeIcon.image.src = curplayer.color + "pipe.png";
+        myPipeIcon.button.style.opacity = "0.5";
     }
 
     debug.innerText = "DOWN PIPE " + this.id + " plotnumA: " + p.plotnumA + " plotnumB: " + p.plotnumB + " count: " + count;
@@ -846,13 +912,16 @@ function debugButtonDownEvent()
 {
     errmsg = " ";
 
-    if (sandbox) {
+    sandbox++;
+    if (sandbox == 3) {
         sandbox = 0;
-        sandboxButton.style.backgroundColor = "lightgrey";
+        debugButton.style.backgroundColor = "lightgrey";
     }
-    else {
-        sandbox = 1;
-        sandboxButton.style.backgroundColor = "red";
+    else if (sandbox == 2) {
+errmsg = "drill all holes ";
+    }
+    else { // sandbox == 1
+        debugButton.style.backgroundColor = "red";
     }
 
     errmsg += "sandbox " + sandbox;
@@ -1041,7 +1110,7 @@ function makeDebugButton()
     b.style.backgroundColor = "lightgrey";
     document.body.appendChild(b);
 
-    sandboxButton = b;
+    debugButton = b;
 }
 
 function makeCardDisplay()
