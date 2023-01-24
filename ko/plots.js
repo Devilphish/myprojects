@@ -43,15 +43,33 @@ const plots = [
     ]
   },
   {
-    id: "p8", plotnum: 8, shedpadleft: 392, shedpadtop: 752,
-    owner: -1, price: 0, nwells: 0,
+    id: "p8", plotnum: 8, shedpadleft: 880, shedpadtop: 378,
+    owner: -1, price: 8000, nwells: 0,
     holes: [
+    { id: "8a", plot: 8, spoke: 19, ring: 2, left: 780, top: 386, drill: -1 },
+    { id: "8b", plot: 8, spoke: 20, ring: 2, left: 795, top: 408, drill: -1 },
+    { id: "8c", plot: 8, spoke: 20, ring: 4, left: 846, top: 376, drill: -1 },
+    { id: "8d", plot: 8, spoke: 21, ring: 1, left: 779, top: 442, drill: -1 },
+    { id: "8e", plot: 8, spoke: 21, ring: 4, left: 863, top: 405, drill: -1 },
+    { id: "8f", plot: 8, spoke: 21, ring: 6, left: 918, top: 383, drill: -1 },
+    { id: "8g", plot: 8, spoke: 22, ring: 3, left: 844, top: 446, drill: -1 },
+    { id: "8h", plot: 8, spoke: 22, ring: 5, left: 903, top: 430, drill: -1 },
     ]
   },
   {
-    id: "p9", plotnum: 9, shedpadleft: 392, shedpadtop: 752,
-    owner: -1, price: 0, nwells: 0,
+    id: "p9", plotnum: 9, shedpadleft: 304, shedpadtop: 489,
+    owner: -1, price: 10000, nwells: 0,
     holes: [
+    { id: "9a", plot: 9, spoke: 47, ring: 3, left: 398, top: 538, drill: -1 },
+    { id: "9b", plot: 9, spoke: 47, ring: 4, left: 370, top: 542, drill: -1 },
+    { id: "9c", plot: 9, spoke: 47, ring: 6, left: 309, top: 550, drill: -1 },
+    { id: "9d", plot: 9, spoke: 0, ring: 4, left: 368, top: 508, drill: -1 },
+    { id: "9e", plot: 9, spoke: 0, ring: 5, left: 338, top: 508, drill: -1 },
+    { id: "9f", plot: 9, spoke: 0, ring: 6, left: 310, top: 509, drill: -1 },
+    { id: "9g", plot: 9, spoke: 1, ring: 3, left: 400, top: 479, drill: -1 },
+    { id: "9h", plot: 9, spoke: 1, ring: 4, left: 369, top: 475, drill: -1 },
+    { id: "9i", plot: 9, spoke: 1, ring: 5, left: 348, top: 472, drill: -1 },
+    { id: "9j", plot: 9, spoke: 1, ring: 6, left: 311, top: 469, drill: -1 },
     ]
   },
   {
@@ -72,7 +90,7 @@ const plots = [
     { id: "11f", plot: 11, spoke: 25, ring: 1, left: 792, top: 527, drill: -1 },
     { id: "11g", plot: 11, spoke: 25, ring: 2, left: 821, top: 531, drill: -1 },
     { id: "11h", plot: 11, spoke: 26, ring: 2, left: 817, top: 556, drill: -1 },
-    { id: "11i", plot: 11, spoke: 26, ring: 3, left: 848, top: 565, drill: -1 }
+    { id: "11i", plot: 11, spoke: 26, ring: 3, left: 848, top: 565, drill: -1 },
     ]
   },
   {
@@ -86,7 +104,7 @@ const plots = [
     { id: "12e", plot: 12, spoke: 27, ring: 3, left: 838, top: 592, drill: -1 },
     { id: "12f", plot: 12, spoke: 27, ring: 5, left: 895, top: 616, drill: -1 },
     { id: "12g", plot: 12, spoke: 27, ring: 6, left: 923, top: 628, drill: -1 },
-    { id: "12h", plot: 12, spoke: 28, ring: 4, left: 853, top: 634, drill: -1 }
+    { id: "12h", plot: 12, spoke: 28, ring: 4, left: 853, top: 634, drill: -1 },
     ]
   },
   {
@@ -130,7 +148,7 @@ const plots = [
     { id: "15e", plot: 15, spoke: 30, ring: 3, left: 791, top: 668, drill: -1 },
     { id: "15f", plot: 15, spoke: 31, ring: 1, left: 729, top: 640, drill: -1 },
     { id: "15g", plot: 15, spoke: 31, ring: 2, left: 748, top: 664, drill: -1 },
-    { id: "15h", plot: 15, spoke: 32, ring: 0, left: 695, top: 627, drill: -1 }
+    { id: "15h", plot: 15, spoke: 32, ring: 0, left: 695, top: 627, drill: -1 },
     ]
   },
   {
@@ -144,7 +162,7 @@ const plots = [
     { id: "16e", plot: 16, spoke: 40, ring: 5, left: 481, top: 762, drill: -1 },
     { id: "16f", plot: 16, spoke: 41, ring: 4, left: 468, top: 716, drill: -1 },
     { id: "16g", plot: 16, spoke: 41, ring: 6, left: 430, top: 765, drill: -1 },
-    { id: "16h", plot: 16, spoke: 42, ring: 5, left: 420, top: 716, drill: -1 }
+    { id: "16h", plot: 16, spoke: 42, ring: 5, left: 420, top: 716, drill: -1 },
     ]
   },
   {
@@ -162,7 +180,7 @@ const plots = [
     { id: "17i", plot: 17, spoke: 36, ring: 5, left: 629, top: 799, drill: -1 },
     { id: "17j", plot: 17, spoke: 37, ring: 3, left: 599, top: 735, drill: -1 },
     { id: "17k", plot: 17, spoke: 37, ring: 4, left: 595, top: 767, drill: -1 },
-    { id: "17l", plot: 17, spoke: 37, ring: 5, left: 590, top: 797, drill: -1 }
+    { id: "17l", plot: 17, spoke: 37, ring: 5, left: 590, top: 797, drill: -1 },
     ]
   },
   {
@@ -180,7 +198,7 @@ const plots = [
     { id: "18i", plot: 18, spoke: 32, ring: 4, left: 760, top: 731, drill: -1 },
     { id: "18j", plot: 18, spoke: 32, ring: 5, left: 776, top: 758, drill: -1 },
     { id: "18k", plot: 18, spoke: 32, ring: 6, left: 791, top: 783, drill: -1 },
-    { id: "18l", plot: 18, spoke: 33, ring: 6, left: 753, top: 804, drill: -1 }
+    { id: "18l", plot: 18, spoke: 33, ring: 6, left: 753, top: 804, drill: -1 },
     ]
   }
 ]
