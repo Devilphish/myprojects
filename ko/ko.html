@@ -333,12 +333,9 @@ function pipeButtonDownEvent()
     if (toolable) {
         if (cursor.mode == "pipe") {
             var removeable = 1;
-            if (turn.removedpipepad != pipepadNone && turn.npiperemove == 0) {
+            if (turn.removedpipepad != pipepadNone && turn.npiperemove < 1) {
                 removeable = 0;
                 errmsg = "not allowed to remove a pipe";
-            }
-            else {
-                errmsg = "allowed to remove a pipe";
             }
             if (sandbox) {
                 removeable = 1;
@@ -940,9 +937,7 @@ function pipePadButtonDownEvent()
 
             p.owner = -1;
         }
-        if (turn.npiperemove > 0) {
-            turn.npiperemove--;
-        }
+        turn.npiperemove--;
         turn.removedpipepad = p;
 
         cursorPipe.imagesrc = turn.player.color + "pipe.png";
