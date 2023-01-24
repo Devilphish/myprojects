@@ -26,6 +26,7 @@ body {
 
 var sandbox = 0;
 var debugButton;
+var fineButton;
 
 var myGamePiece;
 var myBackground;
@@ -44,7 +45,7 @@ var deck = [];
 var debugmsg;
 var turnmsg;
 var gameMode = "start";
-var errmsg = " ";
+var errmsg = "";
 var cardnum = 0;
 var shuffled = 0;
 var drillable;
@@ -155,7 +156,8 @@ var turn = {
     propertybought: 0,
     capsdone: 0,
     npiperemove: 0,
-    removedpipepad: pipepadNone
+    fineable: 0,
+    removedpipepad: pipepadNone,
 }
 
 function updatePlayersDisplay()
@@ -191,7 +193,7 @@ function payCardRoyalty()
     var royalty;
 
     if (curcard.type == "fire") {
-        errmsg = "no royalty for fire";
+        errmsg += "no royalty for fire";
     }
     else {
         if (curcard.type == "depletion") {
@@ -202,7 +204,7 @@ function payCardRoyalty()
         }
         turn.player.money += royalty;
 
-        errmsg = "bank pays $" + royalty + " royalty to " + turn.player.name;
+        errmsg += "bank pays $" + royalty + " royalty to " + turn.player.name;
     }
 
     updatePlayersDisplay();
@@ -256,7 +258,7 @@ function arrayRemove(array, element)
 
 function buyButtonDownEvent()
 {
-    errmsg = " ";
+    errmsg = "";
     toolable = 1;
 
     if (cursor.type == "tool" && cursor.mode != "buy") {
@@ -289,7 +291,7 @@ function buyButtonUpEvent()
 
 function capButtonDownEvent()
 {
-    errmsg = " ";
+    errmsg = "";
     toolable = 1;
 
     if (cursor.type == "tool" && cursor.mode != "cap") {
@@ -322,7 +324,7 @@ function capButtonUpEvent()
 
 function pipeButtonDownEvent()
 {
-    errmsg = " ";
+    errmsg = "";
     toolable = 1;
 
     if (cursor.type == "tool" && cursor.mode != "pipe") {
@@ -333,7 +335,7 @@ function pipeButtonDownEvent()
     if (toolable) {
         if (cursor.mode == "pipe") {
             var removeable = 1;
-            if (turn.removedpipepad != pipepadNone && turn.npiperemove < 1) {
+            if (turn.removedpipepad != pipepadNone && turn.npiperemove < 0) {
                 removeable = 0;
                 errmsg = "not allowed to remove a pipe";
             }
@@ -367,7 +369,7 @@ function pipeButtonUpEvent()
 
 function drillButtonDownEvent()
 {
-    errmsg = " ";
+    errmsg = "";
     toolable = 1;
 
     if (cursor.type == "tool" && cursor.mode != "drill") {
@@ -399,7 +401,7 @@ function drillButtonUpEvent()
 
 function nextPlayerDownEvent()
 {
-    errmsg = " ";
+    errmsg = "";
 
     nextable = 1;
     if (gameMode == "draw") {
@@ -414,7 +416,12 @@ function nextPlayerDownEvent()
         nextable = 0;
         errmsg = "must put tool down to clock out";
     }
-    else if (curcard.ndrills > 0 && turn.drillsused == 0) {
+    else if (turn.fineable == 1) {
+        nextable = 0;
+        errmsg = "must pay fine";
+    }
+    else if (curcard.ndrills > 0 && turn.drillsused == 0 &&
+             turn.fineable == 0) {
         nextable = 0;
         errmsg = "must drill at least once before clocking out";
     }
@@ -445,11 +452,13 @@ function nextPlayerDownEvent()
             curcard = cardNone;
             myCardIcon.image.src = "";
         }
+
         turn.player = players[turn.playernum];
         turn.propertybought = 0;
         turn.drillsused = 0;
         turn.capsdone = 0;
         turn.npiperemove = 0;
+        turn.fineable = 0;
 
         payPipeRoyalty();
 
@@ -471,7 +480,7 @@ function drawCardDownEvent()
 {
     debugmsg.innerHTML = "DOWN DRAW card";
 
-    errmsg = " ";
+    errmsg = "";
     drawable = 1;
 
     if (gameMode == "start" && turn.propertybought == 0) {
@@ -489,9 +498,9 @@ function drawCardDownEvent()
     cardnum = -1;
     if (drawable) {
         shuffled = 0;
-
         cardnum = Math.floor((Math.random() * deck.length) + 1) - 1;
         curcard = deck[cardnum];
+
         if (curcard.type == "fire") {
             // wells = 0: cap 0, 1-5: cap 1, 6-10: cap 2, 11 or more: cap 3
             turn.capsdone = Math.floor((turn.player.nwells + 4) / 5);
@@ -500,6 +509,33 @@ function drawCardDownEvent()
             }
             errmsg = "must cap " + turn.capsdone + " wells";
         }
+        else {
+            // player must drill, check player has any empty holes
+            var emptyfound = 0;
+
+            for (var i = 0; i < turn.player.plots.length; i++) {
+                var p = plots[turn.player.plots[i] - 1];
+
+                for (j = 0; j < p.holes.length; j++) {
+                    if (p.holes[i].drill == -1) {
+                        emptyfound = 1;
+
+                        break;
+                    }
+                }
+
+                if (emptyfound == 1) {
+                    break;
+                }
+            }
+
+            if (emptyfound == 0) {
+                turn.fineable = 1;
+
+                errmsg = "no empty drill sites available, must pay fine\n";
+            }
+        }
+
         myCardIcon.image.src = curcard.imagesrc;
 
         payCardRoyalty();
@@ -729,7 +765,7 @@ function wellButtonUpEvent()
 function shedButtonDownEvent()
 {
     var p = this.plot;
-    errmsg = " ";
+    errmsg = "";
 
     buyable = 1;
     if (gameMode == "draw") {
@@ -740,7 +776,8 @@ function shedButtonDownEvent()
         buyable = 0;
         errmsg = "cursor.mode != buy";
     }
-    else if (curcard.ndrills > 0 && turn.drillsused == 0) {
+    else if (curcard.ndrills > 0 && turn.drillsused == 0 &&
+             turn.fineable == 0) {
         buyable = 0;
         errmsg = "must drill at least once before buying property";
     }
@@ -798,7 +835,7 @@ function pipePadButtonDownEvent()
 {
     var p = this.pipepad;
     var count = p.pipes.length;
-    errmsg = " ";
+    errmsg = "";
 
     pipeable = 1;
     removepipeable = 1;
@@ -904,6 +941,9 @@ function pipePadButtonDownEvent()
             if (turn.removedpipepad == pipepadNone) {
                 turn.player.money -= 25000;
             }
+            else {
+                turn.npiperemove++;
+            }
 
             pipe.to = pipeto;
             pipe.from = pipefrom;
@@ -926,6 +966,8 @@ function pipePadButtonDownEvent()
             setCursor(cursorKingOil);
             myPipeIcon.image.src = turn.player.color + "pipe.png";
             myPipeIcon.button.style.opacity = "0.0";
+
+            errmsg = "placed pipeline from plot " + plots[pipe.from - 1].id + " to plot " + plots[pipe.to - 1].id;
         }
     }
     else if (removepipeable) {
@@ -944,6 +986,8 @@ function pipePadButtonDownEvent()
         setCursor(cursorPipe);
         myPipeIcon.image.src = turn.player.color + "pipe.png";
         myPipeIcon.button.style.opacity = "0.5";
+
+        errmsg = "removed pipeline from plot " + plots[pipe.from - 1].id + " to plot " + plots[pipe.to - 1].id;
     }
 
     debugmsg.innerText = "DOWN PIPE " + this.id + " plotnumA: " + p.plotnumA + " plotnumB: " + p.plotnumB + " count: " + count;
@@ -955,9 +999,37 @@ function pipePadButtonUpEvent()
 {
 }
 
+function fineButtonDownEvent()
+{
+    errmsg = "";
+
+    if (turn.fineable == 1 || sandbox == 1) {
+        turn.player.money -= 10000;
+        turn.fineable = 2;
+
+        fineButton.innerHTML = "FINED!";
+
+        errmsg = turn.player.name + " fined $10000";
+    }
+    else if (turn.fineable == 2) {
+        errmsg = "already paid fine";
+    }
+
+    fineButton.style.backgroundColor = "red";
+
+    updatePlayersDisplay();
+}
+
+function fineButtonUpEvent()
+{
+    fineButton.innerHTML = "IT'S FINE";
+
+    fineButton.style.backgroundColor = "pink";
+}
+
 function debugButtonDownEvent()
 {
-    errmsg = " ";
+    errmsg = "";
 
     sandbox++;
     if (sandbox == 3) {
@@ -966,9 +1038,10 @@ function debugButtonDownEvent()
     }
     else if (sandbox == 2) {
 errmsg = "drill all holes ";
+        debugButton.style.backgroundColor = "green";
     }
     else { // sandbox == 1
-        debugButton.style.backgroundColor = "red";
+        debugButton.style.backgroundColor = "lightgreen";
     }
 
     errmsg += "sandbox " + sandbox;
@@ -989,7 +1062,7 @@ function initWellButton(b)
     b.style.height = "40px";
     b.style.padding = "0px";
     b.style.position = "absolute";
-    b.style.opacity = "0.2";
+    b.style.opacity = "0.5";
 //    b.style.cursor = "url('cursor.png'), pointer";
     b.style.cursor = "auto";
     document.body.appendChild(b);
@@ -1102,7 +1175,7 @@ function makeDrillButton()
 
 function makeNextButton()
 {
-    myNextIcon = new component(55, 66, "timeclock.png", 124, 762, "image", 0, 0);
+    myNextIcon = new component(55, 66, "timeclock.png", 124, 672, "image", 0, 0);
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", nextPlayerDownEvent);
     b.addEventListener("mouseup", nextPlayerUpEvent);
@@ -1112,7 +1185,7 @@ function makeNextButton()
     b.style.padding = "0px";
     b.style.position = "absolute";
     b.style.opacity = "0.0";
-    b.style.top = 772 + "px";
+    b.style.top = 682 + "px";
     b.style.left = 134 + "px";
     b.style.cursor = "url('cursor.png'), pointer";
     document.body.appendChild(b);
@@ -1122,7 +1195,7 @@ function makeNextButton()
 
 function makeDrawButton()
 {
-    myDrawIcon = new component(55, 66, "wildcat.png", 126, 674, "image", 0, 0);
+    myDrawIcon = new component(55, 66, "wildcat.png", 126, 584, "image", 0, 0);
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", drawCardDownEvent);
     b.addEventListener("mouseup", drawCardUpEvent);
@@ -1132,12 +1205,33 @@ function makeDrawButton()
     b.style.padding = "0px";
     b.style.position = "absolute";
     b.style.opacity = "0.0";
-    b.style.top = 682 + "px";
+    b.style.top = 592 + "px";
     b.style.left = 134 + "px";
     b.style.cursor = "url('cursor.png'), pointer";
     document.body.appendChild(b);
 
     myDrawIcon.button = b;
+}
+
+function makeFineButton()
+{
+    var b = document.createElement("BUTTON");
+    b.innerHTML = "IT'S FINE";
+    b.addEventListener("mousedown", fineButtonDownEvent);
+    b.addEventListener("mouseup", fineButtonUpEvent);
+    b.style.border = "0px";
+    b.style.width = "55px";
+    b.style.height = "33px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "1.0";
+    b.style.top = 772 + "px";
+    b.style.left = 134 + "px";
+    b.style.cursor = "url('cursor.png'), pointer";
+    b.style.backgroundColor = "pink";
+    document.body.appendChild(b);
+
+    fineButton = b;
 }
 
 function makeDebugButton()
@@ -1147,11 +1241,11 @@ function makeDebugButton()
     b.addEventListener("mouseup", debugButtonUpEvent);
     b.style.border = "0px";
     b.style.width = "55px";
-    b.style.height = "68px";
+    b.style.height = "33px";
     b.style.padding = "0px";
     b.style.position = "absolute";
     b.style.opacity = "1.0";
-    b.style.top = 852 + "px";
+    b.style.top = 817 + "px";
     b.style.left = 134 + "px";
     b.style.cursor = "url('cursor.png'), pointer";
     b.style.backgroundColor = "lightgrey";
@@ -1187,6 +1281,7 @@ function startGame()
     makeDrawButton();
     makeCardDisplay();
     makeDebugButton();
+    makeFineButton();
     for (var i = 0; i < plots.length; i++) {
         for (var j = 0; j < plots[i].holes.length; j++) {
             var h = plots[i].holes[j];
@@ -1372,8 +1467,6 @@ function setCursor(c)
 <div style="text-align:center;width:480px;">
   <pre id="debuglog" font-weight="bold"> X:  Y:  </pre>
   <pre id="turnlog"> player: </pre>
-  <button onmousedown="drawCardDownEvent()" onmouseup="drawCardUpEvent()"> DRAW</button>
-  <button onmousedown="pipeButtonDownEvent()" onmouseup="pipeButtonUpEvent()"> PIPE</button><br><br>
 </div>
 </body>
 </html>
