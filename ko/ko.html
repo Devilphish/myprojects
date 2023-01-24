@@ -41,19 +41,12 @@ var caps = [];
 var pipes = [];
 var sheds = [];
 var deck = [];
-var debug;
-var turn;
+var debugmsg;
+var turnmsg;
 var gameMode = "start";
 var errmsg = " ";
 var cardnum = 0;
 var shuffled = 0;
-var curplayernum;
-var curplayer;
-var curdrillsused = 0;
-var curPropertyBought = 0;
-var curcaps = 0;
-var curnpiperemove = 0;
-var curremovedpipepad = pipepadNone;
 var drillable;
 var capable;
 var pipeable;
@@ -155,42 +148,61 @@ var cardNone = {
     plotbuy: 0
 };
 
+var turn = {
+    playernum: 0,
+    player: players[0],
+    drillsused: 0,
+    propertybought: 0,
+    capsdone: 0,
+    npiperemove: 0,
+    removedpipepad: pipepadNone
+}
+
 function updatePlayersDisplay()
 {
-    turn.innerHTML = "PLAYERS\n";
+    turnmsg.innerHTML = "PLAYERS\n";
 
     for (var i = 0; i < players.length; i++) {
-        if (i == curplayernum) {
-            turn.innerHTML += " *** ";
+        if (i == turn.playernum) {
+            turnmsg.innerHTML += " *** ";
         }
-        turn.innerHTML += players[i].name + ": $" + players[i].money + " " + players[i].nwells + " wells " + players[i].plots.length + " plots";
-        if (i == curplayernum) {
-            turn.innerHTML += " ***\n";
+        turnmsg.innerHTML += players[i].name + ": $" + players[i].money + " wells: " + players[i].nwells + " plots: " + players[i].plots.length;
+        if (i == turn.playernum) {
+            turnmsg.innerHTML += " ***\n";
         }
         else {
-            turn.innerHTML += "\n";
+            turnmsg.innerHTML += "\n";
         }
     }
-    turn.innerHTML += "\n";
+    turnmsg.innerHTML += "\n";
     if (curcard.type == "none") {
-        turn.innerHTML += "CARD: " + curcard.type + "\n";
+        turnmsg.innerHTML += "CARD: " + curcard.type + "\n";
     }
     else {
-        turn.innerHTML += "CARD: " + curcard.type + " royalty " + curcard.royalty + " drills allowed " + curcard.ndrills + " drills used " + curdrillsused + " plotbuy " + curcard.plotbuy + "\n";
+        turnmsg.innerHTML += "CARD: " + curcard.type + " royalty: " + curcard.royalty + " ndrills: " + curcard.ndrills + " plotbuy: " + curcard.plotbuy + "\n";
     }
-    turn.innerHTML += "\n";
-    turn.innerHTML += "gameMode " + gameMode + " cursor.mode " + cursor.mode + "\n";
-    turn.innerHTML += "\n";
-    turn.innerHTML += errmsg;
+    turnmsg.innerHTML += "drills permitted: " + curcard.ndrills + "\ndrills completed: " + turn.drillsused + "\n";
+    turnmsg.innerHTML += "\n";
+    turnmsg.innerHTML += errmsg;
 }
 
 function payCardRoyalty()
 {
-    if (curcard.type == "depletion") {
-        curplayer.money += 500;
+    var royalty;
+
+    if (curcard.type == "fire") {
+        errmsg = "no royalty for fire";
     }
     else {
-        curplayer.money += curplayer.nwells * curcard.royalty;
+        if (curcard.type == "depletion") {
+            royalty = 500;
+        }
+        else {
+            royalty = turn.player.nwells * curcard.royalty;
+        }
+        turn.player.money += royalty;
+
+        errmsg = "bank pays $" + royalty + " royalty to " + turn.player.name;
     }
 
     updatePlayersDisplay();
@@ -198,23 +210,28 @@ function payCardRoyalty()
 
 function payPipeRoyalty()
 {
-    errmsg = "Num plots: " + curplayer.plots.length + "\n";
+//    errmsg = "Num plots: " + turn.player.plots.length + "\n";
+    errmsg = "";
 
-    for (var i = 0; i < curplayer.plots.length; i++) {
-        var p = plots[curplayer.plots[i] - 1];
+    for (var i = 0; i < turn.player.plots.length; i++) {
+        var p = plots[turn.player.plots[i] - 1];
 
-        errmsg += " plotnum: " + p.plotnum + " nwells: " + p.nwells + " pipepadsto: " + p.pipepadsto.length;
+//        errmsg += " plotnum: " + p.plotnum + " nwells: " + p.nwells + " pipepadsto: " + p.pipepadsto.length;
 
         var royalty;
         for (j = 0; j < p.pipepadsto.length; j++) {
+            if (j > 0) {
+                errmsg += "\n";
+            }
             var pipepad = p.pipepadsto[j];
             var ownerFrom = pipepad.owner;
 
             royalty = p.nwells * (1000 + ((pipepad.pipes.length - 1) * 2000));
             players[ownerFrom].money += royalty;
-            curplayer.money -= royalty;
+            turn.player.money -= royalty;
 
-            errmsg += " ROYALTY $" + royalty + " paid by " + curplayer.name + " to " + players[ownerFrom].name + "\n";
+//            errmsg += " ROYALTY $" + royalty + " paid by " + turn.player.name + " to " + players[ownerFrom].name + "\n";
+            errmsg += "royalty $" + royalty + " paid by " + turn.player.name + " to " + players[ownerFrom].name + " for plot " + p.id + "\n";
         }
     }
 
@@ -250,14 +267,14 @@ function buyButtonDownEvent()
     if (toolable) {
         if (cursor.mode == "buy") {
             setCursor(cursorKingOil);
-            myShedIcon.image.src = curplayer.color + "shed.png";
+            myShedIcon.image.src = turn.player.color + "shed.png";
             myShedIcon.button.style.opacity = "0.0";
         }
         else {
             if (cursor.mode != "drill" && cursor.mode != "cap") {
-                cursorShed.imagesrc = curplayer.color + "shed.png";
+                cursorShed.imagesrc = turn.player.color + "shed.png";
                 setCursor(cursorShed);
-                myShedIcon.image.src = curplayer.color + "shed_outline.png";
+                myShedIcon.image.src = turn.player.color + "shed_outline.png";
                 myShedIcon.button.style.opacity = "0.2";
             }
         }
@@ -283,14 +300,14 @@ function capButtonDownEvent()
     if (toolable) {
         if (cursor.mode == "cap") {
             setCursor(cursorKingOil);
-            myCapIcon.image.src = curplayer.color + "cap.png";
+            myCapIcon.image.src = turn.player.color + "cap.png";
             myCapIcon.button.style.opacity = "0.0";
         }
         else {
             if (cursor.mode != "drill" && cursor.mode != "buy") {
-                cursorCap.imagesrc = curplayer.color + "cap.png";
+                cursorCap.imagesrc = turn.player.color + "cap.png";
                 setCursor(cursorCap);
-                myCapIcon.image.src = curplayer.color + "cap_outline.png";
+                myCapIcon.image.src = turn.player.color + "cap_outline.png";
                 myCapIcon.button.style.opacity = "0.2";
             }
         }
@@ -315,16 +332,30 @@ function pipeButtonDownEvent()
 
     if (toolable) {
         if (cursor.mode == "pipe") {
-            setCursor(cursorKingOil);
-            myPipeIcon.image.src = curplayer.color + "pipe.png";
-            myPipeIcon.button.style.opacity = "0.0";
-            curremovedpipepad = pipepadNone;
+            var removeable = 1;
+            if (turn.removedpipepad != pipepadNone && turn.npiperemove == 0) {
+                removeable = 0;
+                errmsg = "not allowed to remove a pipe";
+            }
+            else {
+                errmsg = "allowed to remove a pipe";
+            }
+            if (sandbox) {
+                removeable = 1;
+            }
+
+            if (removeable) {
+                setCursor(cursorKingOil);
+                myPipeIcon.image.src = turn.player.color + "pipe.png";
+                myPipeIcon.button.style.opacity = "0.0";
+                turn.removedpipepad = pipepadNone;
+            }
         }
         else {
             if (cursor.mode != "drill" && cursor.mode != "cap") {
-                cursorPipe.imagesrc = curplayer.color + "pipe.png";
+                cursorPipe.imagesrc = turn.player.color + "pipe.png";
                 setCursor(cursorPipe);
-                myPipeIcon.image.src = curplayer.color + "pipe.png";
+                myPipeIcon.image.src = turn.player.color + "pipe.png";
                 myPipeIcon.button.style.opacity = "0.5";
             }
         }
@@ -378,7 +409,7 @@ function nextPlayerDownEvent()
         nextable = 0;
         errmsg = "must draw card";
     }
-    else if (gameMode == "start" && curPropertyBought == 0) {
+    else if (gameMode == "start" && turn.propertybought == 0) {
         nextable = 0;
         errmsg = "must buy property to start game";
     }
@@ -386,26 +417,26 @@ function nextPlayerDownEvent()
         nextable = 0;
         errmsg = "must put tool down to clock out";
     }
-    else if (curcard.ndrills > 0 && curdrillsused == 0) {
+    else if (curcard.ndrills > 0 && turn.drillsused == 0) {
         nextable = 0;
         errmsg = "must drill at least once before clocking out";
     }
-    else if (curcaps > 0) {
+    else if (turn.capsdone > 0) {
         nextable = 0;
-        errmsg = "must cap " + curcaps + " more wells before clocking out";
+        errmsg = "must cap " + turn.capsdone + " more wells before clocking out";
     }
-    else if (curnpiperemove > 0) {
+    else if (turn.npiperemove > 0) {
         nextable = 0;
-        errmsg = "must remove " + curnpiperemove + " more pipelines before clocking out";
+        errmsg = "must remove " + turn.npiperemove + " more pipelines before clocking out";
     }
     if (sandbox) {
         nextable = 1;
     }
 
     if (nextable) {
-        curplayernum++;
-        if (curplayernum == players.length) {
-            curplayernum = 0;
+        turn.playernum++;
+        if (turn.playernum == players.length) {
+            turn.playernum = 0;
 
             if (gameMode == "start") {
                 gameMode = "";
@@ -417,18 +448,18 @@ function nextPlayerDownEvent()
             curcard = cardNone;
             myCardIcon.image.src = "";
         }
-        curplayer = players[curplayernum];
-        curPropertyBought = 0;
-        curdrillsused = 0;
-        curcaps = 0;
-        curnpiperemove = 0;
+        turn.player = players[turn.playernum];
+        turn.propertybought = 0;
+        turn.drillsused = 0;
+        turn.capsdone = 0;
+        turn.npiperemove = 0;
 
         payPipeRoyalty();
 
         myNextIcon.image.src = "timeclockcard.png";
-        myShedIcon.image.src = curplayer.color + "shed.png";
-        myCapIcon.image.src = curplayer.color + "cap.png";
-        myPipeIcon.image.src = curplayer.color + "pipe.png";
+        myShedIcon.image.src = turn.player.color + "shed.png";
+        myCapIcon.image.src = turn.player.color + "cap.png";
+        myPipeIcon.image.src = turn.player.color + "pipe.png";
     }
 
     updatePlayersDisplay();
@@ -441,12 +472,12 @@ function nextPlayerUpEvent()
 
 function drawCardDownEvent()
 {
-    debug.innerHTML = "DOWN DRAW card";
+    debugmsg.innerHTML = "DOWN DRAW card";
 
     errmsg = " ";
     drawable = 1;
 
-    if (gameMode == "start" && curPropertyBought == 0) {
+    if (gameMode == "start" && turn.propertybought == 0) {
         drawable = 0;
         errmsg = "must buy property to start game";
     }
@@ -466,11 +497,11 @@ function drawCardDownEvent()
         curcard = deck[cardnum];
         if (curcard.type == "fire") {
             // wells = 0: cap 0, 1-5: cap 1, 6-10: cap 2, 11 or more: cap 3
-            curcaps = Math.floor((curplayer.nwells + 4) / 5);
-            if (curcaps > 3) {
-                curcaps = 3;
+            turn.capsdone = Math.floor((turn.player.nwells + 4) / 5);
+            if (turn.capsdone > 3) {
+                turn.capsdone = 3;
             }
-            errmsg = "must cap " + curcaps + " wells";
+            errmsg = "must cap " + turn.capsdone + " wells";
         }
         myCardIcon.image.src = curcard.imagesrc;
 
@@ -487,9 +518,9 @@ function drawCardDownEvent()
 
         actionMode();
 
-        debug.innerHTML = "DOWN DRAW card " + cardnum + " (" + deck.length + ")";
+        debugmsg.innerHTML = "DOWN DRAW card " + cardnum + " (" + deck.length + ")";
         if (shuffled) {
-            debug.innerHTML += " SHUFFLE";
+            debugmsg.innerHTML += " SHUFFLE";
         }
     }
 
@@ -498,12 +529,12 @@ function drawCardDownEvent()
 
 function drawCardUpEvent()
 {
-    debug.innerHTML = "UP DRAW card";
+    debugmsg.innerHTML = "UP DRAW card";
 
     if (cardnum != -1) {
-        debug.innerHTML = "UP DRAW card " + cardnum + " (" + deck.length + ")";
+        debugmsg.innerHTML = "UP DRAW card " + cardnum + " (" + deck.length + ")";
         if (shuffled) {
-            debug.innerHTML += " SHUFFLE";
+            debugmsg.innerHTML += " SHUFFLE";
         }
     }
 }
@@ -512,7 +543,7 @@ function wellButtonDownEvent()
 {
     var h = this.hole;
     var curwell = -1;
-    errmsg = " ";
+    errmsg = "";
 
     drillable = 1;
     capable = 1;
@@ -523,15 +554,15 @@ function wellButtonDownEvent()
     }
     else if (cursor.mode == "drill") {
         capable = 0;
-        if (curPropertyBought) {
+        if (turn.propertybought) {
             drillable = 0;
             errmsg = "cannot drill after buying property";
         }
-        else if (curdrillsused == curcard.ndrills) {
+        else if (turn.drillsused == curcard.ndrills) {
             drillable = 0;
             errmsg = "no more drills permitted";
         }
-        else if (plots[h.plot - 1].owner != curplayernum) {
+        else if (plots[h.plot - 1].owner != turn.playernum) {
             drillable = 0;
             errmsg = "don't own plot " + h.plot;
         }
@@ -546,7 +577,7 @@ function wellButtonDownEvent()
             capable = 0;
             errmsg = "no caps permitted";
         }
-        else if (plots[h.plot - 1].owner != curplayernum) {
+        else if (plots[h.plot - 1].owner != turn.playernum) {
             capable = 0;
             errmsg = "don't own plot " + h.plot;
         }
@@ -558,7 +589,7 @@ function wellButtonDownEvent()
             capable = 0;
             errmsg = "already capped";
         }
-        else if (curcaps == 0) {
+        else if (turn.capsdone == 0) {
             capable = 0;
             errmsg = "no more caps permitted";
         }
@@ -595,8 +626,8 @@ function wellButtonDownEvent()
     }
     else if (capable) {
         h.drill = 0;
-        curplayer.nwells--;
-        curcaps--;
+        turn.player.nwells--;
+        turn.capsdone--;
 
         var plot = plots[h.plot - 1];
         plot.nwells--;
@@ -606,12 +637,13 @@ function wellButtonDownEvent()
             plotpipesfrom += plot.pipepadsfrom[i].pipes.length;
         }
         var minwells = plotpipesfrom + 3;
-        if (plot.nwells < minwells) {
-            curnpiperemove = minwells - plot.nwells;
-            errmsg = "not enough wells for " + plotpipesfrom + " pipes from plot " + plot.id + ", must remove " + curnpiperemove + " pipes";
+        if (plotpipesfrom > 0 && plot.nwells < minwells) {
+            turn.npiperemove = minwells - plot.nwells;
+
+            errmsg = "not enough wells for " + plotpipesfrom + " pipes from plot " + plot.id + ", must remove " + turn.npiperemove + " pipes";
         }
 
-        caps[caps.length++] = new component(25, 25, curplayer.color + "cap.png", h.left - 21, h.top - 25, "image");
+        caps[caps.length++] = new component(25, 25, turn.player.color + "cap.png", h.left - 21, h.top - 25, "image");
 
 //        for (var i = wells.indexOf(h.well); i < (wells.length - 1); i++) {
 //            wells[i] = wells[i + 1];
@@ -620,7 +652,7 @@ function wellButtonDownEvent()
         arrayRemove(wells, h.well);
 
         actionMode();
-        myCapIcon.image.src = curplayer.color + "cap.png";
+        myCapIcon.image.src = turn.player.color + "cap.png";
         myCapIcon.button.style.opacity = "0.0";
     }
 
@@ -639,21 +671,35 @@ function wellButtonDownEvent()
     }
 
     if (curwell != -1) {
-        curplayer.money -= cost;
-        curdrillsused++;
+        turn.player.money -= cost;
+        turn.drillsused++;
 
         if (curwell > 0) {
-            curplayer.nwells++;
+            turn.player.nwells++;
             plots[h.plot - 1].nwells++;
-            h.well = new component(18, 60, curplayer.color + "well.png", h.left - 16, h.top - 60, "image");
+            h.well = new component(18, 60, turn.player.color + "well.png", h.left - 16, h.top - 60, "image");
             wells[wells.length++] = h.well;
+
+            if (h.drill == 3) {
+                errmsg = "shallow";
+            }
+            else if (h.drill == 2) {
+                errmsg = "medium";
+            }
+            else if (h.drill == 1) {
+                errmsg = "deep";
+            }
         }
         else {
-            caps[caps.length++] = new component(25, 25, curplayer.color + "cap.png", h.left - 21, h.top - 25, "image");
+            caps[caps.length++] = new component(25, 25, turn.player.color + "cap.png", h.left - 21, h.top - 25, "image");
+
+            errmsg = "dry";
         }
+
+        errmsg += " well - $" + cost;
     }
 
-    debug.innerText = "DOWN WELL " + this.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring + " well: " + h.drill + " cost: " + cost;
+    debugmsg.innerText = "DOWN WELL " + this.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring + " well: " + h.drill + " cost: " + cost;
 
     updatePlayersDisplay();
 }
@@ -680,7 +726,7 @@ function wellButtonUpEvent()
         setCursor(cursorDerrick0);
     }
 
-    debug.innerText = "  UP WELL " + this.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring + " well: " + h.drill + " cost: " + cost;
+    debugmsg.innerText = "  UP WELL " + this.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring + " well: " + h.drill + " cost: " + cost;
 }
 
 function shedButtonDownEvent()
@@ -697,7 +743,7 @@ function shedButtonDownEvent()
         buyable = 0;
         errmsg = "cursor.mode != buy";
     }
-    else if (curcard.ndrills > 0 && curdrillsused == 0) {
+    else if (curcard.ndrills > 0 && turn.drillsused == 0) {
         buyable = 0;
         errmsg = "must drill at least once before buying property";
     }
@@ -709,7 +755,7 @@ function shedButtonDownEvent()
         buyable = 0;
         errmsg = "plot " + p.plotnum + " already owned";
     }
-    else if (curPropertyBought) {
+    else if (turn.propertybought) {
         buyable = 0;
         errmsg = "already bought property this turn";
     }
@@ -718,12 +764,14 @@ function shedButtonDownEvent()
     }
 
     if (buyable) {
-        curPropertyBought = 1;
-        p.owner = curplayernum;
-        curplayer.plots[curplayer.plots.length++] = p.plotnum;
-	curplayer.money -= p.price;
+        turn.propertybought = 1;
+        p.owner = turn.playernum;
+        turn.player.plots[turn.player.plots.length++] = p.plotnum;
+	turn.player.money -= p.price;
 
-        sheds[sheds.length++] = new component(40, 40, curplayer.color + "shed.png", p.shedpadleft - 28, p.shedpadtop - 27, "image");
+        errmsg = "bought plot " + p.id + " for $" + p.price;
+
+        sheds[sheds.length++] = new component(40, 40, turn.player.color + "shed.png", p.shedpadleft - 28, p.shedpadtop - 27, "image");
 
         this.style.opacity = "0.0";
 
@@ -733,11 +781,11 @@ function shedButtonDownEvent()
         else {
             actionMode();
         }
-        myShedIcon.image.src = curplayer.color + "shed.png";
+        myShedIcon.image.src = turn.player.color + "shed.png";
         myShedIcon.button.style.opacity = "0.0";
     }
 
-    debug.innerText = "DOWN SHED " + this.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
+    debugmsg.innerText = "DOWN SHED " + this.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
 
     updatePlayersDisplay();
 }
@@ -746,7 +794,7 @@ function shedButtonUpEvent()
 {
     var p = this.plot;
 
-    debug.innerText = "  UP SHED " + this.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
+    debugmsg.innerText = "  UP SHED " + this.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
 }
 
 function pipePadButtonDownEvent()
@@ -764,21 +812,21 @@ function pipePadButtonDownEvent()
     }
     else if (cursor.mode == "pipe") {
         removepipeable = 0;
-        if (curremovedpipepad != pipepadNone && curremovedpipepad != p) {
+        if (turn.removedpipepad != pipepadNone && turn.removedpipepad != p) {
             pipeable = 0;
-            errmsg = "can place removed pipe only on pipe pad from which pipe was removed (pipe pad " + curremovedpipepad.id + ")";
+            errmsg = "can place removed pipe only on pipe pad from which pipe was removed (pipe pad " + turn.removedpipepad.id + ")";
         }
-        else if (p.owner != -1 && p.owner != curplayernum) {
+        else if (p.owner != -1 && p.owner != turn.playernum) {
             pipeable = 0;
             errmsg = "don't own pipe site " + p.id;
         }
-        else if (plots[p.plotnumA - 1].owner != curplayernum &&
-                 plots[p.plotnumB - 1].owner != curplayernum) {
+        else if (plots[p.plotnumA - 1].owner != turn.playernum &&
+                 plots[p.plotnumB - 1].owner != turn.playernum) {
             pipeable = 0;
             errmsg = "don't own either pipe site plot of " + p.id + " (" + p.plotnumA + "," + p.plotnumB + ")";
         }
-        else if (plots[p.plotnumA - 1].owner == curplayernum &&
-                 plots[p.plotnumB - 1].owner == curplayernum) {
+        else if (plots[p.plotnumA - 1].owner == turn.playernum &&
+                 plots[p.plotnumB - 1].owner == turn.playernum) {
             pipeable = 0;
             errmsg = "you own both pipe site plots of " + p.id;
         }
@@ -816,7 +864,7 @@ function pipePadButtonDownEvent()
         var pipeto;
         var pipefrom;
 
-        if (plots[p.plotnumA - 1].owner == curplayernum) {
+        if (plots[p.plotnumA - 1].owner == turn.playernum) {
             pipeto = p.plotnumB;
             pipefrom = p.plotnumA;
         }
@@ -854,9 +902,11 @@ function pipePadButtonDownEvent()
                 height = 30;
             }
             var pipe;
-            pipe = new component(width, height, curplayer.color + "pipe_" + p.pipeorientation + ".png", leftoffset, topoffset, "image");
+            pipe = new component(width, height, turn.player.color + "pipe_" + p.pipeorientation + ".png", leftoffset, topoffset, "image");
 
-            curplayer.money -= 25000;
+            if (turn.removedpipepad == pipepadNone) {
+                turn.player.money -= 25000;
+            }
 
             pipe.to = pipeto;
             pipe.from = pipefrom;
@@ -871,13 +921,13 @@ function pipePadButtonDownEvent()
                 pipepadsto[pipepadsto.length++] = p;
                 pipepadsfrom[pipepadsfrom.length++] = p;
 
-                p.owner = curplayernum;
+                p.owner = turn.playernum;
             }
 
-            curremovedpipepad = pipepadNone;
+            turn.removedpipepad = pipepadNone;
 
             setCursor(cursorKingOil);
-            myPipeIcon.image.src = curplayer.color + "pipe.png";
+            myPipeIcon.image.src = turn.player.color + "pipe.png";
             myPipeIcon.button.style.opacity = "0.0";
         }
     }
@@ -890,16 +940,18 @@ function pipePadButtonDownEvent()
 
             p.owner = -1;
         }
-        curnpiperemove--;
-        curremovedpipepad = p;
+        if (turn.npiperemove > 0) {
+            turn.npiperemove--;
+        }
+        turn.removedpipepad = p;
 
-        cursorPipe.imagesrc = curplayer.color + "pipe.png";
+        cursorPipe.imagesrc = turn.player.color + "pipe.png";
         setCursor(cursorPipe);
-        myPipeIcon.image.src = curplayer.color + "pipe.png";
+        myPipeIcon.image.src = turn.player.color + "pipe.png";
         myPipeIcon.button.style.opacity = "0.5";
     }
 
-    debug.innerText = "DOWN PIPE " + this.id + " plotnumA: " + p.plotnumA + " plotnumB: " + p.plotnumB + " count: " + count;
+    debugmsg.innerText = "DOWN PIPE " + this.id + " plotnumA: " + p.plotnumA + " plotnumB: " + p.plotnumB + " count: " + count;
 
     updatePlayersDisplay();
 }
@@ -979,7 +1031,7 @@ function initLayPipeButton(b)
 
 function makeBuyButton()
 {
-    myShedIcon = new component(40, 40, curplayer.color + "shed.png", 285, 807, "image", 0, 0);
+    myShedIcon = new component(40, 40, turn.player.color + "shed.png", 285, 807, "image", 0, 0);
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", buyButtonDownEvent);
     b.style.border = "0px";
@@ -998,7 +1050,7 @@ function makeBuyButton()
 
 function makeCapButton()
 {
-    myCapIcon = new component(40, 40, curplayer.color + "cap.png", 285, 755, "image", 0, 0);
+    myCapIcon = new component(40, 40, turn.player.color + "cap.png", 285, 755, "image", 0, 0);
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", capButtonDownEvent);
     b.style.border = "0px";
@@ -1017,7 +1069,7 @@ function makeCapButton()
 
 function makePipeButton()
 {
-    myPipeIcon = new component(30, 100, curplayer.color + "pipe.png", 290, 644, "image", 0, 0);
+    myPipeIcon = new component(30, 100, turn.player.color + "pipe.png", 290, 644, "image", 0, 0);
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", pipeButtonDownEvent);
     b.style.border = "0px";
@@ -1120,15 +1172,15 @@ function makeCardDisplay()
 
 function startGame()
 {
-    curplayernum = 0;
-    curplayer = players[curplayernum];
+    turn.playernum = 0;
+    turn.player = players[turn.playernum];
 
     myGamePiece = new component(60, 60, "KingOilIcon.png", 0, 0, "image", 20, 20);
     myGamePiece.enabled = 0;
     myBackground = new component(1000, 1000, "ko_board.png", 100, 0, "image", 0, 0);
 
-    debug = document.getElementById("debug");
-    turn = document.getElementById("turn");
+    debugmsg = document.getElementById("debuglog");
+    turnmsg = document.getElementById("turnlog");
 
     setCursor(cursorKingOil);
 
@@ -1183,7 +1235,7 @@ if (!p.price) continue;
 
 function keyDownEvent(e)
 {
-    debug.innerHTML = "KEY DOWN " + e.code;
+    debugmsg.innerHTML = "KEY DOWN " + e.code;
 
     if (e.code == "KeyW") {
     }
@@ -1191,7 +1243,7 @@ function keyDownEvent(e)
 
 function keyUpEvent(e)
 {
-    debug.innerHTML = "  KEY UP " + e.code;
+    debugmsg.innerHTML = "  KEY UP " + e.code;
 }
 
 var myGameArea = {
@@ -1210,7 +1262,7 @@ var myGameArea = {
         window.addEventListener('mousemove', function (e) {
             myGameArea.x = e.pageX - myGamePiece.xoffset;
             myGameArea.y = e.pageY - myGamePiece.yoffset;
-            debug.innerText = "X: " + e.pageX + " Y: " + e.pageY;
+            debugmsg.innerText = "X: " + e.pageX + " Y: " + e.pageY;
         })
 //        window.addEventListener('mousedown', function (e) {
 //            myGamePiece.image.src = "derrick1.png";
@@ -1255,6 +1307,7 @@ function component(width, height, image, x, y, type, xoffset, yoffset)
 function updateGameArea()
 {
     myGameArea.clear();
+
     myBackground.update();
     myDerrickIcon.update();
     myShedIcon.update();
@@ -1263,18 +1316,20 @@ function updateGameArea()
     myNextIcon.update();
     myDrawIcon.update();
     myCardIcon.update();
-    for (var i = 0; i < wells.length; i++) {
-        wells[i].update();
-    }
-    for (var i = 0; i < caps.length; i++) {
-        caps[i].update();
+
+    for (var i = 0; i < sheds.length; i++) {
+        sheds[i].update();
     }
     for (var i = 0; i < pipes.length; i++) {
         pipes[i].update();
     }
-    for (var i = 0; i < sheds.length; i++) {
-        sheds[i].update();
+    for (var i = 0; i < caps.length; i++) {
+        caps[i].update();
     }
+    for (var i = 0; i < wells.length; i++) {
+        wells[i].update();
+    }
+
     if (myGameArea.x && myGameArea.y) {
         myGamePiece.x = myGameArea.x;
         myGamePiece.y = myGameArea.y;
@@ -1320,8 +1375,8 @@ function setCursor(c)
 </script>
 
 <div style="text-align:center;width:480px;">
-  <pre id="debug" font-weight="bold"> X:  Y:  </pre>
-  <pre id="turn"> player: </pre>
+  <pre id="debuglog" font-weight="bold"> X:  Y:  </pre>
+  <pre id="turnlog"> player: </pre>
   <button onmousedown="drawCardDownEvent()" onmouseup="drawCardUpEvent()"> DRAW</button>
   <button onmousedown="pipeButtonDownEvent()" onmouseup="pipeButtonUpEvent()"> PIPE</button><br><br>
 </div>
