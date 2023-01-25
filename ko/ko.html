@@ -28,6 +28,7 @@ body {
 var sandbox = 0;
 var debugButton;
 var fineButton;
+var randomButton;
 
 var detenterotationinput = [];
 var myGamePiece;
@@ -449,6 +450,7 @@ function drillButtonDownEvent()
                 for (j = 0; j < p.holes.length; j++) {
                     // change all holes
                     p.holes[j].button.style.opacity = "0.0";
+//                    p.holes[j].button.disabled = true;
                 }
             }
         }
@@ -465,6 +467,7 @@ function drillButtonDownEvent()
                         if (p.holes[j].drill == -1) {
                             // only change undrilled holes
                             p.holes[j].button.style.opacity = "0.3";
+//                            p.holes[j].button.disabled = false;
                         }
                     }
                 }
@@ -1144,6 +1147,30 @@ function fineButtonUpEvent()
     fineButton.style.backgroundColor = "pink";
 }
 
+function randomButtonDownEvent()
+{
+    errmsg = "";
+
+    randomButton.style.backgroundColor = "red";
+
+    for (var i = 0; i < 3; i++) {
+        if (detenterotationinput[i].disabled == false) {
+            var randomvalue = Math.floor((Math.random() * 12) + 1) - 1;
+            detenterotationinput[i].value = randomvalue;
+        }
+        else {
+            errmsg = "disc rotations locked";
+        }
+    }
+
+    updatePlayersDisplay();
+}
+
+function randomButtonUpEvent()
+{
+    randomButton.style.backgroundColor = "pink";
+}
+
 function debugButtonDownEvent()
 {
     errmsg = "";
@@ -1189,6 +1216,8 @@ function initWellButton(b)
 //    b.style.cursor = "url('cursor.png'), pointer";
     b.style.cursor = "auto";
     document.body.appendChild(b);
+
+//    b.disabled = true;
 }
 
 function initShedButton(b)
@@ -1357,6 +1386,27 @@ function makeFineButton()
     fineButton = b;
 }
 
+function makeRandomButton()
+{
+    var b = document.createElement("BUTTON");
+    b.innerHTML = "RANDOMIZE";
+    b.addEventListener("mousedown", randomButtonDownEvent);
+    b.addEventListener("mouseup", randomButtonUpEvent);
+    b.style.border = "0px";
+    b.style.width = "70px";
+    b.style.height = "33px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "1.0";
+    b.style.top = 940 + "px";
+    b.style.left = 605 + "px";
+    b.style.cursor = "url('cursor.png'), pointer";
+    b.style.backgroundColor = "pink";
+    document.body.appendChild(b);
+
+    randomButton = b;
+}
+
 function makeDebugButton()
 {
     var b = document.createElement("BUTTON");
@@ -1409,9 +1459,11 @@ function startGame()
         x.style.textAlign = "center";
         document.body.appendChild(x);
 
+        x.disabled = false;
         detenterotationinput[i] = x;
-        detenterotationinput[i].disabled = false;
     }
+
+    makeRandomButton();
 
     myGamePiece = new component(60, 60, "KingOilIcon.png", 0, 0, "image", 20, 20);
     myGamePiece.enabled = 0;
