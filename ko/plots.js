@@ -37,9 +37,16 @@ const plots = [
   },
   {
     id: "p7", plotnum: 7, shedpadleft: 715, shedpadtop: 403,
-    owner: -1, price: 1000, nwells: 0,
+    owner: -1, price: 8000, nwells: 0,
     holes: [
-    { id: "7a", plot: 7, spoke: 16, ring: 2, left: 723, top: 337, drill: -1 },
+    { id: "7a", plot: 7, spoke: 13, ring: 3, left: 654, top: 283, drill: -1 },
+    { id: "7b", plot: 7, spoke: 14, ring: 0, left: 661, top: 376, drill: -1 },
+    { id: "7c", plot: 7, spoke: 14, ring: 2, left: 674, top: 318, drill: -1 },
+    { id: "7d", plot: 7, spoke: 14, ring: 3, left: 682, top: 288, drill: -1 },
+    { id: "7e", plot: 7, spoke: 15, ring: 1, left: 689, top: 353, drill: -1 },
+    { id: "7f", plot: 7, spoke: 16, ring: 2, left: 723, top: 337, drill: -1 },
+    { id: "7g", plot: 7, spoke: 17, ring: 1, left: 726, top: 375, drill: -1 },
+    { id: "7h", plot: 7, spoke: 20, ring: 0, left: 743, top: 439, drill: -1 },
     ]
   },
   {
