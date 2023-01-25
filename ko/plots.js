@@ -73,9 +73,19 @@ const plots = [
     ]
   },
   {
-    id: "p10", plotnum: 10, shedpadleft: 392, shedpadtop: 752,
-    owner: -1, price: 0, nwells: 0,
+    id: "p10", plotnum: 10, shedpadleft: 431, shedpadtop: 444,
+    owner: -1, price: 10000, nwells: 0,
     holes: [
+    { id: "10a", plot: 10, spoke: 46, ring: 0, left: 495, top: 543, drill: -1 },
+    { id: "10b", plot: 10, spoke: 47, ring: 1, left: 461, top: 530, drill: -1 },
+    { id: "10c", plot: 10, spoke: 47, ring: 2, left: 431, top: 533, drill: -1 },
+    { id: "10d", plot: 10, spoke: 0, ring: 0, left: 490, top: 508, drill: -1 },
+    { id: "10e", plot: 10, spoke: 1, ring: 1, left: 461, top: 488, drill: -1 },
+    { id: "10f", plot: 10, spoke: 1, ring: 2, left: 432, top: 483, drill: -1 },
+    { id: "10g", plot: 10, spoke: 2, ring: 0, left: 494, top: 472, drill: -1 },
+    { id: "10h", plot: 10, spoke: 3, ring: 1, left: 471, top: 446, drill: -1 },
+    { id: "10i", plot: 10, spoke: 4, ring: 0, left: 508, top: 440, drill: -1 },
+    { id: "10j", plot: 10, spoke: 5, ring: 1, left: 493, top: 408, drill: -1 },
     ]
   },
   {
