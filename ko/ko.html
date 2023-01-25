@@ -195,7 +195,7 @@ function payCardRoyalty()
     var royalty;
 
     if (curcard.type == "fire") {
-        errmsg += "no royalty for fire";
+        errmsg += " no royalty for fire";
     }
     else {
         if (curcard.type == "depletion") {
@@ -273,6 +273,15 @@ function buyButtonDownEvent()
             setCursor(cursorKingOil);
             myShedIcon.image.src = turn.player.color + "shed.png";
             myShedIcon.button.style.opacity = "0.0";
+
+            for (var i = 0; i < plots.length; i++) {
+                var p = plots[i];
+
+                if (p.owner == -1) {
+if (p.shedbutton != undefined)
+                    p.shedbutton.style.opacity = "0.0";
+                }
+            }
         }
         else {
             if (cursor.mode != "drill" && cursor.mode != "cap") {
@@ -280,6 +289,15 @@ function buyButtonDownEvent()
                 setCursor(cursorShed);
                 myShedIcon.image.src = turn.player.color + "shed_outline.png";
                 myShedIcon.button.style.opacity = "0.2";
+
+                for (var i = 0; i < plots.length; i++) {
+                    var p = plots[i];
+
+                    if (p.owner == -1) {
+if (p.shedbutton != undefined)
+                        p.shedbutton.style.opacity = "0.5";
+                    }
+                }
             }
         }
     }
@@ -306,6 +324,15 @@ function capButtonDownEvent()
             setCursor(cursorKingOil);
             myCapIcon.image.src = turn.player.color + "cap.png";
             myCapIcon.button.style.opacity = "0.0";
+
+            for (var i = 0; i < turn.player.plots.length; i++) {
+                var p = plots[turn.player.plots[i] - 1];
+
+                for (j = 0; j < p.holes.length; j++) {
+                    // change all holes
+                    p.holes[j].button.style.opacity = "0.0";
+                }
+            }
         }
         else {
             if (cursor.mode != "drill" && cursor.mode != "buy") {
@@ -313,6 +340,17 @@ function capButtonDownEvent()
                 setCursor(cursorCap);
                 myCapIcon.image.src = turn.player.color + "cap_outline.png";
                 myCapIcon.button.style.opacity = "0.2";
+
+                for (var i = 0; i < turn.player.plots.length; i++) {
+                    var p = plots[turn.player.plots[i] - 1];
+
+                    for (j = 0; j < p.holes.length; j++) {
+                        if (p.holes[j].drill > 0) {
+                            // only change holes with wells
+                            p.holes[j].button.style.opacity = "0.3";
+                        }
+                    }
+                }
             }
         }
     }
@@ -350,6 +388,16 @@ function pipeButtonDownEvent()
                 myPipeIcon.image.src = turn.player.color + "pipe.png";
                 myPipeIcon.button.style.opacity = "0.0";
                 turn.removedpipepad = pipepadNone;
+
+                for (var i = 0; i < turn.player.plots.length; i++) {
+                    for (j = 0; j < pipepads.length; j++) {
+                        var p = pipepads[j];
+                        if (p.plotnumA == turn.player.plots[i] ||
+                            p.plotnumB == turn.player.plots[i]) {
+                            p.button.style.opacity = "0.0";
+                        }
+                    }
+                }
             }
         }
         else {
@@ -358,6 +406,16 @@ function pipeButtonDownEvent()
                 setCursor(cursorPipe);
                 myPipeIcon.image.src = turn.player.color + "pipe.png";
                 myPipeIcon.button.style.opacity = "0.5";
+
+                for (var i = 0; i < turn.player.plots.length; i++) {
+                    for (j = 0; j < pipepads.length; j++) {
+                        var p = pipepads[j];
+                        if (p.plotnumA == turn.player.plots[i] ||
+                            p.plotnumB == turn.player.plots[i]) {
+                            p.button.style.opacity = "0.5";
+                        }
+                    }
+                }
             }
         }
     }
@@ -384,12 +442,32 @@ function drillButtonDownEvent()
             setCursor(cursorKingOil);
             myDerrickIcon.image.src = "derrick0.png";
             myDerrickIcon.button.style.opacity = "0.0";
+
+            for (var i = 0; i < turn.player.plots.length; i++) {
+                var p = plots[turn.player.plots[i] - 1];
+
+                for (j = 0; j < p.holes.length; j++) {
+                    // change all holes
+                    p.holes[j].button.style.opacity = "0.0";
+                }
+            }
         }
         else {
             if (cursor.mode != "buy" && cursor.mode != "cap") {
                 setCursor(cursorDerrick0);
                 myDerrickIcon.image.src = "derrick0_outline.png";
                 myDerrickIcon.button.style.opacity = "0.2";
+
+                for (var i = 0; i < turn.player.plots.length; i++) {
+                    var p = plots[turn.player.plots[i] - 1];
+
+                    for (j = 0; j < p.holes.length; j++) {
+                        if (p.holes[j].drill == -1) {
+                            // only change undrilled holes
+                            p.holes[j].button.style.opacity = "0.3";
+                        }
+                    }
+                }
             }
         }
     }
@@ -401,7 +479,7 @@ function drillButtonUpEvent()
 {
 }
 
-function nextPlayerDownEvent()
+function nextButtonDownEvent()
 {
     errmsg = "";
 
@@ -446,6 +524,9 @@ function nextPlayerDownEvent()
 
             if (gameMode == "start") {
                 gameMode = "";
+                for (var i = 0; i < 3; i++) {
+                    detenterotationinput[i].disabled = true;
+                }
             }
         }
 
@@ -473,7 +554,7 @@ function nextPlayerDownEvent()
     updatePlayersDisplay();
 }
 
-function nextPlayerUpEvent()
+function nextButtonUpEvent()
 {
     myNextIcon.image.src = "timeclock.png";
 }
@@ -519,7 +600,7 @@ function drawCardDownEvent()
                 var p = plots[turn.player.plots[i] - 1];
 
                 for (j = 0; j < p.holes.length; j++) {
-                    if (p.holes[i].drill == -1) {
+                    if (p.holes[j].drill == -1) {
                         emptyfound = 1;
 
                         break;
@@ -693,6 +774,15 @@ function wellButtonDownEvent()
         actionMode();
         myCapIcon.image.src = turn.player.color + "cap.png";
         myCapIcon.button.style.opacity = "0.0";
+
+        for (var i = 0; i < turn.player.plots.length; i++) {
+            var p = plots[turn.player.plots[i] - 1];
+
+            for (j = 0; j < p.holes.length; j++) {
+                // change all holes
+                p.holes[j].button.style.opacity = "0.0";
+            }
+        }
     }
 
     var cost;
@@ -734,6 +824,8 @@ function wellButtonDownEvent()
 
             errmsg = "dry";
         }
+
+        h.button.style.opacity = "0.0";
 
         errmsg += " well - $" + cost;
     }
@@ -823,6 +915,15 @@ function shedButtonDownEvent()
         }
         myShedIcon.image.src = turn.player.color + "shed.png";
         myShedIcon.button.style.opacity = "0.0";
+
+        for (var i = 0; i < plots.length; i++) {
+            var p = plots[i];
+
+            if (p.owner == -1) {
+if (p.shedbutton != undefined)
+                p.shedbutton.style.opacity = "0.0";
+            }
+        }
     }
 
     debugmsg.innerText = "DOWN SHED " + this.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
@@ -837,7 +938,7 @@ function shedButtonUpEvent()
     debugmsg.innerText = "  UP SHED " + this.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
 }
 
-function pipePadButtonDownEvent()
+function pipepadButtonDownEvent()
 {
     var p = this.pipepad;
     var count = p.pipes.length;
@@ -973,6 +1074,16 @@ function pipePadButtonDownEvent()
             myPipeIcon.image.src = turn.player.color + "pipe.png";
             myPipeIcon.button.style.opacity = "0.0";
 
+            for (var i = 0; i < turn.player.plots.length; i++) {
+                for (j = 0; j < pipepads.length; j++) {
+                    var p = pipepads[j];
+                    if (p.plotnumA == turn.player.plots[i] ||
+                        p.plotnumB == turn.player.plots[i]) {
+                        p.button.style.opacity = "0.0";
+                    }
+                }
+            }
+
             errmsg = "placed pipeline from plot " + plots[pipe.from - 1].id + " to plot " + plots[pipe.to - 1].id;
         }
     }
@@ -1001,7 +1112,7 @@ function pipePadButtonDownEvent()
     updatePlayersDisplay();
 }
 
-function pipePadButtonUpEvent()
+function pipepadButtonUpEvent()
 {
 }
 
@@ -1074,7 +1185,7 @@ function initWellButton(b)
     b.style.height = "40px";
     b.style.padding = "0px";
     b.style.position = "absolute";
-    b.style.opacity = "0.3";
+    b.style.opacity = "0.0";
 //    b.style.cursor = "url('cursor.png'), pointer";
     b.style.cursor = "auto";
     document.body.appendChild(b);
@@ -1089,22 +1200,22 @@ function initShedButton(b)
     b.style.height = "40px";
     b.style.padding = "0px";
     b.style.position = "absolute";
-    b.style.opacity = "0.5";
+    b.style.opacity = "0.0";
     b.style.cursor = "url('cursor.png'), pointer";
     document.body.appendChild(b);
 }
 
 function initLayPipeButton(b)
 {
-    b.addEventListener("mousedown", pipePadButtonDownEvent);
-    b.addEventListener("mouseup", pipePadButtonUpEvent);
+    b.addEventListener("mousedown", pipepadButtonDownEvent);
+    b.addEventListener("mouseup", pipepadButtonUpEvent);
     b.style.borderRadius = "30px";
     b.style.border = "2px solid #4CAF50";
     b.style.width = "40px";
     b.style.height = "40px";
     b.style.padding = "0px";
     b.style.position = "absolute";
-    b.style.opacity = "0.6";
+    b.style.opacity = "0.0";
     b.style.cursor = "url('cursor.png'), pointer";
     document.body.appendChild(b);
 }
@@ -1189,8 +1300,8 @@ function makeNextButton()
 {
     myNextIcon = new component(55, 66, "timeclock.png", 124, 672, "image", 0, 0);
     var b = document.createElement("BUTTON");
-    b.addEventListener("mousedown", nextPlayerDownEvent);
-    b.addEventListener("mouseup", nextPlayerUpEvent);
+    b.addEventListener("mousedown", nextButtonDownEvent);
+    b.addEventListener("mouseup", nextButtonUpEvent);
     b.style.border = "0px";
     b.style.width = "55px";
     b.style.height = "66px";
@@ -1299,6 +1410,7 @@ function startGame()
         document.body.appendChild(x);
 
         detenterotationinput[i] = x;
+        detenterotationinput[i].disabled = false;
     }
 
     myGamePiece = new component(60, 60, "KingOilIcon.png", 0, 0, "image", 20, 20);
@@ -1320,37 +1432,45 @@ function startGame()
     makeDebugButton();
     makeFineButton();
     for (var i = 0; i < plots.length; i++) {
-        for (var j = 0; j < plots[i].holes.length; j++) {
-            var h = plots[i].holes[j];
+        var p = plots[i];
+
+        for (var j = 0; j < p.holes.length; j++) {
+            var h = p.holes[j];
             h.well = {};
             var x = document.createElement("BUTTON");
             initWellButton(x);
 
             x.hole = h;
-            x.id = h.id;
+            x.id = h.id + "button";
             x.style.top = h.top - 18 + "px";
             x.style.left = h.left - 20 + "px";
+
+            h.button = x;
         }
 
-        var p = plots[i];
         p.pipepadsto = [];
         p.pipepadsfrom = [];
 if (!p.price) continue;
         var x = document.createElement("BUTTON");
         initShedButton(x);
         x.plot = p;
-        x.id = p.id;
+        x.id = p.id + "button";
         x.style.top = p.shedpadtop - 18 + "px";
         x.style.left = p.shedpadleft - 20 + "px";
+
+        p.shedbutton = x;
     }
+
     for (var i = 0; i < pipepads.length; i++) {
         var p = pipepads[i];
         var x = document.createElement("BUTTON");
         initLayPipeButton(x);
         x.pipepad = p;
-        x.id = p.id;
+        x.id = p.id + "button";
         x.style.top = p.pipepadtop - 18 + "px";
         x.style.left = p.pipepadleft - 20 + "px";
+
+        p.button = x;
     }
 
     initDeck();
