@@ -21,6 +21,7 @@ body {
 <script src="plots.js"></script>
 <script src="pipepads.js"></script>
 <script src="cards.js"></script>
+<script src="rotation.js"></script>
 
 <script>
 
@@ -28,6 +29,7 @@ var sandbox = 0;
 var debugButton;
 var fineButton;
 
+var detenterotationinput = [];
 var myGamePiece;
 var myBackground;
 var myShedIcon;
@@ -648,7 +650,11 @@ function wellButtonDownEvent()
 
         curwell = 3;
         for (var disc = 2; disc >= 0; disc--) {
-            if (discs[disc][h.spoke][h.ring] == 1) {
+            var rotatedspoke = h.spoke - (detenterotationinput[disc].value * 4);
+            if (rotatedspoke < 0) {
+                rotatedspoke += 48;
+            }
+            if (discs[disc][rotatedspoke][h.ring] == 1) {
                 break;
             }
             else {
@@ -730,6 +736,7 @@ function wellButtonDownEvent()
         }
 
         errmsg += " well - $" + cost;
+errmsg += "\n" + msg;
     }
 
     debugmsg.innerText = "DOWN WELL " + this.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring + " well: " + h.drill + " cost: " + cost;
@@ -1034,6 +1041,9 @@ function debugButtonDownEvent()
     sandbox++;
     if (sandbox == 3) {
         sandbox = 0;
+        for (var i = 0; i < 3; i++) {
+            detenterotationinput[i].disabled = true;
+        }
         debugButton.style.backgroundColor = "lightgrey";
     }
     else if (sandbox == 2) {
@@ -1041,6 +1051,9 @@ errmsg = "drill all holes ";
         debugButton.style.backgroundColor = "green";
     }
     else { // sandbox == 1
+        for (var i = 0; i < 3; i++) {
+            detenterotationinput[i].disabled = false;
+        }
         debugButton.style.backgroundColor = "lightgreen";
     }
 
@@ -1062,7 +1075,7 @@ function initWellButton(b)
     b.style.height = "40px";
     b.style.padding = "0px";
     b.style.position = "absolute";
-    b.style.opacity = "0.5";
+    b.style.opacity = "0.3";
 //    b.style.cursor = "url('cursor.png'), pointer";
     b.style.cursor = "auto";
     document.body.appendChild(b);
@@ -1263,6 +1276,31 @@ function startGame()
 {
     turn.playernum = 0;
     turn.player = players[turn.playernum];
+
+    var x = document.createElement("p");
+    x.innerHTML = "DISC ROTATIONS";
+    x.style.width = "200px";
+    x.style.padding = "0px";
+    x.style.position = "absolute";
+    x.style.left = 573 + "px";
+    x.style.top = 877 + "px";
+    document.body.appendChild(x);
+
+    for (var i = 0; i < 3; i++) {
+        var x = document.createElement("INPUT");
+        x.disabled = true;
+        x.setAttribute("type", "text");
+        x.setAttribute("value", detenterotation[i]);
+        x.style.width = "20px";
+        x.style.padding = "0px";
+        x.style.position = "absolute";
+        x.style.left = 597 + (i * 30) + "px";
+        x.style.top = 917 + "px";
+        x.style.textAlign = "center";
+        document.body.appendChild(x);
+
+        detenterotationinput[i] = x;
+    }
 
     myGamePiece = new component(60, 60, "KingOilIcon.png", 0, 0, "image", 20, 20);
     myGamePiece.enabled = 0;

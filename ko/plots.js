@@ -68,7 +68,7 @@ const plots = [
     { id: "9f", plot: 9, spoke: 0, ring: 6, left: 310, top: 509, drill: -1 },
     { id: "9g", plot: 9, spoke: 1, ring: 3, left: 400, top: 479, drill: -1 },
     { id: "9h", plot: 9, spoke: 1, ring: 4, left: 369, top: 475, drill: -1 },
-    { id: "9i", plot: 9, spoke: 1, ring: 5, left: 348, top: 472, drill: -1 },
+    { id: "9i", plot: 9, spoke: 1, ring: 5, left: 341, top: 470, drill: -1 },
     { id: "9j", plot: 9, spoke: 1, ring: 6, left: 311, top: 469, drill: -1 },
     ]
   },
