@@ -1178,6 +1178,23 @@ function debugButtonDownEvent()
     sandbox++;
     if (sandbox == 3) {
         sandbox = 0;
+
+        for (var i = 0; i < plots.length; i++) {
+            var p = plots[i];
+
+            for (j = 0; j < p.holes.length; j++) {
+                p.holes[j].button.style.opacity = "0.0";
+//                p.holes[j].button.disabled = false;
+            }
+            if (p.price) {
+if (p.shedbutton != undefined)
+                p.shedbutton.style.opacity = "0.0";
+            }
+        }
+        for (var i = 0; i < pipepads.length; i++) {
+            pipepads[i].button.style.opacity = "0.0";
+        }
+
         for (var i = 0; i < 3; i++) {
             detenterotationinput[i].disabled = true;
         }
@@ -1188,6 +1205,22 @@ errmsg = "drill all holes ";
         debugButton.style.backgroundColor = "green";
     }
     else { // sandbox == 1
+        for (var i = 0; i < plots.length; i++) {
+            var p = plots[i];
+
+            for (j = 0; j < p.holes.length; j++) {
+                p.holes[j].button.style.opacity = "0.3";
+//                p.holes[j].button.disabled = false;
+            }
+            if (p.price) {
+if (p.shedbutton != undefined)
+                p.shedbutton.style.opacity = "0.5";
+            }
+        }
+        for (var i = 0; i < pipepads.length; i++) {
+            pipepads[i].button.style.opacity = "0.5";
+        }
+
         for (var i = 0; i < 3; i++) {
             detenterotationinput[i].disabled = false;
         }
@@ -1470,6 +1503,9 @@ function startGame()
     myBackground = new component(1000, 1000, "ko_board.png", 100, 0, "image", 0, 0);
 
     debugmsg = document.getElementById("debuglog");
+    debugmsg.style.position = "absolute";
+    debugmsg.style.left = 117 + "px";
+    debugmsg.style.top = 495 + "px";
     turnmsg = document.getElementById("turnlog");
 
     setCursor(cursorKingOil);
