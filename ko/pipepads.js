@@ -12,7 +12,7 @@ var pipepads = [
     { id: "13-16", plotnumA: 13, plotnumB: 16, owner: -1, pipes: [],
       pipepadleft: 395, pipepadtop: 685, pipeorientation: "vertical" },
     { id: "14-15", plotnumA: 14, plotnumB: 15, owner: -1, pipes: [],
-      pipepadleft: 662, pipepadtop: 611, pipeorientation: "vertical" },
+      pipepadleft: 662, pipepadtop: 611, pipeorientation: "horizontal" },
     { id: "14-16", plotnumA: 14, plotnumB: 16, owner: -1, pipes: [],
       pipepadleft: 470, pipepadtop: 675, pipeorientation: "vertical" },
     { id: "14-17", plotnumA: 14, plotnumB: 17, owner: -1, pipes: [],
