@@ -1186,10 +1186,7 @@ function debugButtonDownEvent()
                 p.holes[j].button.style.opacity = "0.0";
 //                p.holes[j].button.disabled = false;
             }
-            if (p.price) {
-if (p.shedbutton != undefined)
-                p.shedbutton.style.opacity = "0.0";
-            }
+            p.shedbutton.style.opacity = "0.0";
         }
         for (var i = 0; i < pipepads.length; i++) {
             pipepads[i].button.style.opacity = "0.0";
@@ -1212,10 +1209,7 @@ errmsg = "drill all holes ";
                 p.holes[j].button.style.opacity = "0.3";
 //                p.holes[j].button.disabled = false;
             }
-            if (p.price) {
-if (p.shedbutton != undefined)
-                p.shedbutton.style.opacity = "0.5";
-            }
+            p.shedbutton.style.opacity = "0.5";
         }
         for (var i = 0; i < pipepads.length; i++) {
             pipepads[i].button.style.opacity = "0.5";
@@ -1525,9 +1519,9 @@ function startGame()
         for (var j = 0; j < p.holes.length; j++) {
             var h = p.holes[j];
             h.well = {};
+
             var x = document.createElement("BUTTON");
             initWellButton(x);
-
             x.hole = h;
             x.id = h.id + "button";
             x.style.top = h.top - 18 + "px";
@@ -1538,7 +1532,7 @@ function startGame()
 
         p.pipepadsto = [];
         p.pipepadsfrom = [];
-if (!p.price) continue;
+
         var x = document.createElement("BUTTON");
         initShedButton(x);
         x.plot = p;
@@ -1551,6 +1545,7 @@ if (!p.price) continue;
 
     for (var i = 0; i < pipepads.length; i++) {
         var p = pipepads[i];
+
         var x = document.createElement("BUTTON");
         initLayPipeButton(x);
         x.pipepad = p;
