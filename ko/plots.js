@@ -1,38 +1,96 @@
 const plots = [
   {
-    id: "p1", plotnum: 1, shedpadleft: 392, shedpadtop: 752,
-    owner: -1, price: 0, nwells: 0,
+    id: "p1", plotnum: 1, shedpadleft: 338, shedpadtop: 244,
+    owner: -1, price: 12000, nwells: 0,
     holes: [
+    { id: "1a", plot: 1, spoke: 2, ring: 5, left: 348, top: 435, drill: -1 },
+    { id: "1b", plot: 1, spoke: 3, ring: 3, left: 416, top: 423, drill: -1 },
+    { id: "1c", plot: 1, spoke: 3, ring: 4, left: 387, top: 411, drill: -1 },
+    { id: "1d", plot: 1, spoke: 3, ring: 6, left: 332, top: 388, drill: -1 },
+    { id: "1e", plot: 1, spoke: 4, ring: 3, left: 429, top: 396, drill: -1 },
+    { id: "1f", plot: 1, spoke: 4, ring: 5, left: 376, top: 367, drill: -1 },
+    { id: "1g", plot: 1, spoke: 4, ring: 6, left: 350, top: 352, drill: -1 },
+    { id: "1h", plot: 1, spoke: 5, ring: 4, left: 422, top: 354, drill: -1 },
+    { id: "1i", plot: 1, spoke: 5, ring: 5, left: 397, top: 336, drill: -1 },
+    { id: "1j", plot: 1, spoke: 5, ring: 6, left: 374, top: 317, drill: -1 },
+    { id: "1k", plot: 1, spoke: 7, ring: 4, left: 444, top: 328, drill: -1 },
+    { id: "1l", plot: 1, spoke: 7, ring: 6, left: 402, top: 286, drill: -1 },
     ]
   },
   {
-    id: "p2", plotnum: 2, shedpadleft: 392, shedpadtop: 752,
-    owner: -1, price: 0, nwells: 0,
+    id: "p2", plotnum: 2, shedpadleft: 436, shedpadtop: 216,
+    owner: -1, price: 8000, nwells: 0,
     holes: [
+    { id: "2a", plot: 2, spoke: 8, ring: 5, left: 481, top: 261, drill: -1 },
+    { id: "2b", plot: 2, spoke: 8, ring: 6, left: 467, top: 235, drill: -1 },
+    { id: "2c", plot: 2, spoke: 9, ring: 4, left: 527, top: 273, drill: -1 },
+    { id: "2d", plot: 2, spoke: 9, ring: 5, left: 514, top: 245, drill: -1 },
+    { id: "2e", plot: 2, spoke: 9, ring: 6, left: 502, top: 217, drill: -1 },
+    { id: "2f", plot: 2, spoke: 10, ring: 4, left: 557, top: 262, drill: -1 },
+    { id: "2g", plot: 2, spoke: 10, ring: 5, left: 550, top: 233, drill: -1 },
+    { id: "2h", plot: 2, spoke: 20, ring: 6, left: 541, top: 206, drill: -1 },
     ]
   },
   {
-    id: "p3", plotnum: 3, shedpadleft: 392, shedpadtop: 752,
-    owner: -1, price: 0, nwells: 0,
+    id: "p3", plotnum: 3, shedpadleft: 599, shedpadtop: 170,
+    owner: -1, price: 9000, nwells: 0,
     holes: [
+    { id: "3a", plot: 3, spoke: 11, ring: 4, left: 589, top: 256, drill: -1 },
+    { id: "3b", plot: 3, spoke: 11, ring: 5, left: 586, top: 225, drill: -1 },
+    { id: "3c", plot: 3, spoke: 11, ring: 6, left: 581, top: 196, drill: -1 },
+    { id: "3d", plot: 3, spoke: 12, ring: 4, left: 623, top: 252, drill: -1 },
+    { id: "3e", plot: 3, spoke: 12, ring: 5, left: 623, top: 223, drill: -1 },
+    { id: "3f", plot: 3, spoke: 12, ring: 6, left: 623, top: 192, drill: -1 },
+    { id: "3g", plot: 3, spoke: 13, ring: 4, left: 656, top: 254, drill: -1 },
+    { id: "3h", plot: 3, spoke: 13, ring: 5, left: 660, top: 225, drill: -1 },
+    { id: "3i", plot: 3, spoke: 13, ring: 6, left: 663, top: 196, drill: -1 },
     ]
   },
   {
-    id: "p4", plotnum: 4, shedpadleft: 392, shedpadtop: 752,
-    owner: -1, price: 0, nwells: 0,
+    id: "p4", plotnum: 4, shedpadleft: 769, shedpadtop: 198,
+    owner: -1, price: 11000, nwells: 0,
     holes: [
+    { id: "4a", plot: 4, spoke: 14, ring: 4, left: 690, top: 261, drill: -1 },
+    { id: "4b", plot: 4, spoke: 14, ring: 5, left: 696, top: 231, drill: -1 },
+    { id: "4c", plot: 4, spoke: 14, ring: 6, left: 704, top: 204, drill: -1 },
+    { id: "4d", plot: 4, spoke: 15, ring: 4, left: 721, top: 270, drill: -1 },
+    { id: "4e", plot: 4, spoke: 15, ring: 5, left: 732, top: 242, drill: -1 },
+    { id: "4f", plot: 4, spoke: 15, ring: 6, left: 743, top: 215, drill: -1 },
+    { id: "4g", plot: 4, spoke: 16, ring: 3, left: 737, top: 310, drill: -1 },
+    { id: "4h", plot: 4, spoke: 16, ring: 4, left: 751, top: 285, drill: -1 },
+    { id: "4i", plot: 4, spoke: 16, ring: 5, left: 766, top: 258, drill: -1 },
+    { id: "4j", plot: 4, spoke: 16, ring: 6, left: 780, top: 231, drill: -1 },
+    { id: "4k", plot: 4, spoke: 17, ring: 4, left: 779, top: 302, drill: -1 },
     ]
   },
   {
-    id: "p5", plotnum: 5, shedpadleft: 392, shedpadtop: 752,
-    owner: -1, price: 0, nwells: 0,
+    id: "p5", plotnum: 5, shedpadleft: 912, shedpadtop: 303,
+    owner: -1, price: 9000, nwells: 0,
     holes: [
+    { id: "5a", plot: 5, spoke: 17, ring: 6, left: 815, top: 255, drill: -1 },
+    { id: "5b", plot: 5, spoke: 18, ring: 3, left: 784, top: 345, drill: -1 },
+    { id: "5c", plot: 5, spoke: 18, ring: 4, left: 804, top: 324, drill: -1 },
+    { id: "5d", plot: 5, spoke: 18, ring: 5, left: 826, top: 302, drill: -1 },
+    { id: "5e", plot: 5, spoke: 18, ring: 6, left: 847, top: 281, drill: -1 },
+    { id: "5f", plot: 5, spoke: 19, ring: 4, left: 826, top: 349, drill: -1 },
+    { id: "5g", plot: 5, spoke: 19, ring: 5, left: 851, top: 330, drill: -1 },
+    { id: "5h", plot: 5, spoke: 19, ring: 6, left: 875, top: 312, drill: -1 },
+    { id: "5i", plot: 5, spoke: 20, ring: 6, left: 900, top: 345, drill: -1 },
     ]
   },
   {
-    id: "p6", plotnum: 6, shedpadleft: 392, shedpadtop: 752,
-    owner: -1, price: 0, nwells: 0,
+    id: "p6", plotnum: 6, shedpadleft: 591, shedpadtop: 387,
+    owner: -1, price: 9000, nwells: 0,
     holes: [
+    { id: "6a", plot: 6, spoke: 6, ring: 2, left: 486, top: 370, drill: -1 },
+    { id: "6b", plot: 6, spoke: 7, ring: 2, left: 487, top: 330, drill: -1 },
+    { id: "6c", plot: 6, spoke: 8, ring: 2, left: 526, top: 338, drill: -1 },
+    { id: "6d", plot: 6, spoke: 8, ring: 3, left: 511, top: 313, drill: -1 },
+    { id: "6e", plot: 6, spoke: 9, ring: 1, left: 561, top: 354, drill: -1 },
+    { id: "6f", plot: 6, spoke: 10, ring: 2, left: 574, top: 319, drill: -1 },
+    { id: "6g", plot: 6, spoke: 11, ring: 2, left: 603, top: 343, drill: -1 },
+    { id: "6h", plot: 6, spoke: 11, ring: 3, left: 595, top: 286, drill: -1 },
+    { id: "6i", plot: 6, spoke: 12, ring: 3, left: 623, top: 281, drill: -1 },
     ]
   },
   {
