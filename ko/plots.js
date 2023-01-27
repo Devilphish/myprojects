@@ -122,7 +122,7 @@ const plots = [
     ]
   },
   {
-    id: "p9", plotnum: 9, shedpadleft: 304, shedpadtop: 489,
+    id: "p9", plotnum: 9, shedpadleft: 339, shedpadtop: 533,
     owner: -1, price: 10000, nwells: 0,
     holes: [
     { id: "9a", plot: 9, spoke: 47, ring: 3, left: 398, top: 538, drill: -1 },
