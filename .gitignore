@@ -1,6 +1,6 @@
 git_token
-ko/board
-ko/players
-ko/curcard
-ko/msg
-ko/cards
+ko/awk/board
+ko/awk/players
+ko/awk/curcard
+ko/awk/msg
+ko/awk/cards
