@@ -10,7 +10,7 @@ canvas {
 }
 
 body {
-    cursor: wait;
+    cursor: url('cursor.png'), wait;
 }
 
 </style>
@@ -32,6 +32,7 @@ var randomButton;
 
 var detenterotationinput = [];
 var myStatusButton;
+var myAddPlayerButton;
 var myGamePiece;
 var myBackground;
 var myShedIcon;
@@ -41,6 +42,8 @@ var myDerickIcon;
 var myNextIcon;
 var myDrawIcon;
 var myCardIcon;
+var myCardStatusDiv;
+var myTurnResultDiv;
 var wells = [];
 var caps = [];
 var pipes = [];
@@ -121,6 +124,9 @@ var cursorPipe = {
     yoffset: 60
 };
 
+var playerDisplays = [];
+var playercolors = [ "blue", "yellow", "red", "white" ];
+
 var players = [
   {
     name: "ROB",
@@ -128,7 +134,8 @@ var players = [
     plots: [],
     money: 80000,
     nwells: 0,
-    pipelines: 0
+    pipelines: 0,
+    msg: [],
   },
   {
     name: "CHRIS",
@@ -136,11 +143,12 @@ var players = [
     plots: [],
     money: 80000,
     nwells: 0,
-    pipelines: 0
+    pipelines: 0,
+    msg: [],
   }
 ];
 
-var curcard = {
+var cardInit = {
     type: "init",
     royalty: 0,
     ndrills: 0,
@@ -156,6 +164,7 @@ var cardNone = {
 var turn = {
     playernum: 0,
     player: players[0],
+    card: cardInit,
     drillsused: 0,
     propertybought: 0,
     capsdone: 0,
@@ -166,6 +175,16 @@ var turn = {
 
 function updatePlayersDisplay()
 {
+    for (var i = 0; i < players.length; i++) {
+        var d = players[i].display;
+        var p = players[i];
+        d.innerText = p.name + " $" + p.money + "\n";
+        d.innerText += "wells: " + p.nwells + " plots: " + p.plots.length;
+        if (i == turn.playernum && gameMode != "start" && turn.card.ndrills > 0) {
+            d.innerText += " drills: " + turn.drillsused + " of " + turn.card.ndrills;
+        }
+    }
+
     turnmsg.innerHTML = "PLAYERS\n";
 
     for (var i = 0; i < players.length; i++) {
@@ -181,16 +200,17 @@ function updatePlayersDisplay()
         }
     }
     turnmsg.innerHTML += "\n";
-    if (curcard.type == "none") {
-        turnmsg.innerHTML += "CARD: " + curcard.type + "\n";
+    if (turn.card.type == "none") {
+        turnmsg.innerHTML += "CARD: " + turn.card.type + "\n";
     }
     else {
-        turnmsg.innerHTML += "CARD: " + curcard.type + " royalty: " + curcard.royalty + " ndrills: " + curcard.ndrills + " plotbuy: " + curcard.plotbuy + "\n";
+        turnmsg.innerHTML += "CARD: " + turn.card.type + " royalty: " + turn.card.royalty + " ndrills: " + turn.card.ndrills + " plotbuy: " + turn.card.plotbuy + "\n";
     }
-    turnmsg.innerHTML += "drills permitted: " + curcard.ndrills + "\n       completed: " + turn.drillsused + "\n";
+    turnmsg.innerHTML += "drills permitted: " + turn.card.ndrills + "\n       completed: " + turn.drillsused + "\n";
     turnmsg.innerHTML += "\n\n";
 
     statusmsg.innerHTML = errmsg;
+//    myTurnResultDiv.innerText += errmsg;
 
     if (errmsg != "") {
         myStatusButton.style.opacity = "0.7";
@@ -207,15 +227,15 @@ function payCardRoyalty()
 {
     var royalty;
 
-    if (curcard.type == "fire") {
+    if (turn.card.type == "fire") {
         errmsg += " no royalty for fire";
     }
     else {
-        if (curcard.type == "depletion") {
+        if (turn.card.type == "depletion") {
             royalty = 500;
         }
         else {
-            royalty = turn.player.nwells * curcard.royalty;
+            royalty = turn.player.nwells * turn.card.royalty;
         }
         turn.player.money += royalty;
 
@@ -513,7 +533,7 @@ function nextButtonDownEvent()
         nextable = 0;
         errmsg = "must pay fine";
     }
-    else if (curcard.ndrills > 0 && turn.drillsused == 0 &&
+    else if (turn.card.ndrills > 0 && turn.drillsused == 0 &&
              turn.fineable == 0) {
         nextable = 0;
         errmsg = "must drill at least once before clocking out";
@@ -531,6 +551,8 @@ function nextButtonDownEvent()
     }
 
     if (nextable) {
+        turn.player.display.style.backgroundColor = "grey";
+
         turn.playernum++;
         if (turn.playernum == players.length) {
             turn.playernum = 0;
@@ -545,7 +567,7 @@ function nextButtonDownEvent()
 
         if (gameMode != "start") {
             drawMode();
-            curcard = cardNone;
+            turn.card = cardNone;
             myCardIcon.image.src = "";
         }
 
@@ -555,6 +577,7 @@ function nextButtonDownEvent()
         turn.capsdone = 0;
         turn.npiperemove = 0;
         turn.fineable = 0;
+        turn.player.display.style.backgroundColor = "lightblue";
 
         payPipeRoyalty();
 
@@ -595,17 +618,42 @@ function drawCardDownEvent()
     if (drawable) {
         shuffled = 0;
         cardnum = Math.floor((Math.random() * deck.length) + 1) - 1;
-        curcard = deck[cardnum];
+        turn.card = deck[cardnum];
 
-        if (curcard.type == "fire") {
+        if (turn.card.type == "fire") {
             // wells = 0: cap 0, 1-5: cap 1, 6-10: cap 2, 11 or more: cap 3
             turn.capsdone = Math.floor((turn.player.nwells + 4) / 5);
             if (turn.capsdone > 3) {
                 turn.capsdone = 3;
             }
+
+            myCardStatusDiv.innerText = "CURRENT CARD\nFIRE\n";
+            myCardStatusDiv.innerText += "must cap " + turn.capsdone + " wells";
+
             errmsg = "must cap " + turn.capsdone + " wells";
         }
         else {
+            var numstr;
+            if (turn.card.ndrills > 1) {
+                if (turn.card.ndrills == 2) {
+                    numstr = "1 or ";
+                }
+                else {
+                    numstr = "1 to ";
+                }
+            }
+            else {
+                numstr = "";
+            }
+            if (turn.card.type == "depletion") {
+                myCardStatusDiv.innerText = "CURRENT CARD\ndepletion allowance $500";
+            }
+            else {
+                myCardStatusDiv.innerText = "CURRENT CARD\nroyalty $" + turn.card.royalty;
+            }
+            myCardStatusDiv.innerText += "\ndrills permitted: " + numstr + turn.card.ndrills;
+            myCardStatusDiv.innerText += "\nproperty for sale " + turn.card.plotbuy;
+
             // player must drill, check player has any empty holes
             var emptyfound = 0;
 
@@ -632,7 +680,7 @@ function drawCardDownEvent()
             }
         }
 
-        myCardIcon.image.src = curcard.imagesrc;
+        myCardIcon.image.src = turn.card.imagesrc;
 
         payCardRoyalty();
 
@@ -687,7 +735,7 @@ function wellButtonDownEvent()
             drillable = 0;
             errmsg = "cannot drill after buying property";
         }
-        else if (turn.drillsused == curcard.ndrills) {
+        else if (turn.drillsused == turn.card.ndrills) {
             drillable = 0;
             errmsg = "no more drills permitted";
         }
@@ -702,7 +750,7 @@ function wellButtonDownEvent()
     }
     else if (cursor.mode == "cap") {
         drillable = 0;
-        if (curcard.type != "fire") {
+        if (turn.card.type != "fire") {
             capable = 0;
             errmsg = "no caps permitted";
         }
@@ -887,12 +935,12 @@ function shedButtonDownEvent()
         buyable = 0;
         errmsg = "cursor.mode != buy";
     }
-    else if (curcard.ndrills > 0 && turn.drillsused == 0 &&
+    else if (turn.card.ndrills > 0 && turn.drillsused == 0 &&
              turn.fineable == 0) {
         buyable = 0;
         errmsg = "must drill at least once before buying property";
     }
-    else if (curcard.plotbuy == 0) {
+    else if (turn.card.plotbuy == 0) {
         buyable = 0;
         errmsg = "no property buy permitted";
     }
@@ -971,7 +1019,7 @@ function pipepadButtonDownEvent()
         }
         else if (p.owner != -1 && p.owner != turn.playernum) {
             pipeable = 0;
-            errmsg = "don't own pipe site " + p.id;
+            errmsg = "pipe site " + p.id + " already owned";
         }
         else if (plots[p.plotnumA - 1].owner != turn.playernum &&
                  plots[p.plotnumB - 1].owner != turn.playernum) {
@@ -1249,8 +1297,7 @@ function initWellButton(b)
     b.style.padding = "0px";
     b.style.position = "absolute";
     b.style.opacity = "0.0";
-//    b.style.cursor = "url('cursor.png'), pointer";
-    b.style.cursor = "auto";
+    b.style.cursor = "url('cursor.png'), pointer";
     document.body.appendChild(b);
 
 //    b.disabled = true;
@@ -1361,29 +1408,9 @@ function makeDrillButton()
     myDerrickIcon.button = b;
 }
 
-function makeNextButton()
-{
-    myNextIcon = new component(55, 66, "timeclock.png", 124, 672, "image", 0, 0);
-    var b = document.createElement("BUTTON");
-    b.addEventListener("mousedown", nextButtonDownEvent);
-    b.addEventListener("mouseup", nextButtonUpEvent);
-    b.style.border = "0px";
-    b.style.width = "55px";
-    b.style.height = "66px";
-    b.style.padding = "0px";
-    b.style.position = "absolute";
-    b.style.opacity = "0.0";
-    b.style.top = 682 + "px";
-    b.style.left = 134 + "px";
-    b.style.cursor = "url('cursor.png'), pointer";
-    document.body.appendChild(b);
-
-    myNextIcon.button = b;
-}
-
 function makeDrawButton()
 {
-    myDrawIcon = new component(55, 66, "wildcat.png", 126, 584, "image", 0, 0);
+    myDrawIcon = new component(55, 66, "wildcat.png", 126, 680, "image", 0, 0);
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", drawCardDownEvent);
     b.addEventListener("mouseup", drawCardUpEvent);
@@ -1393,12 +1420,32 @@ function makeDrawButton()
     b.style.padding = "0px";
     b.style.position = "absolute";
     b.style.opacity = "0.0";
-    b.style.top = 592 + "px";
+    b.style.top = 688 + "px";
     b.style.left = 134 + "px";
     b.style.cursor = "url('cursor.png'), pointer";
     document.body.appendChild(b);
 
     myDrawIcon.button = b;
+}
+
+function makeNextButton()
+{
+    myNextIcon = new component(55, 66, "timeclock.png", 124, 762, "image", 0, 0);
+    var b = document.createElement("BUTTON");
+    b.addEventListener("mousedown", nextButtonDownEvent);
+    b.addEventListener("mouseup", nextButtonUpEvent);
+    b.style.border = "0px";
+    b.style.width = "55px";
+    b.style.height = "66px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "0.0";
+    b.style.top = 772 + "px";
+    b.style.left = 134 + "px";
+    b.style.cursor = "url('cursor.png'), pointer";
+    document.body.appendChild(b);
+
+    myNextIcon.button = b;
 }
 
 function makeFineButton()
@@ -1413,7 +1460,7 @@ function makeFineButton()
     b.style.padding = "0px";
     b.style.position = "absolute";
     b.style.opacity = "1.0";
-    b.style.top = 772 + "px";
+    b.style.top = 857 + "px";
     b.style.left = 134 + "px";
     b.style.cursor = "url('cursor.png'), pointer";
     b.style.backgroundColor = "pink";
@@ -1434,7 +1481,7 @@ function makeDebugButton()
     b.style.position = "absolute";
     b.style.opacity = "1.0";
     b.style.top = 817 + "px";
-    b.style.left = 134 + "px";
+    b.style.left = 34 + "px";
     b.style.cursor = "url('cursor.png'), pointer";
     b.style.backgroundColor = "lightgrey";
     document.body.appendChild(b);
@@ -1467,7 +1514,6 @@ function makeRotationButtons()
 {
     for (var i = 0; i < 3; i++) {
         var x = document.createElement("INPUT");
-        x.disabled = true;
         x.setAttribute("type", "text");
         x.setAttribute("value", detenterotation[i]);
         x.style.width = "20px";
@@ -1554,6 +1600,140 @@ function makeTurnDisplay()
     turnmsg.style.top = 942 + "px";
 }
 
+function makePlayerDisplay()
+{
+    d = document.createElement("DIV");
+//    d.addEventListener("mousedown", playerDivDownEvent);
+    d.style.border = "3px solid #8080ff";
+    d.style.borderRadius = "7px";
+    d.style.width = 200 + "px";
+    d.style.height = 80 + "px";
+    d.style.position = "absolute";
+    d.style.left = 15 + "px";
+    d.style.top = 150 + (playerDisplays.length * 88) + "px";
+debugmsg.innerText = "foo " + playerDisplays.length;
+    d.style.backgroundColor = "grey";
+    d.style.opacity = "0.7";
+    d.style.font = "bold 20px arial,serif";
+    document.body.appendChild(d);
+
+    playerDisplays.push(d);
+
+    myAddPlayerButton.style.top = 150 + (playerDisplays.length * 88) + "px";
+
+    return d;
+}
+
+function addPlayer(name)
+{
+    var player = {
+        name: name,
+        color: playercolors[players.length],
+        plots: [],
+        money: 80000,
+        nwells: 0,
+        pipelines: 0,
+        msg: [],
+    }
+
+    players.push(player);
+}
+
+function addPlayerButtonDownEvent()
+{
+    var x = document.createElement("INPUT");
+    x.setAttribute("type", "text");
+    x.setAttribute("value", "Unit");
+    x.style.width = "100px";
+    x.style.padding = "0px";
+//    x.style.position = "absolute";
+//    x.style.left = 15 + "px";
+//    x.style.top = 500 + "px";
+    x.style.position = "relative";
+    x.style.left = 5 + "px";
+    x.style.top = 5 + "px";
+    x.style.textAlign = "center";
+//    document.body.appendChild(x);
+
+    addPlayer(x.value);
+
+    var player = players[players.length - 1];
+    var display = makePlayerDisplay();
+    display.appendChild(x);
+    player.display = display;
+    display.innerHTML = player.name;
+
+    if (players.length == 4) {
+        myAddPlayerButton.style.opacity = "0.0";
+        myAddPlayerButton.disabled = true;
+    }
+}
+
+function makeAddPlayerButton()
+{
+    var b = document.createElement("BUTTON");
+    b.addEventListener("mousedown", addPlayerButtonDownEvent);
+    b.style.borderRadius = "30px";
+    b.style.width = "40px";
+    b.style.height = "40px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.top = 150 + (playerDisplays.length * 88) + "px";
+    b.style.backgroundColor = "grey";
+    b.style.opacity = "0.7";
+    b.style.font = "bold 20px arial,serif";
+    b.style.cursor = "url('cursor.png'), pointer";
+    document.body.appendChild(b);
+
+    b.innerText = "+";
+
+    myAddPlayerButton = b;
+}
+
+function makeCardStatusDisplay()
+{
+    d = document.createElement("DIV");
+//    d.addEventListener("mousedown", cardStatusDownEvent);
+    d.style.border = "3px solid #8080ff";
+    d.style.borderRadius = "7px";
+    d.style.width = 200 + "px";
+    d.style.height = 73 + "px";
+    d.style.position = "absolute";
+    d.style.left = 15 + "px";
+    d.style.top = 517 + "px";
+    d.style.backgroundColor = "grey";
+    d.style.opacity = "0.7";
+    d.style.font = "bold 15px arial,serif";
+    document.body.appendChild(d);
+
+    d.innerText = "CURRENT CARD";
+
+    myCardStatusDiv = d;
+}
+
+function makeTurnResultDisplay()
+{
+    d = document.createElement("DIV");
+//    d.addEventListener("mousedown", turnResultDownEvent);
+    d.style.border = "3px solid #8080ff";
+    d.style.borderRadius = "7px";
+    d.style.width = 200 + "px";
+    d.style.height = 73 + "px";
+    d.style.position = "absolute";
+    d.style.left = 15 + "px";
+    d.style.top = 598 + "px";
+    d.style.backgroundColor = "grey";
+    d.style.opacity = "0.7";
+    d.style.font = "bold 15px arial,serif";
+    document.body.appendChild(d);
+
+    d.innerText = "TURN RESULT";
+
+    myTurnResultDiv = d;
+}
+
+//var oilspill;
+
 function startGame()
 {
     turn.playernum = 0;
@@ -1565,9 +1745,29 @@ function startGame()
 
     setCursor(cursorKingOil);
 
-    makeStatusDisplay();
     makeDebugDisplay();
+    makeStatusDisplay();
     makeTurnDisplay();
+
+    makeAddPlayerButton();
+
+//    addPlayer("TONI", "red");
+//    addPlayer("MONICA", "white");
+    for (var i = 0; i < players.length; i++) {
+        var display = makePlayerDisplay();
+        players[i].display = display;
+        display.innerHTML = players[i].name;
+
+        if (i == 3) {
+            myAddPlayerButton.style.opacity = "0.0";
+            myAddPlayerButton.disabled = true;
+        }
+    }
+
+    players[0].display.style.backgroundColor = "lightblue";
+
+    makeCardStatusDisplay();
+    makeTurnResultDisplay();
 
     makeBuyButton();
     makeCapButton();
@@ -1628,6 +1828,7 @@ function startGame()
     updatePlayersDisplay();
 
     myGameArea.start();
+//    oilspill = new component(80, 40, "spill.png", 500, 900, "image");
 }
 
 function keyDownEvent(e)
@@ -1648,8 +1849,7 @@ var myGameArea = {
     start : function() {
         this.canvas.width = 1100;
         this.canvas.height = 1000;
-//        this.canvas.style.cursor = "url('cursor.png'), pointer";
-        this.canvas.style.cursor = "auto";
+        this.canvas.style.cursor = "url('cursor.png'), pointer";
         this.context = this.canvas.getContext("2d");
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
         this.frameNo = 0;
@@ -1726,6 +1926,7 @@ function updateGameArea()
     for (var i = 0; i < wells.length; i++) {
         wells[i].update();
     }
+//    oilspill.update();
 
     if (myGameArea.x && myGameArea.y) {
         myGamePiece.x = myGameArea.x;
