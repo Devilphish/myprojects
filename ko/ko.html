@@ -65,7 +65,7 @@ var buyable;
 var nextable;
 var toolable;
 var drawable;
-var cursor;
+var curcursor;
 
 var pipepadNone = {
     id: "none"
@@ -317,13 +317,13 @@ function buyButtonDownEvent()
     errmsg = "";
     toolable = 1;
 
-    if (cursor.type == "tool" && cursor.mode != "buy") {
+    if (curcursor.type == "tool" && curcursor.mode != "buy") {
         toolable = 0;
         errmsg = "must put tool down to pick up new tool";
     }
 
     if (toolable) {
-        if (cursor.mode == "buy") {
+        if (curcursor.mode == "buy") {
             setCursor(cursorKingOil);
             myShedIcon.image.src = turn.player.color + "shed.png";
             myShedIcon.button.style.opacity = "0.0";
@@ -337,7 +337,7 @@ function buyButtonDownEvent()
             }
         }
         else {
-            if (cursor.mode != "drill" && cursor.mode != "cap") {
+            if (curcursor.mode != "drill" && curcursor.mode != "cap") {
                 cursorShed.imagesrc = turn.player.color + "shed.png";
                 setCursor(cursorShed);
                 myShedIcon.image.src = turn.player.color + "shed_outline.png";
@@ -366,13 +366,13 @@ function capButtonDownEvent()
     errmsg = "";
     toolable = 1;
 
-    if (cursor.type == "tool" && cursor.mode != "cap") {
+    if (curcursor.type == "tool" && curcursor.mode != "cap") {
         toolable = 0;
         errmsg = "must put tool down to pick up new tool";
     }
 
     if (toolable) {
-        if (cursor.mode == "cap") {
+        if (curcursor.mode == "cap") {
             setCursor(cursorKingOil);
             myCapIcon.image.src = turn.player.color + "cap.png";
             myCapIcon.button.style.opacity = "0.0";
@@ -387,7 +387,7 @@ function capButtonDownEvent()
             }
         }
         else {
-            if (cursor.mode != "drill" && cursor.mode != "buy") {
+            if (curcursor.mode != "drill" && curcursor.mode != "buy") {
                 cursorCap.imagesrc = turn.player.color + "cap.png";
                 setCursor(cursorCap);
                 myCapIcon.image.src = turn.player.color + "cap_outline.png";
@@ -419,13 +419,13 @@ function pipeButtonDownEvent()
     errmsg = "";
     toolable = 1;
 
-    if (cursor.type == "tool" && cursor.mode != "pipe") {
+    if (curcursor.type == "tool" && curcursor.mode != "pipe") {
         toolable = 0;
         errmsg = "must put tool down to pick up new tool";
     }
 
     if (toolable) {
-        if (cursor.mode == "pipe") {
+        if (curcursor.mode == "pipe") {
             var removeable = 1;
             if (turn.removedpipepad != pipepadNone && turn.npiperemove < 0) {
                 removeable = 0;
@@ -453,7 +453,7 @@ function pipeButtonDownEvent()
             }
         }
         else {
-            if (cursor.mode != "drill" && cursor.mode != "cap") {
+            if (curcursor.mode != "drill" && curcursor.mode != "cap") {
                 cursorPipe.imagesrc = turn.player.color + "pipe.png";
                 setCursor(cursorPipe);
                 myPipeIcon.image.src = turn.player.color + "pipe_outline.png";
@@ -484,13 +484,13 @@ function drillButtonDownEvent()
     errmsg = "";
     toolable = 1;
 
-    if (cursor.type == "tool" && cursor.mode != "drill") {
+    if (curcursor.type == "tool" && curcursor.mode != "drill") {
         toolable = 0;
         errmsg = "must put tool down to pick up new tool";
     }
 
     if (toolable) {
-        if (cursor.mode == "drill") {
+        if (curcursor.mode == "drill") {
             setCursor(cursorKingOil);
             myDerrickIcon.image.src = "derrick0.png";
             myDerrickIcon.button.style.opacity = "0.0";
@@ -506,7 +506,7 @@ function drillButtonDownEvent()
             }
         }
         else {
-            if (cursor.mode != "buy" && cursor.mode != "cap") {
+            if (curcursor.mode != "buy" && curcursor.mode != "cap") {
                 setCursor(cursorDerrick0);
                 myDerrickIcon.image.src = "derrick0_outline.png";
                 myDerrickIcon.button.style.opacity = "0.2";
@@ -546,7 +546,7 @@ function nextButtonDownEvent()
         nextable = 0;
         errmsg = "must buy property to start game";
     }
-    else if (cursor.type == "tool") {
+    else if (curcursor.type == "tool") {
         nextable = 0;
         errmsg = "must put tool down to clock out";
     }
@@ -759,7 +759,7 @@ function wellButtonDownEvent()
         capable = 0;
         errmsg = "must draw card";
     }
-    else if (cursor.mode == "drill") {
+    else if (curcursor.mode == "drill") {
         capable = 0;
         if (turn.propertybought) {
             drillable = 0;
@@ -778,7 +778,7 @@ function wellButtonDownEvent()
             errmsg = "already drilled";
         }
     }
-    else if (cursor.mode == "cap") {
+    else if (curcursor.mode == "cap") {
         drillable = 0;
         if (turn.card.type != "fire") {
             capable = 0;
@@ -804,14 +804,14 @@ function wellButtonDownEvent()
     else {
         drillable = 0;
         capable = 0;
-        errmsg = "cursor.mode != cap or drill";
+        errmsg = "curcursor.mode != cap or drill";
     }
     if (sandbox) {
-        if (cursor.mode == "drill") {
+        if (curcursor.mode == "drill") {
             drillable = 1;
             capable = 0;
         }
-        else if (cursor.mode == "cap") {
+        else if (curcursor.mode == "cap") {
             capable = 1;
             drillable = 0;
         }
@@ -863,9 +863,7 @@ if (0) {
         errmsg += " well - $" + cost;
 }
 
-        setCursor(cursorKingOil);
-        drillAnimation.hole = h;
-        startDrillAnimation(h.left - 27, h.top - 167, h.drill);
+        startDrillAnimation(h);
 
         h.button.style.opacity = "0.0";
     }
@@ -928,9 +926,9 @@ function shedButtonDownEvent()
         buyable = 0;
         errmsg = "must draw card";
     }
-    else if (cursor.mode != "buy") {
+    else if (curcursor.mode != "buy") {
         buyable = 0;
-        errmsg = "cursor.mode != buy";
+        errmsg = "curcursor.mode != buy";
     }
     else if (turn.card.ndrills > 0 && turn.drillsused == 0 &&
              turn.fineable == 0) {
@@ -1009,7 +1007,7 @@ function pipepadButtonDownEvent()
         removepipeable = 0;
         errmsg = "must draw card";
     }
-    else if (cursor.mode == "pipe") {
+    else if (curcursor.mode == "pipe") {
         removepipeable = 0;
         if (turn.removedpipepad != pipepadNone && turn.removedpipepad != p) {
             pipeable = 0;
@@ -1030,24 +1028,24 @@ function pipepadButtonDownEvent()
             errmsg = "you own both pipe site plots of " + p.id;
         }
     }
-    else if (cursor.mode == "action") {
+    else if (curcursor.mode == "action") {
         pipeable = 0;
         if (p.pipes.length == 0) {
             removepipeable = 0;
-            errmsg = "cursor.mode != pipe";
+            errmsg = "curcursor.mode != pipe";
         }
     }
     else {
         pipeable = 0;
         removepipeable = 0;
-        errmsg = "cursor.mode != pipe";
+        errmsg = "curcursor.mode != pipe";
     }
     if (sandbox) {
-        if (cursor.mode == "pipe") {
+        if (curcursor.mode == "pipe") {
             pipeable = 1;
             removepipeable = 0;
         }
-        else if (cursor.mode == "action") {
+        else if (curcursor.mode == "action") {
             if (p.pipes.length > 0) {
                 removepipeable = 1;
             }
@@ -1843,43 +1841,75 @@ var frame;
 var iId;
 var topatopa;
 var height;
+var depth;
+var shake;
+var shakeInterval = 50;
+var shakeOffset;
+var animationHole;
+var cursorsave;
 
-function startDrillAnimation(x, y, depth)
+function startDrillAnimation(hole)
 {
-    frame = 3;
-    topatopa = y;
+    animationHole = hole;
+
+    depth = hole.drill;
+    topatopa = hole.top - 167;
     height = 167;
-    drillAnimation.x = x;
+    drillAnimation.x = hole.left - 27;
     drillAnimation.y = topatopa;
     drillAnimation.height = height;
     drillAnimation.active = 1;
+    cursorsave = curcursor;
+    setCursor(cursorKingOil);
     drillAnimation.image.src = "derrick3_nobit.png";
     drillAnimation.update();
-    iId = setInterval(drilldown, 1000);
+
+    frame = 3;
+    shake = 750 / shakeInterval;
+    shakeOffset = -5;
+    iId = setInterval(drilldown, shakeInterval);
 
     function drilldown() {
+        var h = animationHole;
+
+        shake--;
+        if (shake != 0) {
+            drillAnimation.x += shakeOffset;
+            shakeOffset = -shakeOffset;
+
+            return;
+        }
+        else {
+            shake = 750 / shakeInterval;
+        }
+
         if (frame == -1) {
             clearInterval(iId);
             drillAnimation.active = 0;
-            setCursor(cursorDerrick0);
+            setCursor(cursorsave);
 
             oilspill.x = 500;
             oilspill.y = 900;
         }
         else if (frame == depth || frame == 1) {
-            var h = drillAnimation.hole;
             var cost = drillDepthCost[h.drill + 1];
 
-            transferMoney(turn.player, bankPlayer, cost);
-            turn.drillsused++;
+            shakeOffset = 0;
+
+            if (h != dummyhole) {
+                transferMoney(turn.player, bankPlayer, cost);
+                turn.drillsused++;
+            }
 
             if (h.drill > 0) {
-                turn.player.nwells++;
-                plots[h.plot - 1].nwells++;
-                h.well = new component(18, 60,
-                    turn.player.color + "well.png",
-                    h.left - 16, h.top - 60, "image");
-                wells[wells.length++] = h.well;
+                if (h != dummyhole) {
+                    turn.player.nwells++;
+                    plots[h.plot - 1].nwells++;
+                    h.well = new component(18, 60,
+                        turn.player.color + "well.png",
+                        h.left - 16, h.top - 60, "image");
+                    wells[wells.length++] = h.well;
+                }
 
                 oilspill.x = drillAnimation.x - 20;
                 oilspill.y = drillAnimation.y + height - 20;
@@ -1895,9 +1925,11 @@ function startDrillAnimation(x, y, depth)
                 }
             }
             else {
-                caps[caps.length++] = new component(25, 25,
-                    turn.player.color + "cap.png",
-                    h.left - 21, h.top - 25, "image");
+                if (h != dummyhole) {
+                    caps[caps.length++] = new component(25, 25,
+                        turn.player.color + "cap.png",
+                        h.left - 21, h.top - 25, "image");
+                }
 
                 topatopa += 20;
                 height -= 20;
@@ -1925,29 +1957,36 @@ function startDrillAnimation(x, y, depth)
     }
 }
 
+var dummyhole = {
+    id: "2a", plot: 2, spoke: 8, ring: 5, left: 481, top: 261,
+    drill: 1, button: {}, well: {}
+};
+
 function keyDownEvent(e)
 {
     debugmsg.innerText = "KEY DOWN " + e.code;
 
-    if (e.code == "KeyB") {
-        frame = 3;
-        topatopa = 500;
-        height = 167;
-        drillAnimation.active = 1;
-        drillAnimation.update();
-        iId = setInterval(drilldown, 500);
-        function drilldown() {
-            if (frame == 0) {
-                clearInterval(iId);
-                drillAnimation.active = 0;
-            }
-            frame--;
-            drillAnimation.image.src = "derrick" + frame + "_nobit.png";
-            topatopa += 20;
-            height -= 20;
-            drillAnimation.y = topatopa;
-            drillAnimation.height = height;
-        }
+    if (e.code == "KeyD") {
+        startDrillAnimation(dummyhole);
+
+//        frame = 3;
+//        topatopa = 500;
+//        height = 167;
+//        drillAnimation.active = 1;
+//        drillAnimation.update();
+//        iId = setInterval(drilldown, 1000);
+//        function drilldown() {
+//            if (frame == 0) {
+//                clearInterval(iId);
+//                drillAnimation.active = 0;
+//            }
+//            frame--;
+//            drillAnimation.image.src = "derrick" + frame + "_nobit.png";
+//            topatopa += 20;
+//            height -= 20;
+//            drillAnimation.y = topatopa;
+//            drillAnimation.height = height;
+//        }
     }
 
     if (e.code == "KeyW") {
@@ -2086,7 +2125,7 @@ function actionMode()
 
 function setCursor(c)
 {
-    cursor = c;
+    curcursor = c;
 
     if (c == cursorKingOil) {
         myGamePiece.enabled = 0;
