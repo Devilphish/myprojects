@@ -32,6 +32,7 @@ var randomButton;
 
 var detenterotationinput = [];
 var drillAnimation;
+var shuffleAnimation = [];
 var myStatusButton;
 var myAddPlayerButton;
 var myGamePiece;
@@ -595,6 +596,11 @@ function nextButtonDownEvent()
 
             myCardStatusDiv.innerText = "CURRENT CARD";
             myCardStatusDiv.style.backgroundColor = "grey";
+
+            if (deck.length == 0) {
+                startShuffleAnimation();
+                initDeck();
+            }
         }
 
         turn.player = players[turn.playernum];
@@ -628,7 +634,11 @@ function drawCardDownEvent()
     errmsg = "";
     drawable = 1;
 
-    if (gameMode == "start" && turn.propertybought == 0) {
+    if (deck.length == 0) {
+        drawable = 0;
+        errmsg = "deck empty";
+    }
+    else if (gameMode == "start" && turn.propertybought == 0) {
         drawable = 0;
         errmsg = "must buy property to start game";
     }
@@ -637,7 +647,9 @@ function drawCardDownEvent()
         errmsg = "cannot draw card";
     }
     if (sandbox) {
-        drawable = 1;
+        if (deck.length) {
+            drawable = 1;
+        }
     }
 
     cardnum = -1;
@@ -711,13 +723,11 @@ function drawCardDownEvent()
 
         payCardRoyalty();
 
-        for (var i = cardnum; i < (deck.length - 1); i++) {
-            deck[i] = deck[i + 1];
-        }
-        deck.length--;
-        if (deck.length == 0) {
-            shuffled = 1;
-            initDeck();
+        if (!curstate.contshuffleEnable) {
+            for (var i = cardnum; i < (deck.length - 1); i++) {
+                deck[i] = deck[i + 1];
+            }
+            deck.length--;
         }
 
         actionMode();
@@ -741,6 +751,37 @@ function drawCardUpEvent()
         debugmsg.innerText = "UP DRAW card " + cardnum + " (" + deck.length + ")";
         if (shuffled) {
             debugmsg.innerText += " SHUFFLE";
+        }
+    }
+}
+
+function completeDrill(h)
+{
+    var cost = drillDepthCost[h.drill + 1];
+
+    if (h != dummyhole) {
+        transferMoney(turn.player, bankPlayer, cost);
+        turn.drillsused++;
+    }
+
+    if (h.drill > 0) {
+        if (h != dummyhole) {
+            turn.player.nwells++;
+            plots[h.plot - 1].nwells++;
+            h.well = new component(18, 60,
+                turn.player.color + "well.png",
+                h.left - 16, h.top - 60, "image");
+            wells[wells.length++] = h.well;
+        }
+    }
+    else {
+        if (h != dummyhole) {
+            if (curstate.soundEnable) {
+                ss.play();
+            }
+            caps[caps.length++] = new component(25, 25,
+                turn.player.color + "cap.png",
+                h.left - 21, h.top - 25, "image");
         }
     }
 }
@@ -832,38 +873,13 @@ function wellButtonDownEvent()
             }
         }
         h.drill = curwell;
-        cost = drillDepthCost[h.drill + 1];
 
-if (0) {
-        transferMoney(turn.player, bankPlayer, cost);
-        turn.drillsused++;
-
-        if (curwell > 0) {
-            turn.player.nwells++;
-            plots[h.plot - 1].nwells++;
-            h.well = new component(18, 60, turn.player.color + "well.png", h.left - 16, h.top - 60, "image");
-            wells[wells.length++] = h.well;
-
-            if (h.drill == 3) {
-                errmsg = "shallow";
-            }
-            else if (h.drill == 2) {
-                errmsg = "medium";
-            }
-            else if (h.drill == 1) {
-                errmsg = "deep";
-            }
+        if (curstate.drillAnimationEnable) {
+            startDrillAnimation(h);
         }
         else {
-            caps[caps.length++] = new component(25, 25, turn.player.color + "cap.png", h.left - 21, h.top - 25, "image");
-
-            errmsg = "dry";
+            completeDrill(h);
         }
-
-        errmsg += " well - $" + cost;
-}
-
-        startDrillAnimation(h);
 
         h.button.style.opacity = "0.0";
     }
@@ -1253,7 +1269,8 @@ function debugButtonDownEvent()
         debugButton.style.opacity = "0.0";
     }
     else if (sandbox == 2) {
-errmsg = "drill all holes ";
+        startShuffleAnimation();
+
         debugButton.style.backgroundColor = "green";
     }
     else { // sandbox == 1
@@ -1409,7 +1426,7 @@ function makeDrillButton()
 
 function makeDrawButton()
 {
-    myDrawIcon = new component(55, 66, "wildcat.png", 134, 680, "image", 0, 0);
+    myDrawIcon = new component(55, 66, "wildcat.png", 140, 680, "image", 0, 0);
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", drawCardDownEvent);
     b.addEventListener("mouseup", drawCardUpEvent);
@@ -1420,7 +1437,7 @@ function makeDrawButton()
     b.style.position = "absolute";
     b.style.opacity = "0.0";
     b.style.top = 688 + "px";
-    b.style.left = 142 + "px";
+    b.style.left = 148 + "px";
     b.style.cursor = "url('cursor.png'), pointer";
     document.body.appendChild(b);
 
@@ -1429,7 +1446,7 @@ function makeDrawButton()
 
 function makeNextButton()
 {
-    myNextIcon = new component(55, 66, "timeclock.png", 132, 762, "image", 0, 0);
+    myNextIcon = new component(55, 66, "timeclock.png", 138, 762, "image", 0, 0);
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", nextButtonDownEvent);
     b.addEventListener("mouseup", nextButtonUpEvent);
@@ -1440,7 +1457,7 @@ function makeNextButton()
     b.style.position = "absolute";
     b.style.opacity = "0.0";
     b.style.top = 772 + "px";
-    b.style.left = 142 + "px";
+    b.style.left = 148 + "px";
     b.style.cursor = "url('cursor.png'), pointer";
     document.body.appendChild(b);
 
@@ -1462,7 +1479,7 @@ function makeFineButton()
     b.style.position = "absolute";
     b.style.opacity = "1.0";
     b.style.top = 850 + "px";
-    b.style.left = 134 + "px";
+    b.style.left = 140 + "px";
     b.style.font = "bold 13px arial,serif";
     b.style.cursor = "url('cursor.png'), pointer";
     b.style.backgroundColor = "pink";
@@ -1737,11 +1754,119 @@ function makeTurnResultDisplay()
 }
 
 var oilspill;
+var ss;
+var dat;
+var att;
+var adt;
+var st;
+var cst;
+
+var curstate = {
+    drillAnimationEnable: false,
+    autotoolEnable: false,
+    autodrawEnable: false,
+    soundEnable: false,
+    contshuffleEnable: false,
+};
+
+function toggleDADownEvent()
+{
+    curstate.drillAnimationEnable = !dat.checked;
+}
+
+function toggleATDownEvent()
+{
+    curstate.autotoolEnable = !att.checked;
+
+    myStatusButton.style.opacity = "0.7";
+    myStatusButton.hidden = 0;
+    myStatusButton.innerHTML = this.id + " not implemented";
+}
+
+function toggleADDownEvent()
+{
+    curstate.autodrawEnable = !adt.checked;
+
+    myStatusButton.style.opacity = "0.7";
+    myStatusButton.hidden = 0;
+    myStatusButton.innerHTML = this.id + " not implemented";
+}
+
+function toggleSDownEvent()
+{
+    curstate.soundEnable = !st.checked;
+}
+
+function toggleCSDownEvent()
+{
+    curstate.contshuffleEnable = !cst.checked;
+}
 
 function startGame()
 {
     turn.playernum = 0;
     turn.player = players[turn.playernum];
+
+    ss = document.getElementById("sadsack");
+    dat = document.getElementById("drillAnimationToggle");
+    dat.addEventListener("mousedown", toggleDADownEvent);
+    dat.style.position = "absolute";
+    dat.style.left = 120 + "px";
+    dat.style.top = 700 + "px";
+    var t = document.getElementById("DATText");
+    t.style.position = "absolute";
+    t.style.left = 10 + "px";
+    t.style.top = 673 + "px";
+    t.style.padding = "0px";
+    t.style.color = "white";
+
+    att = document.getElementById("autotoolToggle");
+    att.addEventListener("mousedown", toggleATDownEvent);
+    att.style.position = "absolute";
+    att.style.left = 120 + "px";
+    att.style.top = 718 + "px";
+    t = document.getElementById("ATTText");
+    t.style.position = "absolute";
+    t.style.left = 10 + "px";
+    t.style.top = 706 + "px";
+    t.style.padding = "0px";
+    t.style.color = "white";
+
+    adt = document.getElementById("autodrawToggle");
+    adt.addEventListener("mousedown", toggleADDownEvent);
+    adt.style.position = "absolute";
+    adt.style.left = 120 + "px";
+    adt.style.top = 736 + "px";
+    t = document.getElementById("ADTText");
+    t.style.position = "absolute";
+    t.style.left = 10 + "px";
+    t.style.top = 724 + "px";
+    t.style.padding = "0px";
+    t.style.color = "white";
+
+    st = document.getElementById("soundToggle");
+    st.addEventListener("mousedown", toggleSDownEvent);
+    st.style.position = "absolute";
+    st.style.left = 120 + "px";
+    st.style.top = 754 + "px";
+    t = document.getElementById("STText");
+    t.style.position = "absolute";
+    t.style.left = 10 + "px";
+    t.style.top = 742 + "px";
+    t.style.padding = "0px";
+    t.style.color = "white";
+
+    cst = document.getElementById("shuffleToggle");
+    cst.addEventListener("mousedown", toggleCSDownEvent);
+    cst.style.position = "absolute";
+    cst.style.left = 120 + "px";
+    cst.style.top = 787 + "px";
+    t = document.getElementById("CSTText");
+    t.style.position = "absolute";
+    t.style.left = 10 + "px";
+    t.style.top = 760 + "px";
+    t.style.padding = "0px";
+    t.style.color = "white";
 
     myGamePiece = new component(60, 60, "KingOilIcon.png", 0, 0, "image", 20, 20);
     myGamePiece.enabled = 0;
@@ -1829,12 +1954,44 @@ function startGame()
     drillAnimation = new component(36, 167, "derrick3_nobit.png", 0, 0, "image");
     drillAnimation.active = 0;
 
+    var side = -1;
+    for (var i = 0; i < cards.length; i++) {
+        shuffleAnimation[i] = new component(192, 50, "wildcat_shuffle.png", 520 + i / 2 + (side * 75), 470 - i, "image");
+        shuffleAnimation[i].active = 0;
+        side = -side;
+    }
+
     initDeck();
 
     updatePlayersDisplay();
 
     myGameArea.start();
     oilspill = new component(80, 40, "spill.png", 500, 900, "image");
+}
+
+var siId;
+var cardInterval = 50;
+var shufflecount;
+
+function startShuffleAnimation()
+{
+    shufflecount = 0;
+    siId = setInterval(shufflecards, cardInterval);
+
+    function shufflecards() {
+        if (shufflecount == cards.length) {
+            for (var i = 0; i < cards.length; i++) {
+                shuffleAnimation[i].active = 0;
+            }
+
+            clearInterval(siId);
+        }
+        else {
+            shuffleAnimation[shufflecount].active = 1;
+            shuffleAnimation[shufflecount].update();
+            shufflecount++;
+        }
+    }
 }
 
 var frame;
@@ -1892,25 +2049,11 @@ function startDrillAnimation(hole)
             oilspill.y = 900;
         }
         else if (frame == depth || frame == 1) {
-            var cost = drillDepthCost[h.drill + 1];
-
             shakeOffset = 0;
 
-            if (h != dummyhole) {
-                transferMoney(turn.player, bankPlayer, cost);
-                turn.drillsused++;
-            }
+            completeDrill(h);
 
             if (h.drill > 0) {
-                if (h != dummyhole) {
-                    turn.player.nwells++;
-                    plots[h.plot - 1].nwells++;
-                    h.well = new component(18, 60,
-                        turn.player.color + "well.png",
-                        h.left - 16, h.top - 60, "image");
-                    wells[wells.length++] = h.well;
-                }
-
                 oilspill.x = drillAnimation.x - 20;
                 oilspill.y = drillAnimation.y + height - 20;
 
@@ -1925,12 +2068,6 @@ function startDrillAnimation(hole)
                 }
             }
             else {
-                if (h != dummyhole) {
-                    caps[caps.length++] = new component(25, 25,
-                        turn.player.color + "cap.png",
-                        h.left - 21, h.top - 25, "image");
-                }
-
                 topatopa += 20;
                 height -= 20;
                 drillAnimation.image.src = "derrick0_nobit.png";
@@ -2094,7 +2231,12 @@ function updateGameArea()
     for (var i = 0; i < wells.length; i++) {
         wells[i].update();
     }
-    if (drillAnimation != undefined && drillAnimation.active) {
+    for (var i = 0; i < cards.length; i++) {
+        if (shuffleAnimation[i].active) {
+            shuffleAnimation[i].update();
+        }
+    }
+    if (drillAnimation.active) {
         drillAnimation.update();
     }
 
@@ -2146,6 +2288,20 @@ function setCursor(c)
   <pre id="debuglog" font-weight="bold"> X:  Y:  </pre>
   <pre id="statuslog"></pre>
   <pre id="turnlog"> player: </pre>
+</div>
+<audio id="sadsack" src="sadsack.amr">
+</audio>
+<div>
+<pre id="DATText"> Drill Animation </pre>
+<input id="drillAnimationToggle" type="checkbox"/>
+<pre id="ATTText"> Autotool </pre>
+<input id="autotoolToggle" type="checkbox"/>
+<pre id="ADTText"> Autodraw </pre>
+<input id="autodrawToggle" type="checkbox"/>
+<pre id="STText"> Sound effects </pre>
+<input id="soundToggle" type="checkbox"/>
+<pre id="CSTText"> Continuous Shuffle </pre>
+<input id="shuffleToggle" type="checkbox"/>
 </div>
 </body>
 </html>
