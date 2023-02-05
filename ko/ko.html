@@ -57,7 +57,6 @@ var turnmsg;
 var errmsg = "";
 var gameMode = "start";
 var cardnum = 0;
-var shuffled = 0;
 var drillable;
 var capable;
 var pipeable;
@@ -85,6 +84,24 @@ var cursorDerrick1 = {
     mode: "drill",
     type: "tool",
     imagesrc: "derrick1.png",
+    width: 200,
+    height: 300,
+    xoffset: 110,
+    yoffset: 295
+};
+var cursorDerrick2 = {
+    mode: "drill",
+    type: "tool",
+    imagesrc: "derrick2.png",
+    width: 200,
+    height: 300,
+    xoffset: 110,
+    yoffset: 295
+};
+var cursorDerrick3 = {
+    mode: "drill",
+    type: "tool",
+    imagesrc: "derrick3.png",
     width: 200,
     height: 300,
     xoffset: 110,
@@ -126,6 +143,8 @@ var cursorPipe = {
     xoffset: 22,
     yoffset: 60
 };
+
+var drillCursors = [ cursorDerrick0, cursorDerrick1, cursorDerrick2, cursorDerrick3 ];
 
 var drillDepthCost = [ 0, 6000, 6000, 4000, 2000 ];
 var playerDisplays = [];
@@ -173,7 +192,7 @@ var turn = {
     card: cardInit,
     drillsused: 0,
     propertybought: 0,
-    capsdone: 0,
+    capsrequired: 0,
     npiperemove: 0,
     fineable: 0,
     removedpipepad: pipepadNone,
@@ -186,8 +205,18 @@ function updatePlayersDisplay()
         var p = players[i];
         d.innerText = p.name + " $" + p.money + "\n";
         d.innerText += "wells: " + p.nwells + " plots: " + p.plots.length;
-        if (i == turn.playernum && turn.card.ndrills > 0) {
-            d.innerText += " drills: " + turn.drillsused + " of " + turn.card.ndrills;
+
+        if (i == turn.playernum && turn.fineable == 1) {
+            d.innerText += "\npay fine";
+        }
+        else if (i == turn.playernum && turn.card.ndrills > 0) {
+            d.innerText += "\ndrills: " + turn.drillsused + " of " + turn.card.ndrills;
+        }
+        else if (i == turn.playernum && turn.capsrequired > 0) {
+            d.innerText += "\ncaps required: " + turn.capsrequired;
+        }
+        else if (i == turn.playernum && gameMode == "draw") {
+            d.innerText += "\ndraw card";
         }
     }
 
@@ -236,15 +265,19 @@ function updatePlayersDisplay()
 
 function transferMoney(from, to, amount)
 {
+    var bankrupt = false;
+
     if (from.money < amount) {
         amount = from.money;
-
-        errmsg = "player " + from.name + " has gone BANKRUPT\n";
+        bankrupt = true;
     }
     from.money -= amount;
     to.money += amount;
 
-    errmsg += from.name + " pays $" + amount + " to " + to.name;
+    errmsg += from.name + " pays $" + amount + " to " + to.name + "\n";
+    if (bankrupt) {
+        errmsg += "player " + from.name + " has gone BANKRUPT\n";
+    }
 }
 
 function payCardRoyalty()
@@ -252,28 +285,23 @@ function payCardRoyalty()
     var royalty;
 
     if (turn.card.type == "fire") {
-        errmsg += "\nno royalty for fire";
+        errmsg += "no royalty for fire\n";
     }
     else {
-        var kind;
-
         if (turn.card.type == "depletion") {
             royalty = 500;
-            kind = " depletion allowance";
         }
         else {
             royalty = turn.player.nwells * turn.card.royalty;
-            kind = " royalty";
         }
         transferMoney(bankPlayer, turn.player, royalty);
     }
 
-    updatePlayersDisplay();
+//    updatePlayersDisplay();
 }
 
 function payPipeRoyalty()
 {
-//    errmsg = "Num plots: " + turn.player.plots.length + "\n";
     errmsg = "";
 
     for (var i = 0; i < turn.player.plots.length; i++) {
@@ -480,6 +508,24 @@ function pipeButtonUpEvent()
 {
 }
 
+function putAwayDrill()
+{
+    cursorsave = null;
+    setCursor(cursorKingOil);
+    myDerrickIcon.image.src = "derrick0.png";
+    myDerrickIcon.button.style.opacity = "0.0";
+
+    for (var i = 0; i < turn.player.plots.length; i++) {
+        var p = plots[turn.player.plots[i] - 1];
+
+        for (j = 0; j < p.holes.length; j++) {
+            // change all holes
+            p.holes[j].button.style.opacity = "0.0";
+//            p.holes[j].button.disabled = true;
+        }
+    }
+}
+
 function drillButtonDownEvent()
 {
     errmsg = "";
@@ -492,19 +538,7 @@ function drillButtonDownEvent()
 
     if (toolable) {
         if (curcursor.mode == "drill") {
-            setCursor(cursorKingOil);
-            myDerrickIcon.image.src = "derrick0.png";
-            myDerrickIcon.button.style.opacity = "0.0";
-
-            for (var i = 0; i < turn.player.plots.length; i++) {
-                var p = plots[turn.player.plots[i] - 1];
-
-                for (j = 0; j < p.holes.length; j++) {
-                    // change all holes
-                    p.holes[j].button.style.opacity = "0.0";
-//                    p.holes[j].button.disabled = true;
-                }
-            }
+            putAwayDrill();
         }
         else {
             if (curcursor.mode != "buy" && curcursor.mode != "cap") {
@@ -560,9 +594,9 @@ function nextButtonDownEvent()
         nextable = 0;
         errmsg = "must drill at least once before clocking out";
     }
-    else if (turn.capsdone > 0) {
+    else if (turn.capsrequired > 0) {
         nextable = 0;
-        errmsg = "must cap " + turn.capsdone + " more wells before clocking out";
+        errmsg = "must cap " + turn.capsrequired + " more wells before clocking out";
     }
     else if (turn.npiperemove > 0) {
         nextable = 0;
@@ -586,6 +620,8 @@ function nextButtonDownEvent()
                 }
                 myAddPlayerButton.style.opacity = "0.0";
                 myAddPlayerButton.disabled = true;
+
+                startShuffleAnimation();
             }
         }
 
@@ -606,7 +642,7 @@ function nextButtonDownEvent()
         turn.player = players[turn.playernum];
         turn.propertybought = 0;
         turn.drillsused = 0;
-        turn.capsdone = 0;
+        turn.capsrequired = 0;
         turn.npiperemove = 0;
         turn.fineable = 0;
         turn.player.display.style.backgroundColor = "lightblue";
@@ -617,6 +653,10 @@ function nextButtonDownEvent()
         myShedIcon.image.src = turn.player.color + "shed.png";
         myCapIcon.image.src = turn.player.color + "cap.png";
         myPipeIcon.image.src = turn.player.color + "pipe.png";
+
+        if (curstate.autodrawEnable) {
+            drawCardDownEvent();
+        }
     }
 
     updatePlayersDisplay();
@@ -634,7 +674,15 @@ function drawCardDownEvent()
     errmsg = "";
     drawable = 1;
 
-    if (deck.length == 0) {
+    if (curcursor.type == "tool") {
+        drawable = 0;
+        errmsg = "must put tool down to draw card";
+    }
+    else if (shuffleAnimation[0].active) {
+        drawable = 0;
+        errmsg = "can't draw while shuffling";
+    }
+    else if (deck.length == 0) {
         drawable = 0;
         errmsg = "deck empty";
     }
@@ -654,22 +702,26 @@ function drawCardDownEvent()
 
     cardnum = -1;
     if (drawable) {
-        shuffled = 0;
         cardnum = Math.floor((Math.random() * deck.length) + 1) - 1;
         turn.card = deck[cardnum];
         myCardStatusDiv.style.backgroundColor = "lightblue";
 
         if (turn.card.type == "fire") {
             // wells = 0: cap 0, 1-5: cap 1, 6-10: cap 2, 11 or more: cap 3
-            turn.capsdone = Math.floor((turn.player.nwells + 4) / 5);
-            if (turn.capsdone > 3) {
-                turn.capsdone = 3;
+            turn.capsrequired = Math.floor((turn.player.nwells + 4) / 5);
+            if (turn.capsrequired > 3) {
+                turn.capsrequired = 3;
+            }
+
+            if (curstate.autotoolEnable && turn.capsrequired > 0) {
+                actionMode();
+                capButtonDownEvent();
             }
 
             myCardStatusDiv.innerText = "CURRENT CARD\nFIRE\n";
-            myCardStatusDiv.innerText += "must cap " + turn.capsdone + " wells";
+            myCardStatusDiv.innerText += "must cap " + turn.capsrequired + " wells";
 
-            errmsg = "must cap " + turn.capsdone + " wells";
+            errmsg = "must cap " + turn.capsrequired + " wells";
         }
         else {
             var numstr;
@@ -712,10 +764,17 @@ function drawCardDownEvent()
                 }
             }
 
+            actionMode();
+
             if (emptyfound == 0) {
                 turn.fineable = 1;
 
                 errmsg = "no empty drill sites available, must pay fine\n";
+            }
+            else {
+                if (curstate.autotoolEnable) {
+                    drillButtonDownEvent();
+                }
             }
         }
 
@@ -724,20 +783,19 @@ function drawCardDownEvent()
         payCardRoyalty();
 
         if (!curstate.contshuffleEnable) {
+            // remove chosen card from deck[] (can't use arrayRemove())
             for (var i = cardnum; i < (deck.length - 1); i++) {
                 deck[i] = deck[i + 1];
             }
             deck.length--;
         }
 
-        actionMode();
+//        if (!(curstate.autotoolEnable && turn.capsrequired > 0)) {
+        if (!curstate.autotoolEnable) {
+            actionMode();
+        }
 
         debugmsg.innerText = "DOWN DRAW card " + cardnum + " (" + deck.length + ")";
-        if (shuffled) {
-            debugmsg.innerText += " SHUFFLE";
-
-            errmsg += " DECK SHUFFLED";
-        }
     }
 
     updatePlayersDisplay();
@@ -749,9 +807,6 @@ function drawCardUpEvent()
 
     if (cardnum != -1) {
         debugmsg.innerText = "UP DRAW card " + cardnum + " (" + deck.length + ")";
-        if (shuffled) {
-            debugmsg.innerText += " SHUFFLE";
-        }
     }
 }
 
@@ -773,6 +828,16 @@ function completeDrill(h)
                 h.left - 16, h.top - 60, "image");
             wells[wells.length++] = h.well;
         }
+
+        if (h.drill == 3) {
+            errmsg += "shallow";
+        }
+        else if (h.drill == 2) {
+            errmsg += "medium";
+        }
+        else if (h.drill == 1) {
+            errmsg += "deep";
+        }
     }
     else {
         if (h != dummyhole) {
@@ -782,6 +847,18 @@ function completeDrill(h)
             caps[caps.length++] = new component(25, 25,
                 turn.player.color + "cap.png",
                 h.left - 21, h.top - 25, "image");
+        }
+
+        errmsg += "dry";
+    }
+
+    errmsg += " well - $" + drillDepthCost[h.drill + 1] + "\n";
+
+    if (curstate.autotoolEnable) {
+        if (turn.drillsused == turn.card.ndrills) {
+//            drillButtonDownEvent();
+            putAwayDrill();
+            actionMode();
         }
     }
 }
@@ -795,6 +872,7 @@ function wellButtonDownEvent()
 
     drillable = 1;
     capable = 1;
+
     if (gameMode == "draw") {
         drillable = 0;
         capable = 0;
@@ -837,7 +915,7 @@ function wellButtonDownEvent()
             capable = 0;
             errmsg = "already capped";
         }
-        else if (turn.capsdone == 0) {
+        else if (turn.capsrequired == 0) {
             capable = 0;
             errmsg = "no more caps permitted";
         }
@@ -878,6 +956,9 @@ function wellButtonDownEvent()
             startDrillAnimation(h);
         }
         else {
+            cursorsave = curcursor;
+            setCursor(drillCursors[h.drill]);
+
             completeDrill(h);
         }
 
@@ -886,7 +967,7 @@ function wellButtonDownEvent()
     else if (capable) {
         h.drill = 0;
         turn.player.nwells--;
-        turn.capsdone--;
+        turn.capsrequired--;
 
         var plot = plots[h.plot - 1];
         plot.nwells--;
@@ -928,6 +1009,11 @@ function wellButtonDownEvent()
 function wellButtonUpEvent()
 {
     var h = this.hole;
+
+    if (!drillAnimation.active && cursorsave != null) {
+        setCursor(cursorsave);
+        cursorsave = null;
+    }
 
     debugmsg.innerText = "  UP WELL " + this.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring;
 }
@@ -1199,7 +1285,7 @@ function fineButtonDownEvent()
 
         fineButton.innerHTML = "FINED!";
 
-        errmsg = turn.player.name + " fined $10000";
+        errmsg += turn.player.name + " fined $10000";
     }
     else if (turn.fineable == 2) {
         errmsg = "already paid fine";
@@ -1626,10 +1712,10 @@ function makePlayerDisplay()
     d.style.border = "3px solid #6060ff";
     d.style.borderRadius = "7px";
     d.style.width = 200 + "px";
-    d.style.height = 80 + "px";
+    d.style.height = 75 + "px";
     d.style.position = "absolute";
     d.style.left = 15 + "px";
-    d.style.top = 150 + (playerDisplays.length * 88) + "px";
+    d.style.top = 145 + (playerDisplays.length * 83) + "px";
     d.style.backgroundColor = "grey";
     d.style.opacity = "0.7";
     d.style.font = "bold 20px arial,serif";
@@ -1681,7 +1767,7 @@ function addPlayerButtonDownEvent()
     var d = makePlayerDisplay();
     p.display = d;
     d.appendChild(x);
-debugmsg.innerText = "append '" + x + "' '" + players[2].display.firstElementChild + "'";
+//debugmsg.innerText = "append '" + x + "' '" + players[2].display.firstElementChild + "'";
     d.innerHTML = p.name;
 
     if (players.length == 4) {
@@ -1700,6 +1786,7 @@ function makeAddPlayerButton()
     b.style.padding = "0px";
     b.style.position = "absolute";
     b.style.top = 150 + (playerDisplays.length * 88) + "px";
+    b.style.left = 15 + "px";
     b.style.backgroundColor = "grey";
     b.style.opacity = "0.7";
     b.style.font = "bold 20px arial,serif";
@@ -1721,7 +1808,7 @@ function makeCardStatusDisplay()
     d.style.height = 73 + "px";
     d.style.position = "absolute";
     d.style.left = 15 + "px";
-    d.style.top = 517 + "px";
+    d.style.top = 492 + "px";
     d.style.backgroundColor = "grey";
     d.style.opacity = "0.7";
     d.style.font = "bold 15px arial,serif";
@@ -1740,10 +1827,10 @@ function makeTurnResultDisplay()
     d.style.border = "3px solid #8080ff";
     d.style.borderRadius = "7px";
     d.style.width = 200 + "px";
-    d.style.height = 73 + "px";
+    d.style.height = 98 + "px";
     d.style.position = "absolute";
     d.style.left = 15 + "px";
-    d.style.top = 598 + "px";
+    d.style.top = 573 + "px";
     d.style.backgroundColor = "grey";
     d.style.opacity = "0.7";
     d.style.font = "bold 15px arial,serif";
@@ -1777,19 +1864,11 @@ function toggleDADownEvent()
 function toggleATDownEvent()
 {
     curstate.autotoolEnable = !att.checked;
-
-    myStatusButton.style.opacity = "0.7";
-    myStatusButton.hidden = 0;
-    myStatusButton.innerHTML = this.id + " not implemented";
 }
 
 function toggleADDownEvent()
 {
     curstate.autodrawEnable = !adt.checked;
-
-    myStatusButton.style.opacity = "0.7";
-    myStatusButton.hidden = 0;
-    myStatusButton.innerHTML = this.id + " not implemented";
 }
 
 function toggleSDownEvent()
@@ -1808,41 +1887,42 @@ function startGame()
     turn.player = players[turn.playernum];
 
     ss = document.getElementById("sadsack");
-    dat = document.getElementById("drillAnimationToggle");
-    dat.addEventListener("mousedown", toggleDADownEvent);
-    dat.style.position = "absolute";
-    dat.style.left = 120 + "px";
-    dat.style.top = 700 + "px";
+
     var t = document.getElementById("DATText");
     t.style.position = "absolute";
     t.style.left = 10 + "px";
     t.style.top = 673 + "px";
     t.style.padding = "0px";
     t.style.color = "white";
+    dat = document.getElementById("drillAnimationToggle");
+    dat.addEventListener("mousedown", toggleDADownEvent);
+    dat.style.position = "absolute";
+    dat.style.left = 120 + "px";
+    dat.style.top = 700 + "px";
 
-    att = document.getElementById("autotoolToggle");
-    att.addEventListener("mousedown", toggleATDownEvent);
-    att.style.position = "absolute";
-    att.style.left = 120 + "px";
-    att.style.top = 718 + "px";
     t = document.getElementById("ATTText");
     t.style.position = "absolute";
     t.style.left = 10 + "px";
     t.style.top = 706 + "px";
     t.style.padding = "0px";
     t.style.color = "white";
+    att = document.getElementById("autotoolToggle");
+    att.addEventListener("mousedown", toggleATDownEvent);
+    att.style.position = "absolute";
+    att.style.left = 120 + "px";
+    att.style.top = 718 + "px";
 
-    adt = document.getElementById("autodrawToggle");
-    adt.addEventListener("mousedown", toggleADDownEvent);
-    adt.style.position = "absolute";
-    adt.style.left = 120 + "px";
-    adt.style.top = 736 + "px";
     t = document.getElementById("ADTText");
     t.style.position = "absolute";
     t.style.left = 10 + "px";
     t.style.top = 724 + "px";
     t.style.padding = "0px";
     t.style.color = "white";
+    adt = document.getElementById("autodrawToggle");
+    adt.addEventListener("mousedown", toggleADDownEvent);
+    adt.style.position = "absolute";
+    adt.style.left = 120 + "px";
+    adt.style.top = 736 + "px";
 
     st = document.getElementById("soundToggle");
     st.addEventListener("mousedown", toggleSDownEvent);
@@ -1975,6 +2055,10 @@ var shufflecount;
 
 function startShuffleAnimation()
 {
+    if (shuffleAnimation[0].active) {
+        return;
+    }
+
     shufflecount = 0;
     siId = setInterval(shufflecards, cardInterval);
 
@@ -1985,6 +2069,7 @@ function startShuffleAnimation()
             }
 
             clearInterval(siId);
+            myCardIcon.image.src = "wildcat.png";
         }
         else {
             shuffleAnimation[shufflecount].active = 1;
@@ -2007,6 +2092,10 @@ var cursorsave;
 
 function startDrillAnimation(hole)
 {
+    if (drillAnimation.active) {
+        return;
+    }
+
     animationHole = hole;
 
     depth = hole.drill;
@@ -2043,7 +2132,10 @@ function startDrillAnimation(hole)
         if (frame == -1) {
             clearInterval(iId);
             drillAnimation.active = 0;
-            setCursor(cursorsave);
+            if (cursorsave != null) {
+                setCursor(cursorsave);
+                cursorsave = null;
+            }
 
             oilspill.x = 500;
             oilspill.y = 900;
@@ -2056,16 +2148,6 @@ function startDrillAnimation(hole)
             if (h.drill > 0) {
                 oilspill.x = drillAnimation.x - 20;
                 oilspill.y = drillAnimation.y + height - 20;
-
-                if (h.drill == 3) {
-                    errmsg = "shallow";
-                }
-                else if (h.drill == 2) {
-                    errmsg = "medium";
-                }
-                else if (h.drill == 1) {
-                    errmsg = "deep";
-                }
             }
             else {
                 topatopa += 20;
@@ -2073,13 +2155,9 @@ function startDrillAnimation(hole)
                 drillAnimation.image.src = "derrick0_nobit.png";
                 drillAnimation.y = topatopa;
                 drillAnimation.height = height;
-
-                errmsg = "dry";
             }
 
             frame = -1;
-
-            errmsg += " well - $" + cost;
 
             updatePlayersDisplay();
         }
@@ -2095,51 +2173,42 @@ function startDrillAnimation(hole)
 }
 
 var dummyhole = {
-    id: "2a", plot: 2, spoke: 8, ring: 5, left: 481, top: 261,
+    id: "13g", plot: 13, spoke: 46, ring: 3, left: 407, top: 568,
     drill: 1, button: {}, well: {}
 };
+
+var drillnum = 3;
 
 function keyDownEvent(e)
 {
     debugmsg.innerText = "KEY DOWN " + e.code;
 
     if (e.code == "KeyD") {
+        dummyhole.drill = drillnum;
         startDrillAnimation(dummyhole);
-
-//        frame = 3;
-//        topatopa = 500;
-//        height = 167;
-//        drillAnimation.active = 1;
-//        drillAnimation.update();
-//        iId = setInterval(drilldown, 1000);
-//        function drilldown() {
-//            if (frame == 0) {
-//                clearInterval(iId);
-//                drillAnimation.active = 0;
-//            }
-//            frame--;
-//            drillAnimation.image.src = "derrick" + frame + "_nobit.png";
-//            topatopa += 20;
-//            height -= 20;
-//            drillAnimation.y = topatopa;
-//            drillAnimation.height = height;
-//        }
+        drillnum--;
+        if (drillnum == -1) {
+            drillnum = 3;
+        }
+    }
+    else if (e.code == "KeyS") {
+        startShuffleAnimation();
     }
 
     if (e.code == "KeyW") {
-debugmsg.innerText += "'" + players[0].color + "'";
-debugmsg.innerText += "'" + players[1].color + "'";
-debugmsg.innerText += "'" + players[2].color + "'";
-debugmsg.innerText += "'" + players[3].color + "'";
-if (players[2].display != null)
-debugmsg.innerText += "'" + players[0].display + "'";
-debugmsg.innerText += "'" + players[0].display.firstElementChild + "'\n";
-debugmsg.innerText += "'" + players[1].display + "'";
-debugmsg.innerText += "'" + players[1].display.firstElementChild + "'\n";
-debugmsg.innerText += "'" + players[2].display + "'";
-debugmsg.innerText += "'" + players[2].display.firstElementChild + "'\n";
-debugmsg.innerText += "'" + players[3].display + "'";
-debugmsg.innerText += "'" + players[3].display.firstElementChild + "'";
+//debugmsg.innerText += "'" + players[0].color + "'";
+//debugmsg.innerText += "'" + players[1].color + "'";
+//debugmsg.innerText += "'" + players[2].color + "'";
+//debugmsg.innerText += "'" + players[3].color + "'";
+//if (players[2].display != null)
+//debugmsg.innerText += "'" + players[0].display + "'";
+//debugmsg.innerText += "'" + players[0].display.firstElementChild + "'\n";
+//debugmsg.innerText += "'" + players[1].display + "'";
+//debugmsg.innerText += "'" + players[1].display.firstElementChild + "'\n";
+//debugmsg.innerText += "'" + players[2].display + "'";
+//debugmsg.innerText += "'" + players[2].display.firstElementChild + "'\n";
+//debugmsg.innerText += "'" + players[3].display + "'";
+//debugmsg.innerText += "'" + players[3].display.firstElementChild + "'";
     }
 }
 
@@ -2254,7 +2323,7 @@ function drawMode()
     setCursor(cursorKingOil);
     gameMode = "draw";
 
-    updatePlayersDisplay();
+//    updatePlayersDisplay();
 }
 
 function actionMode()
@@ -2262,7 +2331,7 @@ function actionMode()
     setCursor(cursorKingOil);
     gameMode = "action";
 
-    updatePlayersDisplay();
+//    updatePlayersDisplay();
 }
 
 function setCursor(c)
@@ -2292,7 +2361,7 @@ function setCursor(c)
 <audio id="sadsack" src="sadsack.amr">
 </audio>
 <div>
-<pre id="DATText"> Drill Animation </pre>
+<pre id="DATText"> Drill<br>    Animation </pre>
 <input id="drillAnimationToggle" type="checkbox"/>
 <pre id="ATTText"> Autotool </pre>
 <input id="autotoolToggle" type="checkbox"/>
@@ -2300,7 +2369,7 @@ function setCursor(c)
 <input id="autodrawToggle" type="checkbox"/>
 <pre id="STText"> Sound effects </pre>
 <input id="soundToggle" type="checkbox"/>
-<pre id="CSTText"> Continuous Shuffle </pre>
+<pre id="CSTText"> Continuous<br>      Shuffle </pre>
 <input id="shuffleToggle" type="checkbox"/>
 </div>
 </body>
