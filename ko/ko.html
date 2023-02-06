@@ -170,7 +170,12 @@ var bankPlayer = {
     nwells: 0,
     pipelines: 0,
     msg: [],
-    display: {},
+    display: {
+        style: {
+            left: 565 + "px",
+            top: 415 + "px"
+        },
+    },
 };
 
 var cardInit = {
@@ -248,11 +253,12 @@ function updatePlayersDisplay()
 
     if (errmsg != "") {
         var height = Number(myTurnResultDiv.style.height.substr(0, myTurnResultDiv.style.height.indexOf("p")));
-        myTurnResultDiv.innerText += errmsg + "\n";
+//        myTurnResultDiv.innerText += errmsg + "\n";
+        myTurnResultDiv.innerText += errmsg;
         myTurnResultDiv.scrollTop += height;
 
         myStatusButton.style.opacity = "0.7";
-        myStatusButton.hidden = 0;
+        myStatusButton.hidden = 1;
         myStatusButton.innerHTML = errmsg;
 
         errmsg = "";
@@ -271,12 +277,15 @@ function transferMoney(from, to, amount)
         amount = from.money;
         bankrupt = true;
     }
+
+    startMoneyAnimation(from, to, amount);
+
     from.money -= amount;
     to.money += amount;
 
-    errmsg += from.name + " pays $" + amount + " to " + to.name + "\n";
+    errmsg += "\n" + from.name + " pays $" + amount + " to " + to.name;
     if (bankrupt) {
-        errmsg += "player " + from.name + " has gone BANKRUPT\n";
+        errmsg += "\nplayer " + from.name + " has gone BANKRUPT\n";
     }
 }
 
@@ -285,7 +294,7 @@ function payCardRoyalty()
     var royalty;
 
     if (turn.card.type == "fire") {
-        errmsg += "no royalty for fire\n";
+        errmsg += "\nno royalty for fire";
     }
     else {
         if (turn.card.type == "depletion") {
@@ -713,8 +722,8 @@ function drawCardDownEvent()
                 turn.capsrequired = 3;
             }
 
+            actionMode();
             if (curstate.autotoolEnable && turn.capsrequired > 0) {
-                actionMode();
                 capButtonDownEvent();
             }
 
@@ -816,7 +825,6 @@ function completeDrill(h)
 
     if (h != dummyhole) {
         transferMoney(turn.player, bankPlayer, cost);
-        turn.drillsused++;
     }
 
     if (h.drill > 0) {
@@ -853,14 +861,6 @@ function completeDrill(h)
     }
 
     errmsg += " well - $" + drillDepthCost[h.drill + 1] + "\n";
-
-    if (curstate.autotoolEnable) {
-        if (turn.drillsused == turn.card.ndrills) {
-//            drillButtonDownEvent();
-            putAwayDrill();
-            actionMode();
-        }
-    }
 }
 
 function wellButtonDownEvent()
@@ -959,6 +959,8 @@ function wellButtonDownEvent()
             cursorsave = curcursor;
             setCursor(drillCursors[h.drill]);
 
+            // count it before drilling
+            turn.drillsused++;
             completeDrill(h);
         }
 
@@ -1010,6 +1012,12 @@ function wellButtonUpEvent()
 {
     var h = this.hole;
 
+    if (curstate.autotoolEnable) {
+        if (turn.drillsused == turn.card.ndrills) {
+            putAwayDrill();
+            actionMode();
+        }
+    }
     if (!drillAnimation.active && cursorsave != null) {
         setCursor(cursorsave);
         cursorsave = null;
@@ -1059,7 +1067,7 @@ function shedButtonDownEvent()
         turn.player.plots[turn.player.plots.length++] = p.plotnum;
         transferMoney(turn.player, bankPlayer, p.price);
 
-        errmsg = "buy plot " + p.id + " for $" + p.price;
+        errmsg += "buy plot " + p.id + " for $" + p.price;
 
         sheds[sheds.length++] = new component(40, 40, turn.player.color + "shed.png", p.shedpadleft - 28, p.shedpadtop - 27, "image");
 
@@ -1097,8 +1105,6 @@ function shedButtonUpEvent()
 
 function pipepadButtonDownEvent()
 {
-//debugmsg.innerText = "DOWN PIPE";
-//return;
     var p = this.pipepad;
     errmsg = "";
 
@@ -1556,7 +1562,6 @@ function makeFineButton()
     b.innerHTML = "IT'S FINE";
     b.addEventListener("mousedown", fineButtonDownEvent);
     b.addEventListener("mouseup", fineButtonUpEvent);
-//    b.style.border = "0px";
     b.style.border = "3px solid #6060ff";
     b.style.borderRadius = "7px";
     b.style.width = "70px";
@@ -1708,7 +1713,6 @@ function makeTurnDisplay()
 function makePlayerDisplay()
 {
     var d = document.createElement("DIV");
-//    d.addEventListener("mousedown", playerDivDownEvent);
     d.style.border = "3px solid #6060ff";
     d.style.borderRadius = "7px";
     d.style.width = 200 + "px";
@@ -1801,7 +1805,6 @@ function makeAddPlayerButton()
 function makeCardStatusDisplay()
 {
     var d = document.createElement("DIV");
-//    d.addEventListener("mousedown", cardStatusDownEvent);
     d.style.border = "3px solid #8080ff";
     d.style.borderRadius = "7px";
     d.style.width = 200 + "px";
@@ -1823,7 +1826,6 @@ function makeCardStatusDisplay()
 function makeTurnResultDisplay()
 {
     var d = document.createElement("DIV");
-//    d.addEventListener("mousedown", turnResultDownEvent);
     d.style.border = "3px solid #8080ff";
     d.style.borderRadius = "7px";
     d.style.width = 200 + "px";
@@ -1880,6 +1882,8 @@ function toggleCSDownEvent()
 {
     curstate.contshuffleEnable = !cst.checked;
 }
+
+var money;
 
 function startGame()
 {
@@ -1947,6 +1951,26 @@ function startGame()
     t.style.top = 760 + "px";
     t.style.padding = "0px";
     t.style.color = "white";
+
+if (1) {
+    var d = document.createElement("DIV");
+    d.style.border = "3px solid #6060ff";
+    d.style.borderRadius = "7px";
+    d.style.width = 120 + "px";
+    d.style.height = 33 + "px";
+    d.style.position = "absolute";
+    d.style.left = 300 + "px";
+    d.style.top = 300 + "px";
+    d.style.backgroundColor = "grey";
+    d.style.opacity = "1.0";
+    d.style.font = "bold 30px arial,serif";
+    d.style.textAlign = "center";
+    d.style.color = "red";
+    d.innerText = "$300000";
+    money = d;
+//    document.body.appendChild(d);
+    money.active = 0;
+}
 
     myGamePiece = new component(60, 60, "KingOilIcon.png", 0, 0, "image", 20, 20);
     myGamePiece.enabled = 0;
@@ -2079,6 +2103,68 @@ function startShuffleAnimation()
     }
 }
 
+var miId;
+var movemoneyinterval = 25;
+var movemoneysteps = 20;
+var movemoneycount;
+var end = {};
+var diff = {};
+var step = {};
+
+function startMoneyAnimation(from, to, amount)
+{
+    if (money.active) {
+        return;
+    }
+
+    document.body.appendChild(money);
+
+    end.x = Number(to.display.style.left.substr(0, to.display.style.left.indexOf("p")));
+    end.y = Number(to.display.style.top.substr(0, to.display.style.top.indexOf("p")));
+    money.x = Number(from.display.style.left.substr(0, from.display.style.left.indexOf("p")));
+    money.y = Number(from.display.style.top.substr(0, from.display.style.top.indexOf("p")));
+    diff.x = money.x - end.x;
+    diff.y = money.y - end.y;
+    step.x = diff.x / movemoneysteps;
+    step.y = diff.y / movemoneysteps;
+
+    money.style.left = money.x + "px";
+    money.style.top = money.y + "px";
+    if (to == bankPlayer) {
+        money.style.color = from.color;
+    }
+    else {
+        money.style.color = to.color;
+    }
+    money.innerText = "$" + amount;
+    money.active = 1;
+    movemoneycount = 0;
+    movemoneydelay = 20;
+    miId = setInterval(movemoney, movemoneyinterval);
+
+    function movemoney() {
+        if (movemoneycount == movemoneysteps) {
+            money.active = 0;
+
+            document.body.removeChild(money);
+
+            clearInterval(miId);
+        }
+        else {
+            if (movemoneydelay > 0) {
+                movemoneydelay--;
+            }
+            else {
+                money.x -= step.x;
+                money.y -= step.y;
+                money.style.left = money.x + "px";
+                money.style.top = money.y + "px";
+                movemoneycount++;
+            }
+        }
+    }
+}
+
 var frame;
 var iId;
 var topatopa;
@@ -2114,6 +2200,9 @@ function startDrillAnimation(hole)
     shake = 750 / shakeInterval;
     shakeOffset = -5;
     iId = setInterval(drilldown, shakeInterval);
+
+    // count it before drilling
+    turn.drillsused++;
 
     function drilldown() {
         var h = animationHole;
@@ -2193,6 +2282,10 @@ function keyDownEvent(e)
     }
     else if (e.code == "KeyS") {
         startShuffleAnimation();
+    }
+    else if (e.code == "KeyL") {
+        money.style.left = 400 + "px";
+        money.style.top = 400 + "px";
     }
 
     if (e.code == "KeyW") {
