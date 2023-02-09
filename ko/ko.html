@@ -373,6 +373,7 @@ function buyButtonDownEvent()
 
                 if (p.owner == -1) {
                     p.shedbutton.style.opacity = "0.0";
+                    document.body.removeChild(p.shedbutton);
                 }
             }
         }
@@ -388,6 +389,7 @@ function buyButtonDownEvent()
 
                     if (p.owner == -1) {
                         p.shedbutton.style.opacity = "0.5";
+                        document.body.appendChild(p.shedbutton);
                     }
                 }
             }
@@ -401,6 +403,25 @@ function buyButtonUpEvent()
 {
 }
 
+function putAwayCap()
+{
+    setCursor(cursorKingOil);
+    myCapIcon.image.src = turn.player.color + "cap.png";
+    myCapIcon.button.style.opacity = "0.0";
+
+    for (var i = 0; i < turn.player.plots.length; i++) {
+        var p = plots[turn.player.plots[i] - 1];
+
+        for (j = 0; j < p.holes.length; j++) {
+            var h = p.holes[j];
+            h.button.style.opacity = "0.0";
+            if (document.body.contains(h.button)) {
+                document.body.removeChild(h.button);
+            }
+        }
+    }
+}
+
 function capButtonDownEvent()
 {
     toolable = 1;
@@ -412,18 +433,7 @@ function capButtonDownEvent()
 
     if (toolable) {
         if (curcursor.mode == "cap") {
-            setCursor(cursorKingOil);
-            myCapIcon.image.src = turn.player.color + "cap.png";
-            myCapIcon.button.style.opacity = "0.0";
-
-            for (var i = 0; i < turn.player.plots.length; i++) {
-                var p = plots[turn.player.plots[i] - 1];
-
-                for (j = 0; j < p.holes.length; j++) {
-                    // change all holes
-                    p.holes[j].button.style.opacity = "0.0";
-                }
-            }
+            putAwayCap();
         }
         else {
             if (curcursor.mode != "drill" && curcursor.mode != "buy") {
@@ -436,9 +446,11 @@ function capButtonDownEvent()
                     var p = plots[turn.player.plots[i] - 1];
 
                     for (j = 0; j < p.holes.length; j++) {
-                        if (p.holes[j].drill > 0) {
+                        var h = p.holes[j];
+                        if (h.drill > 0) {
                             // only change holes with wells
-                            p.holes[j].button.style.opacity = "0.3";
+                            h.button.style.opacity = "0.3";
+                            document.body.appendChild(h.button);
                         }
                     }
                 }
@@ -485,6 +497,7 @@ function pipeButtonDownEvent()
                         if (p.plotnumA == turn.player.plots[i] ||
                             p.plotnumB == turn.player.plots[i]) {
                             p.button.style.opacity = "0.0";
+                            document.body.removeChild(p.button);
                         }
                     }
                 }
@@ -502,7 +515,8 @@ function pipeButtonDownEvent()
                         var p = pipepads[j];
                         if (p.plotnumA == turn.player.plots[i] ||
                             p.plotnumB == turn.player.plots[i]) {
-                            p.button.style.opacity = "0.3";
+                            p.button.style.opacity = "0.5";
+                            document.body.appendChild(p.button);
                         }
                     }
                 }
@@ -528,9 +542,11 @@ function putAwayDrill()
         var p = plots[turn.player.plots[i] - 1];
 
         for (j = 0; j < p.holes.length; j++) {
-            // change all holes
-            p.holes[j].button.style.opacity = "0.0";
-//            p.holes[j].button.disabled = true;
+            var h = p.holes[j];
+            h.button.style.opacity = "0.0";
+            if (document.body.contains(h.button)) {
+                document.body.removeChild(h.button);
+            }
         }
     }
 }
@@ -560,8 +576,9 @@ function drillButtonDownEvent()
                     for (j = 0; j < p.holes.length; j++) {
                         if (p.holes[j].drill == -1) {
                             // only change undrilled holes
-                            p.holes[j].button.style.opacity = "0.3";
-//                            p.holes[j].button.disabled = false;
+                            var h = p.holes[j];
+                            h.button.style.opacity = "0.3";
+                            document.body.appendChild(h.button);
                         }
                     }
                 }
@@ -578,6 +595,8 @@ function drillButtonUpEvent()
 
 function nextButtonDownEvent()
 {
+    this.addEventListener("mouseleave", nextButtonUpEvent);
+
     nextable = 1;
     if (gameMode == "draw") {
         nextable = 0;
@@ -670,11 +689,15 @@ function nextButtonDownEvent()
 
 function nextButtonUpEvent()
 {
+    this.removeEventListener("mouseleave", nextButtonUpEvent);
+
     myNextIcon.image.src = "timeclock.png";
 }
 
 function drawCardDownEvent()
 {
+    this.addEventListener("mouseleave", drawCardUpEvent);
+
     debugmsg.innerText = "DOWN DRAW card";
 
     drawable = 1;
@@ -808,6 +831,8 @@ function drawCardDownEvent()
 
 function drawCardUpEvent()
 {
+    this.removeEventListener("mouseleave", drawCardUpEvent);
+
     debugmsg.innerText = "UP DRAW card";
 
     if (cardnum != -1) {
@@ -868,6 +893,8 @@ function wellButtonDownEvent()
 
     drillable = 1;
     capable = 1;
+
+    this.addEventListener("mouseleave", wellButtonUpEvent);
 
     if (gameMode == "draw") {
         drillable = 0;
@@ -961,6 +988,7 @@ function wellButtonDownEvent()
         }
 
         h.button.style.opacity = "0.0";
+        // don't removeChild button now, wait until up event
     }
     else if (capable) {
         h.drill = 0;
@@ -984,19 +1012,6 @@ function wellButtonDownEvent()
         caps[caps.length++] = new component(25, 25, turn.player.color + "cap.png", h.left - 21, h.top - 25, "image");
 
         arrayRemove(wells, h.well);
-
-        actionMode();
-        myCapIcon.image.src = turn.player.color + "cap.png";
-        myCapIcon.button.style.opacity = "0.0";
-
-        for (var i = 0; i < turn.player.plots.length; i++) {
-            var p = plots[turn.player.plots[i] - 1];
-
-            for (j = 0; j < p.holes.length; j++) {
-                // change all holes, not just ones previously made opaque
-                p.holes[j].button.style.opacity = "0.0";
-            }
-        }
     }
 
     debugmsg.innerText = "DOWN WELL " + this.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring;
@@ -1008,12 +1023,25 @@ function wellButtonUpEvent()
 {
     var h = this.hole;
 
-    if (curstate.autotoolEnable) {
-        if (turn.drillsused == turn.card.ndrills) {
-            putAwayDrill();
-            actionMode();
+    this.removeEventListener("mouseleave", wellButtonUpEvent);
+
+    if (drillable || capable) {
+        document.body.removeChild(this);
+    }
+
+    if (curcursor.mode == "drill" || drillAnimation.active) {
+        if (curstate.autotoolEnable) {
+            if (turn.drillsused == turn.card.ndrills) {
+                putAwayDrill();
+                actionMode();
+            }
         }
     }
+    else if (curcursor.mode == "cap") {
+        putAwayCap();
+        actionMode();
+    }
+
     if (!drillAnimation.active && cursorsave != null) {
         setCursor(cursorsave);
         cursorsave = null;
@@ -1025,6 +1053,8 @@ function wellButtonUpEvent()
 function shedButtonDownEvent()
 {
     var p = this.plot;
+
+    this.addEventListener("mouseleave", shedButtonUpEvent);
 
     buyable = 1;
     if (gameMode == "draw") {
@@ -1082,6 +1112,7 @@ function shedButtonDownEvent()
 
             if (p.owner == -1) {
                 p.shedbutton.style.opacity = "0.0";
+                document.body.removeChild(p.shedbutton);
             }
         }
     }
@@ -1095,12 +1126,20 @@ function shedButtonUpEvent()
 {
     var p = this.plot;
 
+    this.removeEventListener("mouseleave", shedButtonUpEvent);
+
+    if (buyable) {
+        document.body.removeChild(this);
+    }
+
     debugmsg.innerText = "  UP SHED " + this.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
 }
 
 function pipepadButtonDownEvent()
 {
     var p = this.pipepad;
+
+    this.addEventListener("mouseleave", pipepadButtonUpEvent);
 
     pipeable = 1;
     removepipeable = 1;
@@ -1238,6 +1277,7 @@ function pipepadButtonDownEvent()
                     if (p.plotnumA == turn.player.plots[i] ||
                         p.plotnumB == turn.player.plots[i]) {
                         p.button.style.opacity = "0.0";
+                        document.body.removeChild(p.button);
                     }
                 }
             }
@@ -1272,11 +1312,15 @@ function pipepadButtonDownEvent()
 
 function pipepadButtonUpEvent()
 {
-debugmsg.innerText = "  UP PIPE";
+    this.removeEventListener("mouseleave", pipepadButtonUpEvent);
+
+    debugmsg.innerText = "  UP PIPE";
 }
 
 function fineButtonDownEvent()
 {
+    this.addEventListener("mouseleave", fineButtonUpEvent);
+
     if (turn.fineable == 1 || sandbox == 1) {
         transferMoney(turn.player, bankPlayer, 10000);
         turn.fineable = 2;
@@ -1296,6 +1340,8 @@ function fineButtonDownEvent()
 
 function fineButtonUpEvent()
 {
+    this.removeEventListener("mouseleave", fineButtonUpEvent);
+
     fineButton.innerHTML = "IT'S FINE";
 
     fineButton.style.backgroundColor = "pink";
@@ -1303,6 +1349,8 @@ function fineButtonUpEvent()
 
 function randomButtonDownEvent()
 {
+    this.addEventListener("mouseleave", randomButtonUpEvent);
+
     randomButton.style.backgroundColor = "red";
 
     for (var i = 0; i < 3; i++) {
@@ -1320,8 +1368,12 @@ function randomButtonDownEvent()
 
 function randomButtonUpEvent()
 {
+    this.removeEventListener("mouseleave", randomButtonUpEvent);
+
     randomButton.style.backgroundColor = "pink";
 }
+
+var sandboxbuttons = [];
 
 function debugButtonDownEvent()
 {
@@ -1329,18 +1381,29 @@ function debugButtonDownEvent()
     if (sandbox == 3) {
         sandbox = 0;
 
+        while (sandboxbuttons.length) {
+            var b = sandboxbuttons.pop();;
+            b.style.opacity = "0.0";
+            document.body.removeChild(b);
+        }
+if (0) {
         for (var i = 0; i < plots.length; i++) {
             var p = plots[i];
 
             for (j = 0; j < p.holes.length; j++) {
-                p.holes[j].button.style.opacity = "0.0";
-//                p.holes[j].button.disabled = false;
+                var h = p.holes[j];
+                h.button.style.opacity = "0.0";
+                document.body.removeChild(h.button);
             }
             p.shedbutton.style.opacity = "0.0";
+            document.body.removeChild(p.shedbutton);
         }
         for (var i = 0; i < pipepads.length; i++) {
-            pipepads[i].button.style.opacity = "0.0";
+            var p = pipepads[i];
+            p.button.style.opacity = "0.0";
+            document.body.removeChild(p.button);
         }
+}
 
         for (var i = 0; i < 3; i++) {
             detenterotationinput[i].disabled = true;
@@ -1358,13 +1421,26 @@ function debugButtonDownEvent()
             var p = plots[i];
 
             for (j = 0; j < p.holes.length; j++) {
-                p.holes[j].button.style.opacity = "0.3";
-//                p.holes[j].button.disabled = false;
+                var h = p.holes[j];
+                h.button.style.opacity = "0.3";
+                if (!document.body.contains(h.button)) {
+                    document.body.appendChild(h.button);
+                    sandboxbuttons.push(h.button);
+                }
             }
             p.shedbutton.style.opacity = "0.5";
+            if (!document.body.contains(p.shedbutton)) {
+                document.body.appendChild(p.shedbutton);
+                sandboxbuttons.push(p.shedbutton);
+            }
         }
         for (var i = 0; i < pipepads.length; i++) {
-            pipepads[i].button.style.opacity = "0.5";
+            var p = pipepads[i];
+            p.button.style.opacity = "0.5";
+            if (!document.body.contains(p.button)) {
+                document.body.appendChild(p.button);
+                sandboxbuttons.push(p.button);
+            }
         }
 
         for (var i = 0; i < 3; i++) {
@@ -1394,9 +1470,6 @@ function initWellButton(b)
     b.style.position = "absolute";
     b.style.opacity = "0.0";
     b.style.cursor = "url('cursor.png'), pointer";
-    document.body.appendChild(b);
-
-//    b.disabled = true;
 }
 
 function initShedButton(b)
@@ -1410,7 +1483,6 @@ function initShedButton(b)
     b.style.position = "absolute";
     b.style.opacity = "0.0";
     b.style.cursor = "url('cursor.png'), pointer";
-    document.body.appendChild(b);
 }
 
 function initLayPipeButton(b)
@@ -1425,7 +1497,6 @@ function initLayPipeButton(b)
     b.style.position = "absolute";
     b.style.opacity = "0.0";
     b.style.cursor = "url('cursor.png'), pointer";
-    document.body.appendChild(b);
 }
 
 function makeBuyButton()
@@ -2338,7 +2409,7 @@ function keyDownEvent(e)
 
 function keyUpEvent(e)
 {
-//    debugmsg.innerText = "  KEY UP " + e.code;
+    debugmsg.innerText = "  KEY UP " + e.code;
 }
 
 var myGameArea = {
