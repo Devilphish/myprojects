@@ -1929,8 +1929,6 @@ function toggleCSDownEvent()
     curstate.contshuffleEnable = !cst.checked;
 }
 
-var money;
-
 function startGame()
 {
     ss = document.getElementById("sadsack");
@@ -1994,25 +1992,6 @@ function startGame()
     t.style.top = 760 + "px";
     t.style.padding = "0px";
     t.style.color = "white";
-
-if (1) {
-    var d = document.createElement("DIV");
-    d.style.border = "3px solid #6060ff";
-    d.style.borderRadius = "7px";
-    d.style.width = 120 + "px";
-    d.style.height = 33 + "px";
-    d.style.position = "absolute";
-    d.style.left = 300 + "px";
-    d.style.top = 300 + "px";
-    d.style.backgroundColor = "grey";
-    d.style.opacity = "1.0";
-    d.style.font = "bold 30px arial,serif";
-    d.style.textAlign = "center";
-    d.style.color = "red";
-    d.innerText = "$300000";
-    money = d;
-    money.active = 0;
-}
 
     myGamePiece = new component(60, 60, "KingOilIcon.png", 0, 0, "image", 20, 20);
     myGamePiece.enabled = 0;
@@ -2140,62 +2119,82 @@ function startShuffleAnimation()
 }
 
 var miId;
+var moneyarray = [];
 var movemoneyinterval = 25;
 var movemoneysteps = 20;
-var movemoneycount;
-var end = {};
-var diff = {};
 var step = {};
 
 function startMoneyAnimation(from, to, amount)
 {
-    if (money.active) {
-        return;
-    }
+    var m = document.createElement("DIV");
+    m.style.border = "3px solid #6060ff";
+    m.style.borderRadius = "7px";
+    m.style.width = 120 + "px";
+    m.style.height = 33 + "px";
+    m.style.position = "absolute";
+    m.style.left = 300 + "px";
+    m.style.top = 300 + "px";
+    m.style.backgroundColor = "grey";
+    m.style.opacity = "1.0";
+    m.style.font = "bold 30px arial,serif";
+    m.style.textAlign = "center";
+    m.style.color = "red";
+    m.innerText = "$300000";
+    moneyarray.push(m);
+    document.body.appendChild(m);
 
-    document.body.appendChild(money);
-
+    var end = {};
     end.x = Number(to.display.style.left.substr(0, to.display.style.left.indexOf("p"))) + 30;
     end.y = Number(to.display.style.top.substr(0, to.display.style.top.indexOf("p"))) + 20;
-    money.x = Number(from.display.style.left.substr(0, from.display.style.left.indexOf("p"))) + 30;
-    money.y = Number(from.display.style.top.substr(0, from.display.style.top.indexOf("p"))) + 20;
-    diff.x = money.x - end.x;
-    diff.y = money.y - end.y;
-    step.x = diff.x / movemoneysteps;
-    step.y = diff.y / movemoneysteps;
+    m.x = Number(from.display.style.left.substr(0, from.display.style.left.indexOf("p"))) + 30;
+    m.y = Number(from.display.style.top.substr(0, from.display.style.top.indexOf("p"))) + 20;
+    var diff = {};
+    diff.x = m.x - end.x;
+    diff.y = m.y - end.y;
+    m.step = {};
+    m.step.x = diff.x / movemoneysteps;
+    m.step.y = diff.y / movemoneysteps;
 
-    money.style.left = money.x + "px";
-    money.style.top = money.y + "px";
+    m.style.left = m.x + "px";
+    m.style.top = m.y + "px";
     if (to == bankPlayer) {
-        money.style.color = from.color;
+        m.style.color = from.color;
     }
     else {
-        money.style.color = to.color;
+        m.style.color = to.color;
     }
-    money.innerText = "$" + amount;
-    money.active = 1;
-    movemoneycount = 0;
-    movemoneydelay = 20;
-    miId = setInterval(movemoney, movemoneyinterval);
+    m.innerText = "$" + amount;
+    m.movemoneycount = 0;
+    m.movemoneydelay = 20;
+
+    if (moneyarray.length == 1) {
+        miId = setInterval(movemoney, movemoneyinterval);
+    }
 
     function movemoney() {
-        if (movemoneycount == movemoneysteps) {
-            money.active = 0;
+        for (var i = 0; i < moneyarray.length; i++) {
+            var money = moneyarray[i];
+            if (money.movemoneycount == movemoneysteps) {
+                document.body.removeChild(money);
+                arrayRemove(moneyarray, money);
+                i--;
+                money.remove();
 
-            document.body.removeChild(money);
-
-            clearInterval(miId);
-        }
-        else {
-            if (movemoneydelay > 0) {
-                movemoneydelay--;
+                if (moneyarray.length == 0) {
+                    clearInterval(miId);
+                }
             }
             else {
-                money.x -= step.x;
-                money.y -= step.y;
-                money.style.left = money.x + "px";
-                money.style.top = money.y + "px";
-                movemoneycount++;
+                if (money.movemoneydelay > 0) {
+                    money.movemoneydelay--;
+                }
+                else {
+                    money.x -= money.step.x;
+                    money.y -= money.step.y;
+                    money.style.left = money.x + "px";
+                    money.style.top = money.y + "px";
+                    money.movemoneycount++;
+                }
             }
         }
     }
@@ -2320,12 +2319,7 @@ function keyDownEvent(e)
     else if (e.code == "KeyS") {
         startShuffleAnimation();
     }
-    else if (e.code == "KeyL") {
-        money.style.left = 400 + "px";
-        money.style.top = 400 + "px";
-    }
-
-    if (e.code == "KeyW") {
+    else if (e.code == "KeyW") {
 //debugmsg.innerText += "'" + players[0].color + "'";
 //debugmsg.innerText += "'" + players[1].color + "'";
 //debugmsg.innerText += "'" + players[2].color + "'";
