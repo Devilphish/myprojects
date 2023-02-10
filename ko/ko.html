@@ -323,7 +323,7 @@ function payPipeRoyalty()
         var royalty;
         var p = plots[turn.player.plots[i] - 1];
 
-        for (j = 0; j < p.pipepadsfrom.length; j++) {
+        for (var j = 0; j < p.pipepadsfrom.length; j++) {
             var pipepad = p.pipepadsfrom[j];
             var ownerFrom = pipepad.owner;
 
@@ -412,7 +412,7 @@ function putAwayCap()
     for (var i = 0; i < turn.player.plots.length; i++) {
         var p = plots[turn.player.plots[i] - 1];
 
-        for (j = 0; j < p.holes.length; j++) {
+        for (var j = 0; j < p.holes.length; j++) {
             var h = p.holes[j];
             h.button.style.opacity = "0.0";
             if (document.body.contains(h.button)) {
@@ -445,7 +445,7 @@ function capButtonDownEvent()
                 for (var i = 0; i < turn.player.plots.length; i++) {
                     var p = plots[turn.player.plots[i] - 1];
 
-                    for (j = 0; j < p.holes.length; j++) {
+                    for (var j = 0; j < p.holes.length; j++) {
                         var h = p.holes[j];
                         if (h.drill > 0) {
                             // only change holes with wells
@@ -492,12 +492,14 @@ function pipeButtonDownEvent()
                 turn.removedpipepad = pipepadNone;
 
                 for (var i = 0; i < turn.player.plots.length; i++) {
-                    for (j = 0; j < pipepads.length; j++) {
+                    for (var j = 0; j < pipepads.length; j++) {
                         var p = pipepads[j];
                         if (p.plotnumA == turn.player.plots[i] ||
                             p.plotnumB == turn.player.plots[i]) {
                             p.button.style.opacity = "0.0";
-                            document.body.removeChild(p.button);
+                            if (document.body.contains(p.button)) {
+                                document.body.removeChild(p.button);
+                            }
                         }
                     }
                 }
@@ -511,7 +513,7 @@ function pipeButtonDownEvent()
                 myPipeIcon.button.style.opacity = "0.3";
 
                 for (var i = 0; i < turn.player.plots.length; i++) {
-                    for (j = 0; j < pipepads.length; j++) {
+                    for (var j = 0; j < pipepads.length; j++) {
                         var p = pipepads[j];
                         if (p.plotnumA == turn.player.plots[i] ||
                             p.plotnumB == turn.player.plots[i]) {
@@ -541,7 +543,7 @@ function putAwayDrill()
     for (var i = 0; i < turn.player.plots.length; i++) {
         var p = plots[turn.player.plots[i] - 1];
 
-        for (j = 0; j < p.holes.length; j++) {
+        for (var j = 0; j < p.holes.length; j++) {
             var h = p.holes[j];
             h.button.style.opacity = "0.0";
             if (document.body.contains(h.button)) {
@@ -573,7 +575,7 @@ function drillButtonDownEvent()
                 for (var i = 0; i < turn.player.plots.length; i++) {
                     var p = plots[turn.player.plots[i] - 1];
 
-                    for (j = 0; j < p.holes.length; j++) {
+                    for (var j = 0; j < p.holes.length; j++) {
                         if (p.holes[j].drill == -1) {
                             // only change undrilled holes
                             var h = p.holes[j];
@@ -779,7 +781,7 @@ function drawCardDownEvent()
             for (var i = 0; i < turn.player.plots.length; i++) {
                 var p = plots[turn.player.plots[i] - 1];
 
-                for (j = 0; j < p.holes.length; j++) {
+                for (var j = 0; j < p.holes.length; j++) {
                     if (p.holes[j].drill == -1) {
                         emptyfound = 1;
 
@@ -1272,12 +1274,14 @@ function pipepadButtonDownEvent()
             myPipeIcon.button.style.opacity = "0.0";
 
             for (var i = 0; i < turn.player.plots.length; i++) {
-                for (j = 0; j < pipepads.length; j++) {
+                for (var j = 0; j < pipepads.length; j++) {
                     var p = pipepads[j];
                     if (p.plotnumA == turn.player.plots[i] ||
                         p.plotnumB == turn.player.plots[i]) {
                         p.button.style.opacity = "0.0";
-                        document.body.removeChild(p.button);
+                        if (document.body.contains(p.button)) {
+                            document.body.removeChild(p.button);
+                        }
                     }
                 }
             }
@@ -1384,13 +1388,15 @@ function debugButtonDownEvent()
         while (sandboxbuttons.length) {
             var b = sandboxbuttons.pop();;
             b.style.opacity = "0.0";
-            document.body.removeChild(b);
+            if (document.body.contains(b)) {
+                document.body.removeChild(b);
+            }
         }
 if (0) {
         for (var i = 0; i < plots.length; i++) {
             var p = plots[i];
 
-            for (j = 0; j < p.holes.length; j++) {
+            for (var j = 0; j < p.holes.length; j++) {
                 var h = p.holes[j];
                 h.button.style.opacity = "0.0";
                 document.body.removeChild(h.button);
@@ -1420,7 +1426,7 @@ if (0) {
         for (var i = 0; i < plots.length; i++) {
             var p = plots[i];
 
-            for (j = 0; j < p.holes.length; j++) {
+            for (var j = 0; j < p.holes.length; j++) {
                 var h = p.holes[j];
                 h.button.style.opacity = "0.3";
                 if (!document.body.contains(h.button)) {
