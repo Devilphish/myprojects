@@ -353,6 +353,8 @@ function arrayRemove(array, element)
         array.length--;
 }
 
+var shedbuttons = [];
+
 function buyButtonDownEvent()
 {
     toolable = 1;
@@ -368,12 +370,12 @@ function buyButtonDownEvent()
             myShedIcon.image.src = turn.player.color + "shed.png";
             myShedIcon.button.style.opacity = "0.0";
 
-            for (var i = 0; i < plots.length; i++) {
-                var p = plots[i];
+            while (shedbuttons.length) {
+                var b = shedbuttons.pop();
 
-                if (p.owner == -1) {
-                    p.shedbutton.style.opacity = "0.0";
-                    document.body.removeChild(p.shedbutton);
+                b.style.opacity = "0.0";
+                if (document.body.contains(b)) {
+                    document.body.removeChild(b);
                 }
             }
         }
@@ -390,6 +392,7 @@ function buyButtonDownEvent()
                     if (p.owner == -1) {
                         p.shedbutton.style.opacity = "0.5";
                         document.body.appendChild(p.shedbutton);
+                        shedbuttons.push(p.shedbutton);
                     }
                 }
             }
@@ -465,6 +468,8 @@ function capButtonUpEvent()
 {
 }
 
+var pipepadbuttons = [];
+
 function pipeButtonDownEvent()
 {
     toolable = 1;
@@ -491,16 +496,32 @@ function pipeButtonDownEvent()
                 myPipeIcon.button.style.opacity = "0.0";
                 turn.removedpipepad = pipepadNone;
 
+                while (pipepadbuttons.length) {
+                    var b = pipepadbuttons.pop();
+
+                    b.style.opacity = "0.0";
+                    if (document.body.contains(b)) {
+                        document.body.removeChild(b);
+                    }
+                }
                 for (var i = 0; i < turn.player.plots.length; i++) {
-                    for (var j = 0; j < pipepads.length; j++) {
-                        var p = pipepads[j];
-                        if (p.plotnumA == turn.player.plots[i] ||
-                            p.plotnumB == turn.player.plots[i]) {
-                            p.button.style.opacity = "0.0";
-                            if (document.body.contains(p.button)) {
-                                document.body.removeChild(p.button);
-                            }
+                    var p = plots[turn.player.plots[i] - 1];
+                    var plotpipesto = 0;
+                    for (var j = 0; j < p.pipepadsto.length; j++) {
+                        plotpipesto += p.pipepadsto[j].pipes.length;
+                    }
+                    var minwells = plotpipesto + 3;
+                    if (plotpipesto > 0 && p.nwells < minwells) {
+                        turn.npiperemove = Math.min(plotpipesto, minwells - p.nwells);
+
+                        for (var j = 0; j < p.pipepadsto.length; j++) {
+                            var ppt = p.pipepadsto[j];
+                            ppt.button.style.opacity = "0.5";
+                            document.body.appendChild(ppt.button);
+                            pipepadbuttons.push(ppt.button);
                         }
+
+                        errmsg.push("not enough wells for " + plotpipesto + " pipes to plot " + p.id + ", must remove " + turn.npiperemove + " pipes");
                     }
                 }
             }
@@ -515,10 +536,38 @@ function pipeButtonDownEvent()
                 for (var i = 0; i < turn.player.plots.length; i++) {
                     for (var j = 0; j < pipepads.length; j++) {
                         var p = pipepads[j];
-                        if (p.plotnumA == turn.player.plots[i] ||
-                            p.plotnumB == turn.player.plots[i]) {
-                            p.button.style.opacity = "0.5";
-                            document.body.appendChild(p.button);
+                        var ownA = (plots[p.plotnumA - 1].owner ==
+                                    turn.playernum);
+                        var ownB = (plots[p.plotnumB - 1].owner ==
+                                    turn.playernum);
+                        if ((ownA || ownB) &&  // you own at least one pad plot
+                            !(ownA && ownB) &&  // you don't own both pad plots
+                            (p.owner == -1 || p.owner == turn.playernum)) {
+
+                            var pipefrom;
+                            var pipeto;
+
+                            if (plots[p.plotnumA - 1].owner == turn.playernum) {
+                                pipefrom = p.plotnumB;
+                                pipeto = p.plotnumA;
+                            }
+                            else {
+                                pipefrom = p.plotnumA;
+                                pipeto = p.plotnumB;
+                            }
+
+                            var plot = plots[pipeto - 1];
+                            var plotpipesto = 0;
+                            for (var k = 0; k < plot.pipepadsto.length; k++) {
+                                plotpipesto += plot.pipepadsto[k].pipes.length;
+                            }
+                            var minwells = plotpipesto + 4;
+
+                            if (plot.nwells >= minwells && plotpipesto < 3) {
+                                p.button.style.opacity = "0.5";
+                                document.body.appendChild(p.button);
+                                pipepadbuttons.push(p.button);
+                            }
                         }
                     }
                 }
@@ -540,18 +589,17 @@ function putAwayDrill()
     myDerrickIcon.image.src = "derrick0.png";
     myDerrickIcon.button.style.opacity = "0.0";
 
-    for (var i = 0; i < turn.player.plots.length; i++) {
-        var p = plots[turn.player.plots[i] - 1];
+    while (holebuttons.length) {
+        var b = holebuttons.pop();
 
-        for (var j = 0; j < p.holes.length; j++) {
-            var h = p.holes[j];
-            h.button.style.opacity = "0.0";
-            if (document.body.contains(h.button)) {
-                document.body.removeChild(h.button);
-            }
+        b.style.opacity = "0.0";
+        if (document.body.contains(b)) {
+            document.body.removeChild(b);
         }
     }
 }
+
+var holebuttons = [];
 
 function drillButtonDownEvent()
 {
@@ -581,6 +629,7 @@ function drillButtonDownEvent()
                             var h = p.holes[j];
                             h.button.style.opacity = "0.3";
                             document.body.appendChild(h.button);
+                            holebuttons.push(h.button);
                         }
                     }
                 }
@@ -682,7 +731,7 @@ function nextButtonDownEvent()
         myPipeIcon.image.src = turn.player.color + "pipe.png";
 
         if (curstate.autodrawEnable) {
-            drawCardDownEvent();
+            drawcardButtonDownEvent();
         }
     }
 
@@ -696,9 +745,11 @@ function nextButtonUpEvent()
     myNextIcon.image.src = "timeclock.png";
 }
 
-function drawCardDownEvent()
+var lastContShuffleEnable = false;
+
+function drawcardButtonDownEvent()
 {
-    this.addEventListener("mouseleave", drawCardUpEvent);
+    this.addEventListener("mouseleave", drawcardButtonUpEvent);
 
     debugmsg.innerText = "DOWN DRAW card";
 
@@ -732,6 +783,12 @@ function drawCardDownEvent()
 
     cardnum = -1;
     if (drawable) {
+        if (curstate.contshuffleEnable &&
+            curstate.contshuffleEnable != lastContShuffleEnable) {
+            initDeck();
+        }
+        lastContShuffleEnable = curstate.contshuffleEnable;
+
         cardnum = Math.floor((Math.random() * deck.length) + 1) - 1;
         turn.card = deck[cardnum];
         myCardStatusDiv.style.backgroundColor = "lightblue";
@@ -831,9 +888,9 @@ function drawCardDownEvent()
     updatePlayersDisplay();
 }
 
-function drawCardUpEvent()
+function drawcardButtonUpEvent()
 {
-    this.removeEventListener("mouseleave", drawCardUpEvent);
+    this.removeEventListener("mouseleave", drawcardButtonUpEvent);
 
     debugmsg.innerText = "UP DRAW card";
 
@@ -1000,20 +1057,30 @@ function wellButtonDownEvent()
         var plot = plots[h.plot - 1];
         plot.nwells--;
 
-        var plotpipesto = 0;
-        for (var i = 0; i < plot.pipepadsto.length; i++) {
-            plotpipesto += plot.pipepadsto[i].pipes.length;
-        }
-        var minwells = plotpipesto + 3;
-        if (plotpipesto > 0 && plot.nwells < minwells) {
-            turn.npiperemove = minwells - plot.nwells;
-
-            errmsg.push("not enough wells for " + plotpipesto + " pipes to plot " + plot.id + ", must remove " + turn.npiperemove + " pipes");
-        }
+        arrayRemove(wells, h.well);
 
         caps[caps.length++] = new component(25, 25, turn.player.color + "cap.png", h.left - 21, h.top - 25, "image");
 
-        arrayRemove(wells, h.well);
+        for (var i = 0; i < turn.player.plots.length; i++) {
+            var p = plots[turn.player.plots[i] - 1];
+            var plotpipesto = 0;
+            for (var j = 0; j < p.pipepadsto.length; j++) {
+                plotpipesto += p.pipepadsto[j].pipes.length;
+            }
+            var minwells = plotpipesto + 3;
+            if (plotpipesto > 0 && p.nwells < minwells) {
+                turn.npiperemove = Math.min(plotpipesto, minwells - p.nwells);
+
+                for (var j = 0; j < p.pipepadsto.length; j++) {
+                    var ppt = p.pipepadsto[j];
+                    ppt.button.style.opacity = "0.5";
+                    document.body.appendChild(ppt.button);
+                    pipepadbuttons.push(ppt.button);
+                }
+
+                errmsg.push("not enough wells for " + plotpipesto + " pipes to plot " + p.id + ", must remove " + turn.npiperemove + " pipes");
+            }
+        }
     }
 
     debugmsg.innerText = "DOWN WELL " + this.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring;
@@ -1109,12 +1176,12 @@ function shedButtonDownEvent()
         myShedIcon.image.src = turn.player.color + "shed.png";
         myShedIcon.button.style.opacity = "0.0";
 
-        for (var i = 0; i < plots.length; i++) {
-            var p = plots[i];
+        while (shedbuttons.length) {
+            var b = shedbuttons.pop();
 
-            if (p.owner == -1) {
-                p.shedbutton.style.opacity = "0.0";
-                document.body.removeChild(p.shedbutton);
+            b.style.opacity = "0.0";
+            if (document.body.contains(b)) {
+                document.body.removeChild(b);
             }
         }
     }
@@ -1131,7 +1198,9 @@ function shedButtonUpEvent()
     this.removeEventListener("mouseleave", shedButtonUpEvent);
 
     if (buyable) {
-        document.body.removeChild(this);
+        if (document.body.contains(this)) {
+            document.body.removeChild(this);
+        }
     }
 
     debugmsg.innerText = "  UP SHED " + this.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
@@ -1139,7 +1208,7 @@ function shedButtonUpEvent()
 
 function pipepadButtonDownEvent()
 {
-    var p = this.pipepad;
+    var pp = this.pipepad;
 
     this.addEventListener("mouseleave", pipepadButtonUpEvent);
 
@@ -1152,28 +1221,28 @@ function pipepadButtonDownEvent()
     }
     else if (curcursor.mode == "pipe") {
         removepipeable = 0;
-        if (turn.removedpipepad != pipepadNone && turn.removedpipepad != p) {
+        if (turn.removedpipepad != pipepadNone && turn.removedpipepad != pp) {
             pipeable = 0;
             errmsg.push("can place removed pipe only on pipe pad from which pipe was removed (pipe pad " + turn.removedpipepad.id + ")");
         }
-        else if (p.owner != -1 && p.owner != turn.playernum) {
+        else if (pp.owner != -1 && pp.owner != turn.playernum) {
             pipeable = 0;
-            errmsg.push("pipe site " + p.id + " already owned");
+            errmsg.push("pipe site " + pp.id + " already owned");
         }
-        else if (plots[p.plotnumA - 1].owner != turn.playernum &&
-                 plots[p.plotnumB - 1].owner != turn.playernum) {
+        else if (plots[pp.plotnumA - 1].owner != turn.playernum &&
+                 plots[pp.plotnumB - 1].owner != turn.playernum) {
             pipeable = 0;
-            errmsg.push("don't own either pipe site plot of " + p.id + " (" + p.plotnumA + "," + p.plotnumB + ")");
+            errmsg.push("don't own either pipe site plot of " + pp.id + " (" + pp.plotnumA + "," + pp.plotnumB + ")");
         }
-        else if (plots[p.plotnumA - 1].owner == turn.playernum &&
-                 plots[p.plotnumB - 1].owner == turn.playernum) {
+        else if (plots[pp.plotnumA - 1].owner == turn.playernum &&
+                 plots[pp.plotnumB - 1].owner == turn.playernum) {
             pipeable = 0;
-            errmsg.push("you own both pipe site plots of " + p.id);
+            errmsg.push("you own both pipe site plots of " + pp.id);
         }
     }
     else if (curcursor.mode == "action") {
         pipeable = 0;
-        if (p.pipes.length == 0) {
+        if (pp.pipes.length == 0) {
             removepipeable = 0;
             errmsg.push("curcursor.mode != pipe");
         }
@@ -1189,7 +1258,7 @@ function pipepadButtonDownEvent()
             removepipeable = 0;
         }
         else if (curcursor.mode == "action") {
-            if (p.pipes.length > 0) {
+            if (pp.pipes.length > 0) {
                 removepipeable = 1;
             }
             pipeable = 0;
@@ -1200,13 +1269,13 @@ function pipepadButtonDownEvent()
         var pipefrom;
         var pipeto;
 
-        if (plots[p.plotnumA - 1].owner == turn.playernum) {
-            pipefrom = p.plotnumB;
-            pipeto = p.plotnumA;
+        if (plots[pp.plotnumA - 1].owner == turn.playernum) {
+            pipefrom = pp.plotnumB;
+            pipeto = pp.plotnumA;
         }
         else {
-            pipefrom = p.plotnumA;
-            pipeto = p.plotnumB;
+            pipefrom = pp.plotnumA;
+            pipeto = pp.plotnumB;
         }
 
         var plot = plots[pipeto - 1];
@@ -1217,7 +1286,7 @@ function pipepadButtonDownEvent()
         // we're about to add another pipe
         plotpipesto++;
         var minwells = plotpipesto + 3;
-        if (plot.nwells < minwells && sandbox == 0) {
+        if (turn.removedpipepad == pipepadNone && plot.nwells < minwells && sandbox == 0) {
             errmsg.push("not enough wells for " + plotpipesto + " pipes to plot " + plot.id);
         }
         else if (plotpipesto > 3) {
@@ -1228,43 +1297,72 @@ function pipepadButtonDownEvent()
             var topoffset;
             var width;
             var height;
-            var count = p.pipes.length;
-            if (p.pipeorientation == "vertical") {
-                leftoffset = p.pipepadleft - 24 - ((count - 1) * 5);
-                topoffset = p.pipepadtop - 60 + ((count - 1) * 5);
+            var count = pp.pipes.length;
+            if (pp.pipeorientation == "vertical") {
+                leftoffset = pp.pipepadleft - 24 - ((count - 1) * 5);
+                topoffset = pp.pipepadtop - 60 + ((count - 1) * 5);
                 width = 30;
                 height = 100;
             }
             else {
-                leftoffset = p.pipepadleft - 57 - ((count - 1) * 5);
-                topoffset = p.pipepadtop - 20 + ((count - 1) * 5);
+                leftoffset = pp.pipepadleft - 57 - ((count - 1) * 5);
+                topoffset = pp.pipepadtop - 20 + ((count - 1) * 5);
                 width = 100;
                 height = 30;
             }
             var pipe;
-            pipe = new component(width, height, turn.player.color + "pipe_" + p.pipeorientation + ".png", leftoffset, topoffset, "image");
+            pipe = new component(width, height, turn.player.color + "pipe_" + pp.pipeorientation + ".png", leftoffset, topoffset, "image");
 
             if (turn.removedpipepad == pipepadNone) {
                 transferMoney(turn.player, bankPlayer, 25000);
             }
             else {
                 turn.npiperemove++;
+if (0) {
+                for (var i = 0; i < plot.pipepadsto.length; i++) {
+                    var ppt = plot.pipepadsto[i];
+                    ppt.button.style.opacity = "0.5";
+                    document.body.appendChild(ppt.button);
+                    pipepadbuttons.push(ppt.button);
+                }
+}
             }
 
             pipe.from = pipefrom;
             pipe.to = pipeto;
-            pipe.pipepad = p;
+            pipe.pipepad = pp;
 
-            p.pipes.push(pipe);
+            pp.pipes.push(pipe);
             pipes[pipes.length++] = pipe;
 
-            if (p.pipes.length == 1) {
+            if (pp.pipes.length == 1) {
                 var pipepadsfrom = plots[pipe.from - 1].pipepadsfrom;
                 var pipepadsto = plots[pipe.to - 1].pipepadsto;
-                pipepadsfrom[pipepadsfrom.length++] = p;
-                pipepadsto[pipepadsto.length++] = p;
+                pipepadsfrom[pipepadsfrom.length++] = pp;
+                pipepadsto[pipepadsto.length++] = pp;
 
-                p.owner = turn.playernum;
+                pp.owner = turn.playernum;
+            }
+
+            for (var i = 0; i < turn.player.plots.length; i++) {
+                var p = plots[turn.player.plots[i] - 1];
+                var plotpipesto = 0;
+                for (var j = 0; j < p.pipepadsto.length; j++) {
+                    plotpipesto += p.pipepadsto[j].pipes.length;
+                }
+                var minwells = plotpipesto + 3;
+                if (plotpipesto > 0 && p.nwells < minwells) {
+                    turn.npiperemove = Math.min(plotpipesto, minwells - p.nwells);
+
+                    for (var j = 0; j < p.pipepadsto.length; j++) {
+                        var ppt = p.pipepadsto[j];
+                        ppt.button.style.opacity = "0.5";
+                        document.body.appendChild(ppt.button);
+                        pipepadbuttons.push(ppt.button);
+                    }
+
+                    errmsg.push("not enough wells for " + plotpipesto + " pipes to plot " + p.id + ", must remove " + turn.npiperemove + " pipes");
+                }
             }
 
             turn.removedpipepad = pipepadNone;
@@ -1273,15 +1371,13 @@ function pipepadButtonDownEvent()
             myPipeIcon.image.src = turn.player.color + "pipe.png";
             myPipeIcon.button.style.opacity = "0.0";
 
-            for (var i = 0; i < turn.player.plots.length; i++) {
-                for (var j = 0; j < pipepads.length; j++) {
-                    var p = pipepads[j];
-                    if (p.plotnumA == turn.player.plots[i] ||
-                        p.plotnumB == turn.player.plots[i]) {
-                        p.button.style.opacity = "0.0";
-                        if (document.body.contains(p.button)) {
-                            document.body.removeChild(p.button);
-                        }
+            if (turn.npiperemove == 0) {
+                while (pipepadbuttons.length) {
+                    var b = pipepadbuttons.pop();
+
+                    b.style.opacity = "0.0";
+                    if (document.body.contains(b)) {
+                        document.body.removeChild(b);
                     }
                 }
             }
@@ -1290,26 +1386,38 @@ function pipepadButtonDownEvent()
         }
     }
     else if (removepipeable) {
-        var pipe = p.pipes.pop();
+        var pipe = pp.pipes.pop();
         arrayRemove(pipes, pipe);
-        if (p.pipes.length == 0) {
-            arrayRemove(plots[pipe.to - 1].pipepadsto, p);
-            arrayRemove(plots[pipe.from - 1].pipepadsfrom, p);
+        if (pp.pipes.length == 0) {
+            arrayRemove(plots[pipe.to - 1].pipepadsto, pp);
+            arrayRemove(plots[pipe.from - 1].pipepadsfrom, pp);
 
-            p.owner = -1;
+            pp.owner = -1;
         }
         turn.npiperemove--;
-        turn.removedpipepad = p;
+        turn.removedpipepad = pp;
 
         cursorPipe.imagesrc = turn.player.color + "pipe.png";
         setCursor(cursorPipe);
-        myPipeIcon.image.src = turn.player.color + "pipe.png";
-        myPipeIcon.button.style.opacity = "0.5";
+        myPipeIcon.image.src = turn.player.color + "pipe_outline.png";
+        myPipeIcon.button.style.opacity = "0.3";
+
+        while (pipepadbuttons.length) {
+            var b = pipepadbuttons.pop();
+
+            b.style.opacity = "0.0";
+            if (document.body.contains(b)) {
+                document.body.removeChild(b);
+            }
+        }
+        this.style.opacity = "0.5";
+        document.body.appendChild(this);
+        pipepadbuttons.push(this);
 
         errmsg.push("remove pipeline to " + plots[pipe.to - 1].id + " from " + plots[pipe.from - 1].id);
     }
 
-    debugmsg.innerText = "DOWN PIPE " + this.id + " plotnumA: " + p.plotnumA + " plotnumB: " + p.plotnumB + " count: " + p.pipes.length;
+    debugmsg.innerText = "DOWN PIPE " + this.id + " plotnumA: " + pp.plotnumA + " plotnumB: " + pp.plotnumB + " count: " + pp.pipes.length;
 
     updatePlayersDisplay();
 }
@@ -1392,24 +1500,6 @@ function debugButtonDownEvent()
                 document.body.removeChild(b);
             }
         }
-if (0) {
-        for (var i = 0; i < plots.length; i++) {
-            var p = plots[i];
-
-            for (var j = 0; j < p.holes.length; j++) {
-                var h = p.holes[j];
-                h.button.style.opacity = "0.0";
-                document.body.removeChild(h.button);
-            }
-            p.shedbutton.style.opacity = "0.0";
-            document.body.removeChild(p.shedbutton);
-        }
-        for (var i = 0; i < pipepads.length; i++) {
-            var p = pipepads[i];
-            p.button.style.opacity = "0.0";
-            document.body.removeChild(p.button);
-        }
-}
 
         for (var i = 0; i < 3; i++) {
             detenterotationinput[i].disabled = true;
@@ -1585,8 +1675,8 @@ function makeDrawButton()
 {
     myDrawIcon = new component(55, 66, "wildcat.png", 140, 680, "image", 0, 0);
     var b = document.createElement("BUTTON");
-    b.addEventListener("mousedown", drawCardDownEvent);
-    b.addEventListener("mouseup", drawCardUpEvent);
+    b.addEventListener("mousedown", drawcardButtonDownEvent);
+    b.addEventListener("mouseup", drawcardButtonUpEvent);
     b.style.border = "0px";
     b.style.width = "55px";
     b.style.height = "68px";
