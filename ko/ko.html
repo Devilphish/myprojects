@@ -190,6 +190,7 @@ var turn = {
     npiperemove: 0,
     fineable: 0,
     removedpipepad: pipepadNone,
+    removedpipe: {},
 }
 
 var statusiId;
@@ -347,10 +348,10 @@ function initDeck()
 
 function arrayRemove(array, element)
 {
-        for (var i = array.indexOf(element); i < (array.length - 1); i++) {
-            array[i] = array[i + 1];
-        }
-        array.length--;
+    for (var i = array.indexOf(element); i < (array.length - 1); i++) {
+        array[i] = array[i + 1];
+    }
+    array.length--;
 }
 
 var shedbuttons = [];
@@ -472,6 +473,7 @@ var pipepadbuttons = [];
 
 function enablePipepadRemoveButtons()
 {
+    turn.npiperemove = 0;
     for (var i = 0; i < turn.player.plots.length; i++) {
         var p = plots[turn.player.plots[i] - 1];
         var plotpipesto = 0;
@@ -480,7 +482,7 @@ function enablePipepadRemoveButtons()
         }
         var minwells = plotpipesto + 3;
         if (plotpipesto > 0 && p.nwells < minwells) {
-            turn.npiperemove = Math.min(plotpipesto, minwells - p.nwells);
+            turn.npiperemove += Math.min(plotpipesto, minwells - p.nwells);
 
             for (var j = 0; j < p.pipepadsto.length; j++) {
                 var ppt = p.pipepadsto[j];
@@ -506,7 +508,7 @@ function removePipepadButtons()
     }
 }
 
-function pipeButtonDownEvent()
+function pipetoolButtonDownEvent()
 {
     toolable = 1;
 
@@ -528,7 +530,7 @@ function pipeButtonDownEvent()
 
             if (removeable) {
                 if (turn.removedpipepad != pipepadNone) {
-                    // complete the pipeline removal
+                    // complete pipe data removal (already removed graphic)
                     var pp = turn.removedpipepad;
                     var pipe = turn.removedpipe;
                     if (pp.pipes.length == 0) {
@@ -545,7 +547,7 @@ function pipeButtonDownEvent()
                 myPipeIcon.button.style.opacity = "0.0";
                 turn.removedpipepad = pipepadNone;
 
-                removePipepadButtons();
+                removePipepadButtons();  // should be just the one
                 enablePipepadRemoveButtons();
             }
         }
@@ -624,7 +626,7 @@ function putAwayDrill()
 
 var holebuttons = [];
 
-function drillButtonDownEvent()
+function drilltoolButtonDownEvent()
 {
     toolable = 1;
 
@@ -883,7 +885,7 @@ function drawcardButtonDownEvent()
             }
             else {
                 if (curstate.autotoolEnable) {
-                    drillButtonDownEvent();
+                    drilltoolButtonDownEvent();
                 }
             }
         }
@@ -1270,6 +1272,7 @@ function pipepadButtonDownEvent()
     }
 
     if (turn.removedpipepad != pipepadNone) {
+        // put pipe graphic back where it was
         var pp = turn.removedpipepad;
         var pipe = turn.removedpipe;
         pp.pipes.push(pipe);
@@ -1280,12 +1283,18 @@ function pipepadButtonDownEvent()
         myPipeIcon.image.src = turn.player.color + "pipe.png";
         myPipeIcon.button.style.opacity = "0.0";
 
+if (0) {
+        // can this happen?  don't think so, remove
         if (turn.npiperemove == 0) {
             this.style.opacity = "0.0";
             document.body.removeChild(this);
             pipepadbuttons.pop();
 
         }
+}
+else {
+        removePipepadButtons();  // should be just the one
+}
         enablePipepadRemoveButtons();
     }
     else if (pipeable) {
@@ -1346,6 +1355,7 @@ function pipepadButtonDownEvent()
             pipes[pipes.length++] = pipe;
 
             if (pp.pipes.length == 1) {
+                // this is the 1st pipe on this pipepad
                 var pipepadsfrom = plots[pipe.from - 1].pipepadsfrom;
                 var pipepadsto = plots[pipe.to - 1].pipepadsto;
                 pipepadsfrom[pipepadsfrom.length++] = pp;
@@ -1354,20 +1364,18 @@ function pipepadButtonDownEvent()
                 pp.owner = turn.playernum;
             }
 
-            turn.removedpipepad = pipepadNone;
-
             setCursor(cursorKingOil);
             myPipeIcon.image.src = turn.player.color + "pipe.png";
             myPipeIcon.button.style.opacity = "0.0";
 
-            if (turn.npiperemove == 0) {
-                removePipepadButtons();
-            }
+            removePipepadButtons();
+            enablePipepadRemoveButtons();
 
             errmsg.push("place pipeline from " + plots[pipe.from - 1].id + " to " + plots[pipe.to - 1].id);
         }
     }
     else if (removepipeable) {
+        // only remove graphic for now, will get data removed later
         var pipe = pp.pipes.pop();
         arrayRemove(pipes, pipe);
         turn.removedpipepad = pp;
@@ -1607,7 +1615,7 @@ function makePipeButton()
 {
     myPipeIcon = new component(30, 100, turn.player.color + "pipe.png", 290, 644, "image", 0, 0);
     var b = document.createElement("BUTTON");
-    b.addEventListener("mousedown", pipeButtonDownEvent);
+    b.addEventListener("mousedown", pipetoolButtonDownEvent);
     b.style.border = "0px";
     b.style.width = "30px";
     b.style.height = "100px";
@@ -1626,7 +1634,7 @@ function makeDrillButton()
 {
     myDerrickIcon = new component(200, 300, "derrick0.png", 155, 554, "image", 0, 0);
     var b = document.createElement("BUTTON");
-    b.addEventListener("mousedown", drillButtonDownEvent);
+    b.addEventListener("mousedown", drilltoolButtonDownEvent);
     b.style.border = "0px";
     b.style.width = "35px";
     b.style.height = "194px";
