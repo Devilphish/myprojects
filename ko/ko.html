@@ -470,6 +470,42 @@ function capButtonUpEvent()
 
 var pipepadbuttons = [];
 
+function enablePipepadRemoveButtons()
+{
+    for (var i = 0; i < turn.player.plots.length; i++) {
+        var p = plots[turn.player.plots[i] - 1];
+        var plotpipesto = 0;
+        for (var j = 0; j < p.pipepadsto.length; j++) {
+            plotpipesto += p.pipepadsto[j].pipes.length;
+        }
+        var minwells = plotpipesto + 3;
+        if (plotpipesto > 0 && p.nwells < minwells) {
+            turn.npiperemove = Math.min(plotpipesto, minwells - p.nwells);
+
+            for (var j = 0; j < p.pipepadsto.length; j++) {
+                var ppt = p.pipepadsto[j];
+                ppt.button.style.opacity = "0.5";
+                document.body.appendChild(ppt.button);
+                pipepadbuttons.push(ppt.button);
+            }
+
+            errmsg.push("not enough wells for " + plotpipesto + " pipes to plot " + p.id + ", must remove " + turn.npiperemove + " pipes");
+        }
+    }
+}
+
+function removePipepadButtons()
+{
+    while (pipepadbuttons.length) {
+        var b = pipepadbuttons.pop();
+
+        b.style.opacity = "0.0";
+        if (document.body.contains(b)) {
+            document.body.removeChild(b);
+        }
+    }
+}
+
 function pipeButtonDownEvent()
 {
     toolable = 1;
@@ -482,7 +518,7 @@ function pipeButtonDownEvent()
     if (toolable) {
         if (curcursor.mode == "pipe") {
             var removeable = 1;
-            if (turn.removedpipepad != pipepadNone && turn.npiperemove < 0) {
+            if (turn.removedpipepad != pipepadNone && turn.npiperemove == 0) {
                 removeable = 0;
                 errmsg.push("not allowed to remove a pipe");
             }
@@ -491,39 +527,26 @@ function pipeButtonDownEvent()
             }
 
             if (removeable) {
+                if (turn.removedpipepad != pipepadNone) {
+                    // complete the pipeline removal
+                    var pp = turn.removedpipepad;
+                    var pipe = turn.removedpipe;
+                    if (pp.pipes.length == 0) {
+                        arrayRemove(plots[pipe.to - 1].pipepadsto, pp);
+                        arrayRemove(plots[pipe.from - 1].pipepadsfrom, pp);
+
+                        pp.owner = -1;
+                    }
+                    turn.npiperemove--;
+                }
+
                 setCursor(cursorKingOil);
                 myPipeIcon.image.src = turn.player.color + "pipe.png";
                 myPipeIcon.button.style.opacity = "0.0";
                 turn.removedpipepad = pipepadNone;
 
-                while (pipepadbuttons.length) {
-                    var b = pipepadbuttons.pop();
-
-                    b.style.opacity = "0.0";
-                    if (document.body.contains(b)) {
-                        document.body.removeChild(b);
-                    }
-                }
-                for (var i = 0; i < turn.player.plots.length; i++) {
-                    var p = plots[turn.player.plots[i] - 1];
-                    var plotpipesto = 0;
-                    for (var j = 0; j < p.pipepadsto.length; j++) {
-                        plotpipesto += p.pipepadsto[j].pipes.length;
-                    }
-                    var minwells = plotpipesto + 3;
-                    if (plotpipesto > 0 && p.nwells < minwells) {
-                        turn.npiperemove = Math.min(plotpipesto, minwells - p.nwells);
-
-                        for (var j = 0; j < p.pipepadsto.length; j++) {
-                            var ppt = p.pipepadsto[j];
-                            ppt.button.style.opacity = "0.5";
-                            document.body.appendChild(ppt.button);
-                            pipepadbuttons.push(ppt.button);
-                        }
-
-                        errmsg.push("not enough wells for " + plotpipesto + " pipes to plot " + p.id + ", must remove " + turn.npiperemove + " pipes");
-                    }
-                }
+                removePipepadButtons();
+                enablePipepadRemoveButtons();
             }
         }
         else {
@@ -1061,26 +1084,7 @@ function wellButtonDownEvent()
 
         caps[caps.length++] = new component(25, 25, turn.player.color + "cap.png", h.left - 21, h.top - 25, "image");
 
-        for (var i = 0; i < turn.player.plots.length; i++) {
-            var p = plots[turn.player.plots[i] - 1];
-            var plotpipesto = 0;
-            for (var j = 0; j < p.pipepadsto.length; j++) {
-                plotpipesto += p.pipepadsto[j].pipes.length;
-            }
-            var minwells = plotpipesto + 3;
-            if (plotpipesto > 0 && p.nwells < minwells) {
-                turn.npiperemove = Math.min(plotpipesto, minwells - p.nwells);
-
-                for (var j = 0; j < p.pipepadsto.length; j++) {
-                    var ppt = p.pipepadsto[j];
-                    ppt.button.style.opacity = "0.5";
-                    document.body.appendChild(ppt.button);
-                    pipepadbuttons.push(ppt.button);
-                }
-
-                errmsg.push("not enough wells for " + plotpipesto + " pipes to plot " + p.id + ", must remove " + turn.npiperemove + " pipes");
-            }
-        }
+        enablePipepadRemoveButtons();
     }
 
     debugmsg.innerText = "DOWN WELL " + this.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring;
@@ -1265,7 +1269,26 @@ function pipepadButtonDownEvent()
         }
     }
 
-    if (pipeable) {
+    if (turn.removedpipepad != pipepadNone) {
+        var pp = turn.removedpipepad;
+        var pipe = turn.removedpipe;
+        pp.pipes.push(pipe);
+        pipes[pipes.length++] = pipe;
+        turn.removedpipepad = pipepadNone;
+
+        setCursor(cursorKingOil);
+        myPipeIcon.image.src = turn.player.color + "pipe.png";
+        myPipeIcon.button.style.opacity = "0.0";
+
+        if (turn.npiperemove == 0) {
+            this.style.opacity = "0.0";
+            document.body.removeChild(this);
+            pipepadbuttons.pop();
+
+        }
+        enablePipepadRemoveButtons();
+    }
+    else if (pipeable) {
         var pipefrom;
         var pipeto;
 
@@ -1313,20 +1336,7 @@ function pipepadButtonDownEvent()
             var pipe;
             pipe = new component(width, height, turn.player.color + "pipe_" + pp.pipeorientation + ".png", leftoffset, topoffset, "image");
 
-            if (turn.removedpipepad == pipepadNone) {
-                transferMoney(turn.player, bankPlayer, 25000);
-            }
-            else {
-                turn.npiperemove++;
-if (0) {
-                for (var i = 0; i < plot.pipepadsto.length; i++) {
-                    var ppt = plot.pipepadsto[i];
-                    ppt.button.style.opacity = "0.5";
-                    document.body.appendChild(ppt.button);
-                    pipepadbuttons.push(ppt.button);
-                }
-}
-            }
+            transferMoney(turn.player, bankPlayer, 25000);
 
             pipe.from = pipefrom;
             pipe.to = pipeto;
@@ -1344,27 +1354,6 @@ if (0) {
                 pp.owner = turn.playernum;
             }
 
-            for (var i = 0; i < turn.player.plots.length; i++) {
-                var p = plots[turn.player.plots[i] - 1];
-                var plotpipesto = 0;
-                for (var j = 0; j < p.pipepadsto.length; j++) {
-                    plotpipesto += p.pipepadsto[j].pipes.length;
-                }
-                var minwells = plotpipesto + 3;
-                if (plotpipesto > 0 && p.nwells < minwells) {
-                    turn.npiperemove = Math.min(plotpipesto, minwells - p.nwells);
-
-                    for (var j = 0; j < p.pipepadsto.length; j++) {
-                        var ppt = p.pipepadsto[j];
-                        ppt.button.style.opacity = "0.5";
-                        document.body.appendChild(ppt.button);
-                        pipepadbuttons.push(ppt.button);
-                    }
-
-                    errmsg.push("not enough wells for " + plotpipesto + " pipes to plot " + p.id + ", must remove " + turn.npiperemove + " pipes");
-                }
-            }
-
             turn.removedpipepad = pipepadNone;
 
             setCursor(cursorKingOil);
@@ -1372,14 +1361,7 @@ if (0) {
             myPipeIcon.button.style.opacity = "0.0";
 
             if (turn.npiperemove == 0) {
-                while (pipepadbuttons.length) {
-                    var b = pipepadbuttons.pop();
-
-                    b.style.opacity = "0.0";
-                    if (document.body.contains(b)) {
-                        document.body.removeChild(b);
-                    }
-                }
+                removePipepadButtons();
             }
 
             errmsg.push("place pipeline from " + plots[pipe.from - 1].id + " to " + plots[pipe.to - 1].id);
@@ -1388,28 +1370,16 @@ if (0) {
     else if (removepipeable) {
         var pipe = pp.pipes.pop();
         arrayRemove(pipes, pipe);
-        if (pp.pipes.length == 0) {
-            arrayRemove(plots[pipe.to - 1].pipepadsto, pp);
-            arrayRemove(plots[pipe.from - 1].pipepadsfrom, pp);
-
-            pp.owner = -1;
-        }
-        turn.npiperemove--;
         turn.removedpipepad = pp;
+        turn.removedpipe = pipe;
 
         cursorPipe.imagesrc = turn.player.color + "pipe.png";
         setCursor(cursorPipe);
         myPipeIcon.image.src = turn.player.color + "pipe_outline.png";
         myPipeIcon.button.style.opacity = "0.3";
 
-        while (pipepadbuttons.length) {
-            var b = pipepadbuttons.pop();
+        removePipepadButtons();
 
-            b.style.opacity = "0.0";
-            if (document.body.contains(b)) {
-                document.body.removeChild(b);
-            }
-        }
         this.style.opacity = "0.5";
         document.body.appendChild(this);
         pipepadbuttons.push(this);
