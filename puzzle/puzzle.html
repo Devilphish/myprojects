@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+
+canvas {
+    border:1px solid #d3d3d3;
+    background-color: #7171f1;
+}
+
+</style>
+</head>
+<body onload="startPuzzle()">
+
+<img id="Tile1.png">
+<img id="Tile2.png">
+<img id="Tile3.png">
+<img id="Tile4.png">
+<img id="Tile5.png">
+<img id="Tile6.png">
+<img id="Tile7.png">
+<img id="Tile8.png">
+<img id="Tile9.png">
+
+<script>
+
+// 1 = Harry
+// 2 = Nick
+// 3 = Brendon
+// 4 = Taylor
+
+var t1 = {};
+var t2 = {};
+var t3 = {};
+var t4 = {};
+var t5 = {};
+var t6 = {};
+var t7 = {};
+var t8 = {};
+var t9 = {};
+
+var statusmsg;
+var debugmsg;
+var turnmsg;
+
+function keyDownEvent(e)
+{
+    if (e.code == "KeyR") {
+        curtileImage.rot += 90;
+        if (curtileImage.rot == 360) curtileImage.rot = 0;
+        curtileImage.style.rotate = curtileImage.rot + "deg";
+    }
+}
+
+function keyUpEvent(e)
+{
+}
+
+function startPuzzle()
+{
+    window.addEventListener('keydown', keyDownEvent);
+    window.addEventListener('keyup', keyUpEvent);
+    document.body.style.backgroundColor = "#7171f1";
+
+    debugmsg = document.getElementById('debuglog');
+    debugmsg.style.position = "absolute";
+    debugmsg.style.top = "760px";
+    statusmsg = document.getElementById('statuslog');
+    statusmsg.style.position = "absolute";
+    statusmsg.style.top = "780px";
+    statusmsg.innerHTML = "foo";
+    turnmsg = document.getElementById('turnlog');
+    turnmsg.style.position = "absolute";
+    turnmsg.style.top = "800px";
+
+    t1 = new tile(250, 250, "Tile1.png", 55, 5, "image", 0, 0);
+    t2 = new tile(250, 250, "Tile2.png", 305, 5, "image", 0, 0);
+    t3 = new tile(250, 250, "Tile3.png", 555, 5, "image", 0, 0);
+    t4 = new tile(250, 250, "Tile4.png", 55, 255, "image", 0, 0);
+    t5 = new tile(250, 250, "Tile5.png", 305, 255, "image", 0, 0);
+    t6 = new tile(250, 250, "Tile6.png", 555, 255, "image", 0, 0);
+    t7 = new tile(250, 250, "Tile7.png", 55, 505, "image", 0, 0);
+    t8 = new tile(250, 250, "Tile8.png", 305, 505, "image", 0, 0);
+    t9 = new tile(250, 250, "Tile9.png", 555, 505, "image", 0, 0);
+}
+
+var curtileImage = null;
+var selectedTile = null;
+
+function swapTiles(t1, t2)
+{
+}
+
+function tileEnter()
+{
+    curtileImage = this;
+}
+
+function tileDownEvent()
+{
+    if (selectedTile != null) {
+//        swapTiles(selectedTile, this);
+        saverot = this.rot;
+        savesrc = this.src;
+
+        this.rot = selectedTile.rot;
+        this.style.rotate = this.rot + "deg";
+        this.src = selectedTile.src;
+
+        selectedTile.rot = saverot;
+        selectedTile.style.rotate = selectedTile.rot + "deg";
+        selectedTile.src = savesrc;
+
+        selectedTile.style.opacity = "1.0";
+
+        selectedTile = null;
+    }
+    else {
+        selectedTile = this;
+        this.style.opacity = "0.7";
+    }
+}
+
+function tile(width, height, image, x, y, type, xoffset, yoffset)
+{
+    this.image = document.getElementById(image);
+    this.image.addEventListener("mouseenter", tileEnter);
+    this.image.addEventListener("mousedown", tileDownEvent);
+    this.image.rot = 0;
+    this.image.src = image;
+    this.image.style.position = "absolute";
+    this.image.style.left = x + "px";
+    this.image.style.top = y + "px";
+    this.image.style.width = width + "px";
+    this.image.style.height = height + "px";
+}
+
+</script>
+
+<div style="text-align:center;width:480px;">
+  <pre id="debuglog" font-weight="bold"> X:  Y:  </pre>
+  <pre id="statuslog"></pre>
+  <pre id="turnlog"> player: </pre>
+</div>
+</body>
+</html>
