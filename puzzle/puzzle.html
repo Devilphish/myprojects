@@ -25,24 +25,166 @@ canvas {
 
 <script>
 
+var sq = [
+    [-4, -2, 3, 2],
+    [-1, 2, 3, -4],
+    [-1, 4, 2, 1],
+    [-3, -4, 1, 3],
+    [1, -2, -3, 4],
+    [1, -4, 3, 2],
+    [3, 2, -1, -4],
+    [1, 4, 3, -2],
+    [-4, -2, -3, -1]
+];
+
+var cmps = [
+    [[0, 1], [1, 3]],
+    [[1, 1], [2, 3]],
+
+    [[0, 2], [3, 0]],
+    [[1, 2], [4, 0]],
+    [[2, 2], [5, 0]],
+
+    [[3, 1], [4, 3]],
+    [[4, 1], [5, 3]],
+
+    [[3, 2], [6, 0]],
+    [[4, 2], [7, 0]],
+    [[5, 2], [8, 0]],
+
+    [[6, 1], [7, 3]],
+    [[7, 1], [8, 3]],
+];
+
 // 1 = Harry
 // 2 = Nick
 // 3 = Brendon
 // 4 = Taylor
 
-var t1 = {};
-var t2 = {};
-var t3 = {};
-var t4 = {};
-var t5 = {};
-var t6 = {};
-var t7 = {};
-var t8 = {};
-var t9 = {};
+var p = [];
+var deck = [];
+var rots = [];
 
 var statusmsg;
 var debugmsg;
 var turnmsg;
+
+var count = 0;
+
+function test(ncmps)
+{
+    var ncmpsnew = ncmps - 1;
+    var p0;
+    var p1;
+    var r0;
+    var r1;
+    var t0;
+    var t1;
+    var t;
+
+    t0 = cmps[ncmpsnew][0][0];
+    t1 = cmps[ncmpsnew][1][0];
+    p0 = cmps[ncmpsnew][0][1];
+    p1 = cmps[ncmpsnew][1][1];
+    r0 = (rots[t0] + p0) % 4;
+    r1 = (rots[t1] + p1) % 4;
+
+    if (sq[deck[t0]][r0] == -sq[deck[t1]][r1]) {
+        if (ncmpsnew) {
+            if (test(ncmpsnew)) {
+                return true;
+            }
+        }
+        else {
+            // GOT IT
+            statusmsg.innerHTML = "GOT IT!";
+            turnmsg.innerHTML = "";
+            for (var t = 0; t < 3; t++) {
+                turnmsg.innerHTML += deck[t] + "" + rots[t] + " ";
+            }
+            turnmsg.innerHTML += "\n";
+            for (var t = 3; t < 6; t++) {
+                turnmsg.innerHTML += deck[t] + "" + rots[t] + " ";
+            }
+            turnmsg.innerHTML += "\n";
+            for (var t = 6; t < 9; t++) {
+                turnmsg.innerHTML += deck[t] + "" + rots[t] + " ";
+            }
+            turnmsg.innerHTML += "\n";
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function rotate(ntiles)
+{
+    var ntilesnew = ntiles - 1;
+
+    for (var r = 0; r < 4; r++) {
+        rots[ntilesnew] = r;
+
+        if (ntilesnew) {
+            if (rotate(ntilesnew)) {
+                return true;;
+            }
+        }
+        else {
+            if (test(12)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+function permute(ntiles, tiles)
+{
+    var newtiles = [];
+    var ntilesnew = ntiles - 1;
+
+    for (var t = 0; t < ntiles; t++) {
+        deck[ntilesnew] = tiles[t];
+
+        for (var x = 0; x < t; x++) {
+            newtiles[x] = tiles[x];
+        }
+        for (var x = t; x < ntilesnew; x++) {
+            newtiles[x] = tiles[x+1];
+        }
+
+        if (ntilesnew) {
+            if (permute(ntilesnew, newtiles)) {
+                return true;;
+            }
+        }
+        else {
+            count++;
+
+            if (rotate(9)) {
+                renderDeck();
+
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+function solve()
+{
+    var tiles = [];
+
+    for (var t = 0; t < 9; t++) {
+        tiles[t] = t;
+    }
+
+    permute(9, tiles, deck);
+}
 
 function keyDownEvent(e)
 {
@@ -50,6 +192,17 @@ function keyDownEvent(e)
         curtileImage.rot += 90;
         if (curtileImage.rot == 360) curtileImage.rot = 0;
         curtileImage.style.rotate = curtileImage.rot + "deg";
+    }
+    if (e.code == "KeyS") {
+        solve();
+    }
+    if (e.code == "KeyD") {
+        debugmsg.innerHTML = "deck: ";
+        for (var i = 0; i < 9; i++) {
+            var r = p[i].image.rot / 90;
+            var t = Number(p[i].image.src[p[i].image.src.length - 5]);
+            debugmsg.innerHTML += (t - 1) + ""  + r + " ";
+        }
     }
 }
 
@@ -74,15 +227,23 @@ function startPuzzle()
     turnmsg.style.position = "absolute";
     turnmsg.style.top = "800px";
 
-    t1 = new tile(250, 250, "Tile1.png", 55, 5, "image", 0, 0);
-    t2 = new tile(250, 250, "Tile2.png", 305, 5, "image", 0, 0);
-    t3 = new tile(250, 250, "Tile3.png", 555, 5, "image", 0, 0);
-    t4 = new tile(250, 250, "Tile4.png", 55, 255, "image", 0, 0);
-    t5 = new tile(250, 250, "Tile5.png", 305, 255, "image", 0, 0);
-    t6 = new tile(250, 250, "Tile6.png", 555, 255, "image", 0, 0);
-    t7 = new tile(250, 250, "Tile7.png", 55, 505, "image", 0, 0);
-    t8 = new tile(250, 250, "Tile8.png", 305, 505, "image", 0, 0);
-    t9 = new tile(250, 250, "Tile9.png", 555, 505, "image", 0, 0);
+    for (var i = 0; i < 9; i++) {
+        var x = 55 + ((i % 3) * 250);
+        var y = 5 + (Math.floor(i / 3) * 250);
+        var tileName = "Tile" + (i + 1) + ".png";
+        p[i] = new tile(250, 250, tileName, x, y, "image", 0, 0);
+    }
+}
+
+function renderDeck()
+{
+    debugmsg.innerHTML = "deck: ";
+    for (var i = 0; i < 9; i++) {
+        p[i].image.rot = rots[i] * 90;
+        p[i].image.style.rotate = p[i].image.rot + "deg";
+        p[i].image.src = "Tile" + (deck[i] + 1) + ".png";
+        debugmsg.innerHTML += deck[i] + "" + rots[i] + " ";
+    }
 }
 
 var curtileImage = null;
