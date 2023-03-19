@@ -314,7 +314,22 @@ var curtile;
 var firstTile;
 var firstRot;
 var iId = null;
+var p0;
+var r0;
+var face;
 var tilesWithArray;
+
+function initfollowPath()
+{
+    p0 = fwdCmpsForTile[0][0][0][1];
+    r0 = 0;
+    face = sq[0][p0];
+    tilesWithArray = tilesWith[-face + 4];
+
+    curtile = 0;
+    firstTile = 0;
+    firstRot = 0;
+}
 
 function followPath()
 {
@@ -329,36 +344,26 @@ function followPath()
 
     fpcount++;
 
-    var newFirst;
+    if (deck[0] == -1) {
+        deck[0] = firstTile;;
+        rots[0] = firstRot;
+        tileUsed[firstTile] = true;
 
-    if (deck[0] != -1) {
-        newFirst = false;
-        tileUsed[deck[0]] = false;
-    }
-    else {
-        newFirst = true;
-    }
-    deck[0] = firstTile;;
-    rots[0] = firstRot;
-    tileUsed[firstTile] = true;
+        renderDeck();
 
-    renderDeck();
+        tilesetBorder(tilesWithArray, true);
 
-    if (newFirst) {
         return true;
     }
 
     var nexttile = fwdCmpsForTile[curtile][0][1][0];
     var p1 = fwdCmpsForTile[curtile][0][1][1];
 
-    var p0 = fwdCmpsForTile[curtile][0][0][1];
-    var r0 = (p0 - rots[curtile] + 4) % 4;
-    var face = sq[deck[curtile]][r0];
-
     while (tilesWithIndex[curtile] < tilesWithArray.length &&
            tileUsed[tilesWithArray[tilesWithIndex[curtile]]]) {
         tilesWithIndex[curtile]++;
     }
+
     if (tilesWithIndex[curtile] == tilesWithArray.length) {
         var tilenum = deck[curtile];
 
@@ -393,38 +398,46 @@ function followPath()
         tilesetBorder(tilesWithArray, false);
 
         if (curtile == 0) {
-            firstRot++;
             tilesWithIndex[0] = 0;
+
+            firstRot++;
             if (firstRot == 4) {
                 firstRot = 0;
+
                 firstTile++;
                 if (firstTile == 9) {
-                    // shouldn't ever get here (bad tiles?)
+                    // shouldn't ever get here
+                    // bad tiles?
+                    // continued solving past last solution?
+
                     clearInterval(iId);
                     iId = null;
 
-                    alert("ERROR: solution 404!\nBAD TILE DECK");
+                    alert("ERROR: solution 404!");
 
                     return false;
                 }
             }
-            deck[0] = firstTile;
-            rots[0] = firstRot;
-            tileUsed[firstTile] = true;
+
+            curdeck = firstTile;
+            currots = firstRot;
         }
         else {
             curtile = prevtile[curtile];
             p[deck[curtile]].image.style.opacity = "0.7";
+
+            curdeck = deck[curtile];
+            currots = rots[curtile];
         }
 
-        if (tilesWithArray != undefined) {
-            tilesetBorder(tilesWithArray, false);
-        }
         p0 = fwdCmpsForTile[curtile][0][0][1];
-        r0 = (p0 - rots[curtile] + 4) % 4;
-        face = sq[deck[curtile]][r0];
+        r0 = (p0 - currots + 4) % 4;
+        face = sq[curdeck][r0];
         tilesWithArray = tilesWith[-face + 4];
-        tilesetBorder(tilesWithArray, true);
+
+        if (deck[curtile] != -1) {
+            tilesetBorder(tilesWithArray, true);
+        }
     }
     else {
         if (fwdCmpsForTile[curtile].length > 1) {
@@ -469,13 +482,14 @@ function followPath()
             }
         }
 
+        tilesWithIndex[curtile]++;
+
         if (deck[nexttile] != -1) {
             tileUsed[deck[nexttile]] = false;
         }
         deck[nexttile] = tilesWithArray[tilesWithIndex[curtile]];
         var x = sq[deck[nexttile]].indexOf(-face);
         rots[nexttile] = (p1 - x + 4) % 4;
-        tilesWithIndex[curtile]++;
         tileUsed[deck[nexttile]] = true;
 
         renderDeck();
@@ -517,16 +531,10 @@ function solve(animate)
     fpcount = 0;
 
 //    permute(9, tiles);
+
 //    iterate(0, tiles);
 
-    var p0 = fwdCmpsForTile[0][0][0][1];
-    var face = sq[0][p0];
-    tilesWithArray = tilesWith[-face + 4];
-
-    curtile = 0;
-    firstTile = 0;
-    firstRot = 0;
-
+    initfollowPath();
     if (animate) {
         iId = setInterval(followPath, animationInterval);
     }
@@ -557,6 +565,22 @@ function keyDownEvent(e)
     if (e.code == "KeyF") {
         if (iId == null) {
             solve(false);
+        }
+    }
+    if (e.code == "Equal") {
+        if (iId != null) {
+            animationInterval *= 2;
+            clearInterval(iId);
+            iId = setInterval(followPath, animationInterval);
+            statusmsg.innerHTML += " " + animationInterval;
+        }
+    }
+    if (e.code == "Minus") {
+        if (iId != null) {
+            animationInterval /= 2;
+            clearInterval(iId);
+            iId = setInterval(followPath, animationInterval);
+            statusmsg.innerHTML += " " + animationInterval;
         }
     }
     if (e.code == "KeyC") {
