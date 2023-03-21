@@ -42,6 +42,7 @@ var sq = [
     [-4, -2, -3, -1]
 ];
 
+// should just compute this from sq
 var tilesWith =  [
     [ 0, 2, 3, 5, 6, 8, ],  // -4
     [ 3, 4, 8, ],           // -3
@@ -115,7 +116,7 @@ var turnmsg;
 
 var fpcount = 0;
 var count = 0;
-var animationInterval = 50;
+var animationInterval = 500;
 
 function test(ncmps)
 {
@@ -482,8 +483,6 @@ function followPath()
             }
         }
 
-        tilesWithIndex[curtile]++;
-
         if (deck[nexttile] != -1) {
             tileUsed[deck[nexttile]] = false;
         }
@@ -491,6 +490,8 @@ function followPath()
         var x = sq[deck[nexttile]].indexOf(-face);
         rots[nexttile] = (p1 - x + 4) % 4;
         tileUsed[deck[nexttile]] = true;
+
+        tilesWithIndex[curtile]++;
 
         renderDeck();
 
@@ -555,7 +556,7 @@ function keyDownEvent(e)
         if (curtileImage.rot == 360) curtileImage.rot = 0;
         curtileImage.style.rotate = curtileImage.rot + "deg";
 
-        test(12);
+//        test(12);
     }
     if (e.code == "KeyS") {
         if (iId == null) {
@@ -715,7 +716,7 @@ function tileDownEvent()
 
         selectedTile = null;
 
-        test(12);
+//        test(12);
     }
     else {
         selectedTile = this;
