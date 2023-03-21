@@ -62,8 +62,8 @@ int test(int ncmps, int *deck, int *rots)
     t1 = cmps[ncmpsnew][1][TILE];
     p0 = cmps[ncmpsnew][0][POS];
     p1 = cmps[ncmpsnew][1][POS];
-    r0 = (rots[t0] + p0) % 4;
-    r1 = (rots[t1] + p1) % 4;
+    r0 = (p0 - rots[t0] + 4) % 4;
+    r1 = (p1 - rots[t1] + 4) % 4;
 
     if (sq[deck[t0]][r0] == -sq[deck[t1]][r1]) {
         if (ncmpsnew) {
