@@ -24,6 +24,7 @@
 // 2 = Nick
 // 3 = Brendon
 // 4 = Taylor
+//
 // Solutions:
 // deck: 11 31 21 53 41 03 83 63 73 
 // deck: 20 02 72 30 40 62 10 52 82 
@@ -77,18 +78,6 @@ var cmps = [
     [[7, 1], [8, 3]],
 ];
 
-var backCmpsForTile = [
-    [],
-    [[[0, 1], [1, 3]]],
-    [[[1, 1], [2, 3]]],
-    [[[0, 2], [3, 0]]],
-    [[[1, 2], [4, 0]], [[3, 1], [4, 3]]],
-    [[[2, 2], [5, 0]], [[4, 1], [5, 3]]],
-    [[[3, 2], [6, 0]]],
-    [[[4, 2], [7, 0]], [[6, 1], [7, 3]]],
-    [[[5, 2], [8, 0]], [[7, 1], [8, 3]]],
-];
-
 var fwdCmpsForTile = [
     [[[0, 1], [1, 3]]],
     [[[1, 1], [2, 3]]],
@@ -105,8 +94,10 @@ var prevtile = [
     -1, 0, 1, 4, 5, 2, 3, 6, 7
 ];
 
-var _T = [];
-var _B = [];
+var _T = [];            // Tiles
+var _B = [];            // Board
+var _B_buttons = [];    // Board buttons
+var _Tray_button;       // Tile tray button
 var deck = [];
 var rots = [];
 
@@ -217,6 +208,19 @@ function permute(ntiles, tiles)
     return false;
 }
 
+var backCmpsForTile = [
+    [],
+    [[[0, 1], [1, 3]]],
+    [[[1, 1], [2, 3]]],
+    [[[0, 2], [3, 0]]],
+    [[[1, 2], [4, 0]], [[3, 1], [4, 3]]],
+    [[[2, 2], [5, 0]], [[4, 1], [5, 3]]],
+    [[[3, 2], [6, 0]]],
+    [[[4, 2], [7, 0]], [[6, 1], [7, 3]]],
+    [[[5, 2], [8, 0]], [[7, 1], [8, 3]]],
+];
+
+// IN PROGRESS, logic doesn't compute
 function iterate(curtile, tiles)
 {
     for (var t = curtile; t < 9; t++) {
@@ -284,7 +288,10 @@ function tilesetBorder(tileset, enable)
 {
     for (var i = 0; i < tileset.length; i++) {
         if (enable) {
-            _T[tileset[i]].image.src = "Tile" + (tileset[i] + 1) + "_hi.png";
+            var tile = _T[tileset[i]];
+            if (tile.deckpos == -1 && iId != null) {
+                tile.image.src = "Tile" + (tileset[i] + 1) + "_hi.png";
+            }
         }
         else {
             _T[tileset[i]].image.src = "Tile" + (tileset[i] + 1) + ".png";
@@ -426,7 +433,6 @@ function followPath()
         }
         else {
             curtile = prevtile[curtile];
-            _T[deck[curtile]].image.style.opacity = "0.7";
 
             curdeck = deck[curtile];
             currots = rots[curtile];
@@ -469,7 +475,6 @@ function followPath()
 
             _T[t].image.rot = r * 90;
             _T[t].image.style.rotate = _T[t].image.rot + "deg";
-            _T[t].image.style.opacity = "0.7";
 
             _T[t].image.style.width = _B[nexttile].w + "px";
             _T[t].image.style.height = _B[nexttile].h + "px";
@@ -565,6 +570,18 @@ function startPuzzle()
     turnmsg.style.position = "absolute";
     turnmsg.style.top = "800px";
 
+    var b = document.createElement("BUTTON");
+    b.addEventListener("mousedown", trayButtonDownEvent);
+    b.style.border = "2px solid #ffffff";
+    b.style.width = "220px";
+    b.style.height = "550px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "0.0";
+    b.style.left = 850 + "px";
+    b.style.top = 45 + "px";
+    _Tray_button = b;
+
     for (var i = 0; i < 9; i++) {
         var tw = 100;
         var th = 100;
@@ -587,7 +604,23 @@ function startPuzzle()
         _B[i].x = x;
         _B[i].y = y;
         _B[i].tilenum = -1;
+
+        b = document.createElement("BUTTON");
+        b.addEventListener("mousedown", boardButtonDownEvent);
+        b.style.border = "2px solid #ffffff";
+        b.style.width = "250px";
+        b.style.height = "250px";
+        b.style.padding = "0px";
+        b.style.position = "absolute";
+        b.style.opacity = "0.5";
+        b.style.left = x + "px";
+        b.style.top = y + "px";
+        _B_buttons[i] = b;
+
+        deck[i] = -1;
     }
+
+    renderDeck(9);
 }
 
 function renderDeck()
@@ -605,6 +638,13 @@ function renderDeck()
             tile.image.style.top = _B[i].y + "px";
             _B[i].tilenum = deck[i];;
             debugmsg.innerHTML += deck[i] + "" + rots[i] + " ";
+
+            if (document.body.contains(_B_buttons[i])) {
+                document.body.removeChild(_B_buttons[i]);
+            }
+        }
+        else {
+            document.body.appendChild(_B_buttons[i]);
         }
     }
 }
@@ -617,17 +657,19 @@ function keyDownEvent(e)
 {
     statusmsg.innerHTML = "foo " + e.code;
     if (e.code == "KeyR") {
-        curtileImage.rot += 90;
-        if (curtileImage.rot == 360) curtileImage.rot = 0;
-        curtileImage.style.rotate = curtileImage.rot + "deg";
+        if (iId == null && _T[curtileImage.n].deckpos != -1) {
+            curtileImage.rot += 90;
+            if (curtileImage.rot == 360) curtileImage.rot = 0;
+            curtileImage.style.rotate = curtileImage.rot + "deg";
 
-        rots[_T[curtileImage.n].deckpos] = curtileImage.rot / 90;
+            rots[_T[curtileImage.n].deckpos] = curtileImage.rot / 90;
 
-        var silly = {};
-        silly.code = "KeyD";
-        keyDownEvent(silly);
+            var silly = {};
+            silly.code = "KeyD";
+            keyDownEvent(silly);
 
-        test(12);
+//            test(12);
+        }
     }
     if (e.code == "KeyS") {
         if (iId == null) {
@@ -705,6 +747,57 @@ function keyUpEvent(e)
 {
 }
 
+function boardButtonDownEvent()
+{
+    statusmsg.innerHTML = "_B_buttons[" + _B_buttons.indexOf(this) + "]";
+
+    if (selectedTile != null) {
+        document.body.removeChild(_Tray_button);
+
+        var buttonPos = _B_buttons.indexOf(this);
+        var selectedTilenum = _T.indexOf(selectedTile);
+        deck[selectedTile.deckpos] = -1;
+        rots[selectedTile.deckpos] = -1;
+        selectedTile.deckpos = buttonPos;
+
+        deck[buttonPos] = selectedTilenum;
+        rots[buttonPos] = selectedTile.image.rot / 90;
+
+        renderDeck(9);
+
+        selectedTile = null;
+
+//        test(12);
+    }
+}
+
+function trayButtonDownEvent()
+{
+    statusmsg.innerHTML = "_Tray_button";
+
+    document.body.removeChild(_Tray_button);
+
+    selectedTile.image.style.opacity = "1.0";
+
+    if (selectedTile.deckpos != -1) {
+        selectedTile.image.rot = 0;
+        selectedTile.image.style.rotate = selectedTile.image.rot + "deg";
+
+        selectedTile.image.style.width = selectedTile.trayw + "px";
+        selectedTile.image.style.height = selectedTile.trayh + "px";
+        selectedTile.image.style.left = selectedTile.trayx + "px";
+        selectedTile.image.style.top = selectedTile.trayy + "px";
+
+        deck[selectedTile.deckpos] = -1;
+        rots[selectedTile.deckpos] = -1;
+        selectedTile.deckpos = -1;
+
+        renderDeck(9);
+    }
+
+    selectedTile = null;
+}
+
 function tileEnter()
 {
     curtileImage = this;
@@ -714,9 +807,10 @@ function tileDownEvent()
 {
     if (selectedTile != null) {
         var thisTile = _T[this.n];
+
         var saveTilenum = _B[thisTile.deckpos].tilenum;
         var saveTile = _T[saveTilenum];
-        var savedeck = thisTile.deckpos;
+        var saveDeck = thisTile.deckpos;
 
         var selectedTilenum = _T.indexOf(selectedTile);
 
@@ -726,17 +820,31 @@ function tileDownEvent()
 
         deck[selectedTile.deckpos] = saveTilenum;
         rots[selectedTile.deckpos] = saveTile.image.rot / 90;
-        selectedTile.deckpos = savedeck;
+        selectedTile.deckpos = saveDeck;
+
+        saveTile.image.rot = 0;
+        saveTile.image.style.rotate = saveTile.image.rot + "deg";
+        saveTile.image.style.opacity = "1.0";
+
+        saveTile.image.style.width = saveTile.trayw + "px";
+        saveTile.image.style.height = saveTile.trayh + "px";
+        saveTile.image.style.left = saveTile.trayx + "px";
+        saveTile.image.style.top = saveTile.trayy + "px";
 
         renderDeck(9);
 
+        document.body.removeChild(_Tray_button);
+
         selectedTile = null;
 
-        test(12);
+//        test(12);
     }
     else {
-        selectedTile = _T[this.n];
-        this.style.opacity = "0.7";
+        if (iId == null) {
+            selectedTile = _T[this.n];
+            this.style.opacity = "0.7";
+            document.body.appendChild(_Tray_button);
+        }
     }
 }
 
