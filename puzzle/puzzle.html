@@ -105,10 +105,10 @@ var prevtile = [
     -1, 0, 1, 4, 5, 2, 3, 6, 7
 ];
 
-var p = [];
+var _T = [];
+var _B = [];
 var deck = [];
 var rots = [];
-var board = [];
 
 var statusmsg;
 var debugmsg;
@@ -121,19 +121,13 @@ var animationInterval = 500;
 function test(ncmps)
 {
     var ncmpsnew = ncmps - 1;
-    var p0;
-    var p1;
-    var r0;
-    var r1;
-    var t0;
-    var t1;
 
-    t0 = cmps[ncmpsnew][0][0];
-    t1 = cmps[ncmpsnew][1][0];
-    p0 = cmps[ncmpsnew][0][1];
-    p1 = cmps[ncmpsnew][1][1];
-    r0 = (p0 - rots[t0] + 4) % 4;
-    r1 = (p1 - rots[t1] + 4) % 4;
+    var t0 = cmps[ncmpsnew][0][0];
+    var t1 = cmps[ncmpsnew][1][0];
+    var p0 = cmps[ncmpsnew][0][1];
+    var p1 = cmps[ncmpsnew][1][1];
+    var r0 = (p0 - rots[t0] + 4) % 4;
+    var r1 = (p1 - rots[t1] + 4) % 4;
 
     if (sq[deck[t0]][r0] == -sq[deck[t1]][r1]) {
         if (ncmpsnew) {
@@ -143,7 +137,7 @@ function test(ncmps)
         }
         else {
             // GOT IT
-            alert("GOT IT!");
+            setTimeout(GOT_IT_popup, 50);
 
             statusmsg.innerHTML = "GOT IT!";
             turnmsg.innerHTML = "";
@@ -290,10 +284,10 @@ function tilesetBorder(tileset, enable)
 {
     for (var i = 0; i < tileset.length; i++) {
         if (enable) {
-            p[tileset[i]].image.src = "Tile" + (tileset[i] + 1) + "_hi.png";
+            _T[tileset[i]].image.src = "Tile" + (tileset[i] + 1) + "_hi.png";
         }
         else {
-            p[tileset[i]].image.src = "Tile" + (tileset[i] + 1) + ".png";
+            _T[tileset[i]].image.src = "Tile" + (tileset[i] + 1) + ".png";
         }
     }
 }
@@ -332,13 +326,18 @@ function initfollowPath()
     firstRot = 0;
 }
 
+function GOT_IT_popup()
+{
+    alert("GOT IT!");
+}
+
 function followPath()
 {
     if (curtile == 8) {
         clearInterval(iId);
         iId = null;
 
-        alert("GOT IT!");
+        setTimeout(GOT_IT_popup, 50);
 
         return false;
     }
@@ -347,6 +346,7 @@ function followPath()
 
     if (deck[0] == -1) {
         deck[0] = firstTile;;
+        _T[firstTile].deckpos = 0; 
         rots[0] = firstRot;
         tileUsed[firstTile] = true;
 
@@ -368,8 +368,8 @@ function followPath()
     if (tilesWithIndex[curtile] == tilesWithArray.length) {
         var tilenum = deck[curtile];
 
-        if (board[nexttile].tile != -1) {
-            var t = p[board[nexttile].tile];
+        if (_B[nexttile].tilenum != -1) {
+            var t = _T[_B[nexttile].tilenum];
             t.image.rot = 0;
             t.image.style.rotate = t.image.rot + "deg";
             t.image.style.opacity = "1.0";
@@ -379,18 +379,19 @@ function followPath()
             t.image.style.left = t.trayx + "px";
             t.image.style.top = t.trayy + "px";
 
-            board[nexttile].tile = -1;
+            _B[nexttile].tilenum = -1;
         }
 
-        p[tilenum].image.rot = 0;
-        p[tilenum].image.style.rotate = p[tilenum].image.rot + "deg";
-        p[tilenum].image.style.opacity = "1.0";
+        _T[tilenum].image.rot = 0;
+        _T[tilenum].image.style.rotate = _T[tilenum].image.rot + "deg";
+        _T[tilenum].image.style.opacity = "1.0";
 
-        p[tilenum].image.style.width = p[tilenum].trayw + "px";
-        p[tilenum].image.style.height = p[tilenum].trayh + "px";
-        p[tilenum].image.style.left = p[tilenum].trayx + "px";
-        p[tilenum].image.style.top = p[tilenum].trayy + "px";
+        _T[tilenum].image.style.width = _T[tilenum].trayw + "px";
+        _T[tilenum].image.style.height = _T[tilenum].trayh + "px";
+        _T[tilenum].image.style.left = _T[tilenum].trayx + "px";
+        _T[tilenum].image.style.top = _T[tilenum].trayy + "px";
 
+        _T[deck[curtile]].deckpos = -1; 
         tileUsed[deck[curtile]] = false;
         deck[curtile] = -1;
 
@@ -425,7 +426,7 @@ function followPath()
         }
         else {
             curtile = prevtile[curtile];
-            p[deck[curtile]].image.style.opacity = "0.7";
+            _T[deck[curtile]].image.style.opacity = "0.7";
 
             curdeck = deck[curtile];
             currots = rots[curtile];
@@ -452,8 +453,8 @@ function followPath()
             var rf0 = (pf0 - r + 4) % 4;
             var rf1 = (pf1 - rots[tf1] + 4) % 4;
 
-            if (board[nexttile].tile != -1) {
-                var tile = p[board[nexttile].tile];
+            if (_B[nexttile].tilenum != -1) {
+                var tile = _T[_B[nexttile].tilenum];
                 tile.image.rot = 0;
                 tile.image.style.rotate = tile.image.rot + "deg";
                 tile.image.style.opacity = "1.0";
@@ -463,18 +464,18 @@ function followPath()
                 tile.image.style.left = tile.trayx + "px";
                 tile.image.style.top = tile.trayy + "px";
 
-                board[nexttile].tile = -1;
+                _B[nexttile].tilenum = -1;
             }
 
-            p[t].image.rot = r * 90;
-            p[t].image.style.rotate = p[t].image.rot + "deg";
-            p[t].image.style.opacity = "0.7";
+            _T[t].image.rot = r * 90;
+            _T[t].image.style.rotate = _T[t].image.rot + "deg";
+            _T[t].image.style.opacity = "0.7";
 
-            p[t].image.style.width = board[nexttile].w + "px";
-            p[t].image.style.height = board[nexttile].h + "px";
-            p[t].image.style.left = board[nexttile].x + "px";
-            p[t].image.style.top = board[nexttile].y + "px";
-            board[nexttile].tile = t;
+            _T[t].image.style.width = _B[nexttile].w + "px";
+            _T[t].image.style.height = _B[nexttile].h + "px";
+            _T[t].image.style.left = _B[nexttile].x + "px";
+            _T[t].image.style.top = _B[nexttile].y + "px";
+            _B[nexttile].tilenum = t;
 
             if (sq[t][rf0] != -sq[deck[tf1]][rf1]) {
                 tilesWithIndex[curtile]++;
@@ -487,6 +488,7 @@ function followPath()
             tileUsed[deck[nexttile]] = false;
         }
         deck[nexttile] = tilesWithArray[tilesWithIndex[curtile]];
+        _T[deck[nexttile]].deckpos = nexttile;
         var x = sq[deck[nexttile]].indexOf(-face);
         rots[nexttile] = (p1 - x + 4) % 4;
         tileUsed[deck[nexttile]] = true;
@@ -546,6 +548,69 @@ function solve(animate)
     }
 }
 
+function startPuzzle()
+{
+    window.addEventListener('keydown', keyDownEvent);
+    window.addEventListener('keyup', keyUpEvent);
+    document.body.style.backgroundColor = "#7171f1";
+
+    debugmsg = document.getElementById('debuglog');
+    debugmsg.style.position = "absolute";
+    debugmsg.style.top = "760px";
+    statusmsg = document.getElementById('statuslog');
+    statusmsg.style.position = "absolute";
+    statusmsg.style.top = "780px";
+    statusmsg.innerHTML = "foo";
+    turnmsg = document.getElementById('turnlog');
+    turnmsg.style.position = "absolute";
+    turnmsg.style.top = "800px";
+
+    for (var i = 0; i < 9; i++) {
+        var tw = 100;
+        var th = 100;
+        var tx = 855 + ((i % 2) * 110);
+        var ty = 50 + (Math.floor(i / 2) * 110);
+        var tileName = "Tile" + (i + 1) + ".png";
+        _T[i] = new tile(tw, th, tileName, tx, ty, "image", 0, 0);
+        _T[i].image.n = i;
+        _T[i].deckpos = -1;
+        _T[i].trayw = tw;
+        _T[i].trayh = tw;
+        _T[i].trayx = tx;
+        _T[i].trayy = ty;
+
+        var x = 55 + ((i % 3) * 250);
+        var y = 5 + (Math.floor(i / 3) * 250);
+        _B[i] = {};
+        _B[i].w = 250;
+        _B[i].h = 250;
+        _B[i].x = x;
+        _B[i].y = y;
+        _B[i].tilenum = -1;
+    }
+}
+
+function renderDeck()
+{
+    debugmsg.innerHTML = "deck: ";
+    for (var i = 0; i < 9; i++) {
+        if (deck[i] != -1) {
+            var tile = _T[deck[i]];
+            tile.image.rot = rots[i] * 90;
+            tile.image.style.rotate = tile.image.rot + "deg";
+            tile.image.style.opacity = "1.0";
+            tile.image.style.width = _B[i].w + "px";
+            tile.image.style.height = _B[i].h + "px";
+            tile.image.style.left = _B[i].x + "px";
+            tile.image.style.top = _B[i].y + "px";
+            _B[i].tilenum = deck[i];;
+            debugmsg.innerHTML += deck[i] + "" + rots[i] + " ";
+        }
+    }
+}
+
+var curtileImage = null;
+var selectedTile = null;
 var paused = false;
 
 function keyDownEvent(e)
@@ -556,7 +621,13 @@ function keyDownEvent(e)
         if (curtileImage.rot == 360) curtileImage.rot = 0;
         curtileImage.style.rotate = curtileImage.rot + "deg";
 
-//        test(12);
+        rots[_T[curtileImage.n].deckpos] = curtileImage.rot / 90;
+
+        var silly = {};
+        silly.code = "KeyD";
+        keyDownEvent(silly);
+
+        test(12);
     }
     if (e.code == "KeyS") {
         if (iId == null) {
@@ -568,28 +639,35 @@ function keyDownEvent(e)
             solve(false);
         }
     }
-    if (e.code == "Equal") {
+    if (e.code == "Minus") {
+        animationInterval *= 2;
+        statusmsg.innerHTML += " " + animationInterval;
+
         if (iId != null) {
-            animationInterval *= 2;
             clearInterval(iId);
             iId = setInterval(followPath, animationInterval);
-            statusmsg.innerHTML += " " + animationInterval;
         }
     }
-    if (e.code == "Minus") {
+    if (e.code == "Equal") {
+        animationInterval /= 2;
+        statusmsg.innerHTML += " " + animationInterval;
+
         if (iId != null) {
-            animationInterval /= 2;
             clearInterval(iId);
             iId = setInterval(followPath, animationInterval);
-            statusmsg.innerHTML += " " + animationInterval;
         }
     }
     if (e.code == "KeyC") {
         if (iId == null) {
             if (curtile == 8) {
-                curtile = prevtile[8];;
+                _T[deck[8]].deckpos = -1; 
                 tileUsed[deck[8]] = false;
                 deck[8] = -1;
+
+                renderDeck(9);
+
+                curtile = prevtile[8];;
+
                 iId = setInterval(followPath, animationInterval);
             }
         }
@@ -616,7 +694,7 @@ function keyDownEvent(e)
         for (var i = 0; i < 9; i++) {
             if (deck[i] != -1) {
                 var t = deck[i];
-                var r = p[t].image.rot / 90;
+                var r = _T[t].image.rot / 90;
                 debugmsg.innerHTML += t + ""  + r + " ";
             }
         }
@@ -624,72 +702,6 @@ function keyDownEvent(e)
 }
 
 function keyUpEvent(e)
-{
-}
-
-function startPuzzle()
-{
-    window.addEventListener('keydown', keyDownEvent);
-    window.addEventListener('keyup', keyUpEvent);
-    document.body.style.backgroundColor = "#7171f1";
-
-    debugmsg = document.getElementById('debuglog');
-    debugmsg.style.position = "absolute";
-    debugmsg.style.top = "760px";
-    statusmsg = document.getElementById('statuslog');
-    statusmsg.style.position = "absolute";
-    statusmsg.style.top = "780px";
-    statusmsg.innerHTML = "foo";
-    turnmsg = document.getElementById('turnlog');
-    turnmsg.style.position = "absolute";
-    turnmsg.style.top = "800px";
-
-    for (var i = 0; i < 9; i++) {
-        var tw = 100;
-        var th = 100;
-        var tx = 855 + ((i % 2) * 110);
-        var ty = 50 + (Math.floor(i / 2) * 110);
-        var tileName = "Tile" + (i + 1) + ".png";
-        p[i] = new tile(tw, th, tileName, tx, ty, "image", 0, 0);
-        p[i].trayw = tw;
-        p[i].trayh = tw;
-        p[i].trayx = tx;
-        p[i].trayy = ty;
-
-        var x = 55 + ((i % 3) * 250);
-        var y = 5 + (Math.floor(i / 3) * 250);
-        board[i] = {};
-        board[i].w = 250;
-        board[i].h = 250;
-        board[i].x = x;
-        board[i].y = y;
-        board[i].tile = -1;
-    }
-}
-
-function renderDeck()
-{
-    debugmsg.innerHTML = "deck: ";
-    for (var i = 0; i < 9; i++) {
-        if (deck[i] != -1) {
-            var tile = p[deck[i]];
-            tile.image.rot = rots[i] * 90;
-            tile.image.style.rotate = tile.image.rot + "deg";
-            tile.image.style.opacity = "1.0";
-            tile.image.style.width = board[i].w + "px";
-            tile.image.style.height = board[i].h + "px";
-            tile.image.style.left = board[i].x + "px";
-            tile.image.style.top = board[i].y + "px";
-            board[i].tile = deck[i];;
-            debugmsg.innerHTML += deck[i] + "" + rots[i] + " ";
-        }
-    }
-}
-
-var curtileImage = null;
-var selectedTile = null;
-
-function swapTiles(t1, t2)
 {
 }
 
@@ -701,25 +713,29 @@ function tileEnter()
 function tileDownEvent()
 {
     if (selectedTile != null) {
-        saverot = this.rot;
-        savesrc = this.src;
+        var thisTile = _T[this.n];
+        var saveTilenum = _B[thisTile.deckpos].tilenum;
+        var saveTile = _T[saveTilenum];
+        var savedeck = thisTile.deckpos;
 
-        this.rot = selectedTile.rot;
-        this.style.rotate = this.rot + "deg";
-        this.src = selectedTile.src;
+        var selectedTilenum = _T.indexOf(selectedTile);
 
-        selectedTile.rot = saverot;
-        selectedTile.style.rotate = selectedTile.rot + "deg";
-        selectedTile.src = savesrc;
+        deck[thisTile.deckpos] = selectedTilenum;
+        rots[thisTile.deckpos] = selectedTile.image.rot / 90;
+        thisTile.deckpos = selectedTile.deckpos;
 
-        selectedTile.style.opacity = "1.0";
+        deck[selectedTile.deckpos] = saveTilenum;
+        rots[selectedTile.deckpos] = saveTile.image.rot / 90;
+        selectedTile.deckpos = savedeck;
+
+        renderDeck(9);
 
         selectedTile = null;
 
-//        test(12);
+        test(12);
     }
     else {
-        selectedTile = this;
+        selectedTile = _T[this.n];
         this.style.opacity = "0.7";
     }
 }
