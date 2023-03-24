@@ -98,6 +98,7 @@ var _T = [];            // Tiles
 var _B = [];            // Board
 var _B_buttons = [];    // Board buttons
 var _Tray_button;       // Tile tray button
+
 var deck = [];
 var rots = [];
 
@@ -665,6 +666,7 @@ function renderDeck()
 
 var finalRot;
 var rId = null;
+var rotateImage = null;
 
 function rotateTile()
 {
@@ -683,13 +685,13 @@ function rotateTile()
 }
 
 var curtileImage = null;
-var rotateImage = null;
 var selectedTile = null;
 var paused = false;
 
 function keyDownEvent(e)
 {
     statusmsg.innerHTML = e.code;
+
     if (e.code == "KeyR") {
         // rotate tile under mouse
         if (iId == null && rId == null && _T[curtileImage.n].deckpos != -1) {
@@ -755,7 +757,7 @@ function keyDownEvent(e)
         }
     }
     if (e.code == "KeyP") {
-        // pause/resume solution animation
+        // pause/unpause solution animation
         if (iId != null) {
             if (!paused) {
                 clearInterval(iId);
@@ -837,8 +839,6 @@ function trayButtonDownEvent()
         selectedTile.image.style.left = selectedTile.trayx + "px";
         selectedTile.image.style.top = selectedTile.trayy + "px";
 
-        curtileImage = selectedTile.image;
-
         deck[selectedTile.deckpos] = -1;
         rots[selectedTile.deckpos] = 0;
         selectedTile.deckpos = -1;
@@ -851,7 +851,16 @@ function trayButtonDownEvent()
 
 function tileEnter()
 {
+    turnmsg.innerHTML = "tileEnter " + this.n;
+
     curtileImage = this;
+}
+
+function tileLeave()
+{
+    turnmsg.innerHTML = "tileLeave " + this.n;
+
+    curtileImage = null;
 }
 
 function tileDownEvent()
@@ -908,6 +917,7 @@ function tile(width, height, image, x, y, type, xoffset, yoffset)
 {
     this.image = document.getElementById(image);
     this.image.addEventListener("mouseenter", tileEnter);
+    this.image.addEventListener("mouseleave", tileLeave);
     this.image.addEventListener("mousedown", tileDownEvent);
     this.image.rot = 0;
     this.image.src = image;
