@@ -111,6 +111,12 @@ var animationInterval = 500;
 
 function test(ncmps)
 {
+    for (var i = 0; i < 9; i++) {
+        if (deck[i] == -1) {
+            return false;
+        }
+    }
+
     var ncmpsnew = ncmps - 1;
 
     var t0 = cmps[ncmpsnew][0][0];
@@ -367,12 +373,14 @@ function followPath()
     var nexttile = fwdCmpsForTile[curtile][0][1][0];
     var p1 = fwdCmpsForTile[curtile][0][1][1];
 
+    // advance to next unused matching tile in list
     while (tilesWithIndex[curtile] < tilesWithArray.length &&
            tileUsed[tilesWithArray[tilesWithIndex[curtile]]]) {
         tilesWithIndex[curtile]++;
     }
 
     if (tilesWithIndex[curtile] == tilesWithArray.length) {
+        // all matching tiles in list exhausted, curtile doesn't work
         var tilenum = deck[curtile];
 
         if (_B[nexttile].tilenum != -1) {
@@ -407,10 +415,12 @@ function followPath()
         tilesetBorder(tilesWithArray, false);
 
         if (curtile == 0) {
+            // all possibilities with current deck[0] tile rotation exhausted
             tilesWithIndex[0] = 0;
 
             firstRot++;
             if (firstRot == 4) {
+                // all rotations for deck[0] tile exhausted
                 firstRot = 0;
 
                 firstTile++;
@@ -518,6 +528,7 @@ function followPath()
             tilesetBorder(tilesWithArray, true);
         }
         else {
+            // solution found, will finish up next interval
             if (tilesWithArray != undefined) {
                 tilesetBorder(tilesWithArray, false);
             }
@@ -534,9 +545,12 @@ function solve(animate)
     for (var t = 0; t < 9; t++) {
         tiles[t] = t;
         deck[t] = -1;
-        rots[t] = -1;
+        rots[t] = 0;
+        _T[t].deckpos = -1;
     }
     fpcount = 0;
+
+    renderDeck(9);
 
 //    permute(9, tiles);
 
@@ -649,39 +663,63 @@ function renderDeck()
     }
 }
 
+var finalRot;
+var rId = null;
+
+function rotateTile()
+{
+    if (rotateImage.rot == finalRot) {
+        clearInterval(rId);
+        rId = null;
+        rotateImage = null;
+
+        test(12);
+    }
+    else {
+        rotateImage.rot += 15;
+        if (rotateImage.rot == 360) rotateImage.rot = 0;
+        rotateImage.style.rotate = rotateImage.rot + "deg";
+    }
+}
+
 var curtileImage = null;
+var rotateImage = null;
 var selectedTile = null;
 var paused = false;
 
 function keyDownEvent(e)
 {
-    statusmsg.innerHTML = "foo " + e.code;
+    statusmsg.innerHTML = e.code;
     if (e.code == "KeyR") {
-        if (iId == null && _T[curtileImage.n].deckpos != -1) {
-            curtileImage.rot += 90;
-            if (curtileImage.rot == 360) curtileImage.rot = 0;
-            curtileImage.style.rotate = curtileImage.rot + "deg";
+        // rotate tile under mouse
+        if (iId == null && rId == null && _T[curtileImage.n].deckpos != -1) {
+            rotateImage = curtileImage;
+            finalRot = rotateImage.rot + 90;
+            if (finalRot == 360) finalRot = 0;
+            rId = setInterval(rotateTile, 50);
 
-            rots[_T[curtileImage.n].deckpos] = curtileImage.rot / 90;
+            rots[_T[rotateImage.n].deckpos] = finalRot / 90;
 
+            // silly way to achieve body of KeyD
             var silly = {};
             silly.code = "KeyD";
             keyDownEvent(silly);
-
-//            test(12);
         }
     }
     if (e.code == "KeyS") {
+        // solve with animation
         if (iId == null) {
             solve(true);
         }
     }
     if (e.code == "KeyF") {
+        // solve without animation
         if (iId == null) {
             solve(false);
         }
     }
     if (e.code == "Minus") {
+        // slow down animation
         animationInterval *= 2;
         statusmsg.innerHTML += " " + animationInterval;
 
@@ -691,6 +729,7 @@ function keyDownEvent(e)
         }
     }
     if (e.code == "Equal") {
+        // speed up animation
         animationInterval /= 2;
         statusmsg.innerHTML += " " + animationInterval;
 
@@ -700,6 +739,7 @@ function keyDownEvent(e)
         }
     }
     if (e.code == "KeyC") {
+        // continue solving from last solution
         if (iId == null) {
             if (curtile == 8) {
                 _T[deck[8]].deckpos = -1; 
@@ -715,6 +755,7 @@ function keyDownEvent(e)
         }
     }
     if (e.code == "KeyP") {
+        // pause/resume solution animation
         if (iId != null) {
             if (!paused) {
                 clearInterval(iId);
@@ -727,11 +768,13 @@ function keyDownEvent(e)
         }
     }
     if (e.code == "KeyJ") {
+        // step next solution animation iteration while paused
         if (paused) {
             followPath();
         }
     }
     if (e.code == "KeyD") {
+        // print current deck
         debugmsg.innerHTML = "deck: ";
         for (var i = 0; i < 9; i++) {
             if (deck[i] != -1) {
@@ -747,6 +790,10 @@ function keyUpEvent(e)
 {
 }
 
+function boardButtonEnter()
+{
+}
+
 function boardButtonDownEvent()
 {
     statusmsg.innerHTML = "_B_buttons[" + _B_buttons.indexOf(this) + "]";
@@ -757,8 +804,10 @@ function boardButtonDownEvent()
         var buttonPos = _B_buttons.indexOf(this);
         var selectedTilenum = _T.indexOf(selectedTile);
         deck[selectedTile.deckpos] = -1;
-        rots[selectedTile.deckpos] = -1;
+        rots[selectedTile.deckpos] = 0;
         selectedTile.deckpos = buttonPos;
+
+        curtileImage = selectedTile.image;
 
         deck[buttonPos] = selectedTilenum;
         rots[buttonPos] = selectedTile.image.rot / 90;
@@ -767,7 +816,7 @@ function boardButtonDownEvent()
 
         selectedTile = null;
 
-//        test(12);
+        test(12);
     }
 }
 
@@ -788,8 +837,10 @@ function trayButtonDownEvent()
         selectedTile.image.style.left = selectedTile.trayx + "px";
         selectedTile.image.style.top = selectedTile.trayy + "px";
 
+        curtileImage = selectedTile.image;
+
         deck[selectedTile.deckpos] = -1;
-        rots[selectedTile.deckpos] = -1;
+        rots[selectedTile.deckpos] = 0;
         selectedTile.deckpos = -1;
 
         renderDeck(9);
@@ -808,36 +859,41 @@ function tileDownEvent()
     if (selectedTile != null) {
         var thisTile = _T[this.n];
 
-        var saveTilenum = _B[thisTile.deckpos].tilenum;
-        var saveTile = _T[saveTilenum];
-        var saveDeck = thisTile.deckpos;
+        if (thisTile != selectedTile) {
+            var saveTilenum = _B[thisTile.deckpos].tilenum;
+            var saveTile = _T[saveTilenum];
+            var saveDeck = thisTile.deckpos;
 
-        var selectedTilenum = _T.indexOf(selectedTile);
+            var selectedTilenum = _T.indexOf(selectedTile);
 
-        deck[thisTile.deckpos] = selectedTilenum;
-        rots[thisTile.deckpos] = selectedTile.image.rot / 90;
-        thisTile.deckpos = selectedTile.deckpos;
+            deck[thisTile.deckpos] = selectedTilenum;
+            rots[thisTile.deckpos] = selectedTile.image.rot / 90;
+            thisTile.deckpos = selectedTile.deckpos;
 
-        deck[selectedTile.deckpos] = saveTilenum;
-        rots[selectedTile.deckpos] = saveTile.image.rot / 90;
-        selectedTile.deckpos = saveDeck;
+            curtileImage = selectedTile.image;
 
-        saveTile.image.rot = 0;
-        saveTile.image.style.rotate = saveTile.image.rot + "deg";
-        saveTile.image.style.opacity = "1.0";
+            deck[selectedTile.deckpos] = saveTilenum;
+            rots[selectedTile.deckpos] = saveTile.image.rot / 90;
+            selectedTile.deckpos = saveDeck;
 
-        saveTile.image.style.width = saveTile.trayw + "px";
-        saveTile.image.style.height = saveTile.trayh + "px";
-        saveTile.image.style.left = saveTile.trayx + "px";
-        saveTile.image.style.top = saveTile.trayy + "px";
+            if (saveDeck) {
+                thisTile.image.rot = 0;
+                thisTile.image.style.rotate = thisTile.image.rot + "deg";
+
+                thisTile.image.style.width = thisTile.trayw + "px";
+                thisTile.image.style.height = thisTile.trayh + "px";
+                thisTile.image.style.left = thisTile.trayx + "px";
+                thisTile.image.style.top = thisTile.trayy + "px";
+            }
+
+            test(12);
+        }
 
         renderDeck(9);
 
         document.body.removeChild(_Tray_button);
 
         selectedTile = null;
-
-//        test(12);
     }
     else {
         if (iId == null) {
