@@ -694,7 +694,8 @@ function keyDownEvent(e)
 
     if (e.code == "KeyR") {
         // rotate tile under mouse
-        if (iId == null && rId == null && _T[curtileImage.n].deckpos != -1) {
+        if (iId == null && rId == null &&
+            curtileImage != null && _T[curtileImage.n].deckpos != -1) {
             rotateImage = curtileImage;
             finalRot = rotateImage.rot + 90;
             if (finalRot == 360) finalRot = 0;
@@ -856,11 +857,19 @@ function tileEnter()
     curtileImage = this;
 }
 
+var movedTile = null;
+
 function tileLeave()
 {
     turnmsg.innerHTML = "tileLeave " + this.n;
 
-    curtileImage = null;
+    if (movedTile != null) {
+        curtileImage = movedTile.image;
+        movedTile = null;
+    }
+    else {
+        curtileImage = null;
+    }
 }
 
 function tileDownEvent()
@@ -885,7 +894,7 @@ function tileDownEvent()
             rots[selectedTile.deckpos] = saveTile.image.rot / 90;
             selectedTile.deckpos = saveDeck;
 
-            if (saveDeck) {
+            if (thisTile.deckpos == -1) {
                 thisTile.image.rot = 0;
                 thisTile.image.style.rotate = thisTile.image.rot + "deg";
 
@@ -894,6 +903,8 @@ function tileDownEvent()
                 thisTile.image.style.left = thisTile.trayx + "px";
                 thisTile.image.style.top = thisTile.trayy + "px";
             }
+
+            movedTile = selectedTile;
 
             test(12);
         }
