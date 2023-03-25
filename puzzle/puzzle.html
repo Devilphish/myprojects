@@ -386,26 +386,13 @@ function followPath()
 
         if (_B[nexttile].tilenum != -1) {
             var t = _T[_B[nexttile].tilenum];
-            t.image.rot = 0;
-            t.image.style.rotate = t.image.rot + "deg";
-            t.image.style.opacity = "1.0";
 
-            t.image.style.width = t.trayw + "px";
-            t.image.style.height = t.trayh + "px";
-            t.image.style.left = t.trayx + "px";
-            t.image.style.top = t.trayy + "px";
+            moveTileImageToTray(t);
 
             _B[nexttile].tilenum = -1;
         }
 
-        _T[tilenum].image.rot = 0;
-        _T[tilenum].image.style.rotate = _T[tilenum].image.rot + "deg";
-        _T[tilenum].image.style.opacity = "1.0";
-
-        _T[tilenum].image.style.width = _T[tilenum].trayw + "px";
-        _T[tilenum].image.style.height = _T[tilenum].trayh + "px";
-        _T[tilenum].image.style.left = _T[tilenum].trayx + "px";
-        _T[tilenum].image.style.top = _T[tilenum].trayy + "px";
+        moveTileImageToTray(_T[tilenum]);
 
         _T[deck[curtile]].deckpos = -1; 
         tileUsed[deck[curtile]] = false;
@@ -472,25 +459,15 @@ function followPath()
 
             if (_B[nexttile].tilenum != -1) {
                 var tile = _T[_B[nexttile].tilenum];
-                tile.image.rot = 0;
-                tile.image.style.rotate = tile.image.rot + "deg";
-                tile.image.style.opacity = "1.0";
 
-                tile.image.style.width = tile.trayw + "px";
-                tile.image.style.height = tile.trayh + "px";
-                tile.image.style.left = tile.trayx + "px";
-                tile.image.style.top = tile.trayy + "px";
+                moveTileImageToTray(tile);
 
                 _B[nexttile].tilenum = -1;
             }
 
             _T[t].image.rot = r * 90;
-            _T[t].image.style.rotate = _T[t].image.rot + "deg";
+            moveTileImageToBoard(_T[t], nexttile);
 
-            _T[t].image.style.width = _B[nexttile].w + "px";
-            _T[t].image.style.height = _B[nexttile].h + "px";
-            _T[t].image.style.left = _B[nexttile].x + "px";
-            _T[t].image.style.top = _B[nexttile].y + "px";
             _B[nexttile].tilenum = t;
 
             if (sq[t][rf0] != -sq[deck[tf1]][rf1]) {
@@ -638,6 +615,29 @@ function startPuzzle()
     renderDeck(9);
 }
 
+function moveTileImageToTray(t)
+{
+    t.image.rot = 0;
+    t.image.style.rotate = t.image.rot + "deg";
+    t.image.style.opacity = "1.0";
+
+    t.image.style.width = t.trayw + "px";
+    t.image.style.height = t.trayh + "px";
+    t.image.style.left = t.trayx + "px";
+    t.image.style.top = t.trayy + "px";
+}
+
+function moveTileImageToBoard(t, p)
+{
+    t.image.style.rotate = t.image.rot + "deg";
+    t.image.style.opacity = "1.0";
+
+    t.image.style.width = _B[p].w + "px";
+    t.image.style.height = _B[p].h + "px";
+    t.image.style.left = _B[p].x + "px";
+    t.image.style.top = _B[p].y + "px";
+}
+
 function renderDeck()
 {
     debugmsg.innerHTML = "deck: ";
@@ -645,13 +645,10 @@ function renderDeck()
         if (deck[i] != -1) {
             var tile = _T[deck[i]];
             tile.image.rot = rots[i] * 90;
-            tile.image.style.rotate = tile.image.rot + "deg";
-            tile.image.style.opacity = "1.0";
-            tile.image.style.width = _B[i].w + "px";
-            tile.image.style.height = _B[i].h + "px";
-            tile.image.style.left = _B[i].x + "px";
-            tile.image.style.top = _B[i].y + "px";
+            moveTileImageToBoard(tile, i);
+
             _B[i].tilenum = deck[i];;
+
             debugmsg.innerHTML += deck[i] + "" + rots[i] + " ";
 
             if (document.body.contains(_B_buttons[i])) {
@@ -832,13 +829,7 @@ function trayButtonDownEvent()
     selectedTile.image.style.opacity = "1.0";
 
     if (selectedTile.deckpos != -1) {
-        selectedTile.image.rot = 0;
-        selectedTile.image.style.rotate = selectedTile.image.rot + "deg";
-
-        selectedTile.image.style.width = selectedTile.trayw + "px";
-        selectedTile.image.style.height = selectedTile.trayh + "px";
-        selectedTile.image.style.left = selectedTile.trayx + "px";
-        selectedTile.image.style.top = selectedTile.trayy + "px";
+        moveTileImageToTray(selectedTile);
 
         deck[selectedTile.deckpos] = -1;
         rots[selectedTile.deckpos] = 0;
@@ -895,13 +886,7 @@ function tileDownEvent()
             selectedTile.deckpos = saveDeck;
 
             if (thisTile.deckpos == -1) {
-                thisTile.image.rot = 0;
-                thisTile.image.style.rotate = thisTile.image.rot + "deg";
-
-                thisTile.image.style.width = thisTile.trayw + "px";
-                thisTile.image.style.height = thisTile.trayh + "px";
-                thisTile.image.style.left = thisTile.trayx + "px";
-                thisTile.image.style.top = thisTile.trayy + "px";
+                moveTileImageToTray(thisTile);
             }
 
             movedTile = selectedTile;
