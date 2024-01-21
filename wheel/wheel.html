@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+</style>
+</head>
+<body onload="startWheel()">
+
+<img id="wheel.png">
+<img id="wheel1.png">
+<img id="wheel2.png">
+<img id="cardimage">
+
+<script>
+
+var deck = [
+    "8S", "5D", "2S", "9D", "8H", "4D", "QC", "3S", "KC", "7D", "3H", "8D",
+    "AS", "5S", "JD", "TS", "KS", "QH", "2H", "7H", "KD", "AC", "7C", "AH",
+    "6H", "5C", "6C", "QD", "3D", "7S", "9H", "6S", "4C", "JH", "2D", "TD",
+    "9S", "4S", "AD", "JS", "5H", "8C", "2C", "6D", "TC", "QS", "4H", "9C",
+    "KH", "3C", "TH", "JC"
+];
+var degpercard = 360.0 / 52;   // 6.92307...
+
+var statusmsg;
+var projmsg;
+var debugmsg;
+var wheelmsg;
+var decelmsg;
+var clicker;
+var click;
+var decelinput;
+var rpminput;
+var spinrpmsuffix;
+var decelsuffix;
+var cardtile;
+
+var timestamp = 0;
+var mX = 0;
+var speed;
+
+function startWheel()
+{
+    var tw = 600;
+    var th = 600;
+    var tx = 300;
+    var ty = 30;
+    var tileName = "wheel.png";
+
+    click = document.getElementById("click");
+    click.load();
+
+    var wheeltile = new tile(tw, th, tileName, tx, ty, tileName, 0, 0);
+    rotateimage = wheeltile.image;
+
+    cardtile = new tile(100, 150, "8S.png", 20, 90, "cardimage", 0, 0);
+
+    window.addEventListener('keydown', keyDownEvent);
+    window.addEventListener('keyup', keyUpEvent);
+    document.body.style.backgroundColor = "#7171f1";
+
+    window.addEventListener('mousemove', function(e) {
+        var now = Date.now();
+        var currentmX = e.screenX;
+
+        var dt = now - timestamp;
+//        var distance = Math.abs(currentmX - mX);
+        var distance = currentmX - mX;
+        speed = Math.round(distance / dt * 1000);
+    
+        mX = currentmX;
+        timestamp = now;
+    });
+
+    debugmsg = document.getElementById('debuglog');
+    debugmsg.style.position = "absolute";
+    debugmsg.style.top = "10px";
+    debugmsg.style.font = "bold 30px arial,serif";
+
+    wheelmsg = document.getElementById('turnlog');
+    wheelmsg.style.position = "absolute";
+    wheelmsg.style.top = "10px";
+    wheelmsg.style.left = "940px";
+    wheelmsg.style.font = "bold 20px arial,serif";
+
+    statusmsg = document.getElementById('statuslog');
+    statusmsg.style.position = "absolute";
+    statusmsg.style.top = "70px";
+    statusmsg.style.left = "940px";
+    statusmsg.style.font = "bold 20px arial,serif";
+
+    projmsg = document.getElementById('projlog');
+    projmsg.style.position = "absolute";
+    projmsg.style.top = "170px";
+    projmsg.style.left = "940px";
+    projmsg.style.font = "bold 20px arial,serif";
+
+    rpmmsg = document.getElementById('rpminput');
+    rpmmsg.addEventListener("mousedown", spinButton);
+    rpmmsg.style.border = "2px solid #ffffff";
+    rpmmsg.style.borderRadius = "4px";
+    rpmmsg.style.position = "absolute";
+    rpmmsg.style.top = "270px";
+    rpmmsg.style.font = "bold 30px arial,serif";
+    rpmmsg.innerHTML = "SPIN";
+
+    spinrpmsuffix = document.getElementById('spinrpmsuffixlog');
+    spinrpmsuffix.style.position = "absolute";
+    spinrpmsuffix.style.top = "260px";
+    spinrpmsuffix.style.left = "170px";
+    spinrpmsuffix.style.font = "bold 20px arial,serif";
+    spinrpmsuffix.innerHTML = "rpm";
+
+    decelmsg = document.getElementById('decelinput');
+    decelmsg.style.position = "absolute";
+    decelmsg.style.top = "307px";
+    decelmsg.style.font = "bold 20px arial,serif";
+    decelmsg.innerHTML = "DECEL";
+
+    decelsuffix = document.getElementById('decelsuffixlog');
+    decelsuffix.style.position = "absolute";
+    decelsuffix.style.top = "305px";
+    decelsuffix.style.left = "150px";
+    decelsuffix.style.font = "bold 20px arial,serif";
+    decelsuffix.innerHTML = "rpm/s";
+
+    // rpm input
+    var i = document.createElement("INPUT");
+    i.setAttribute("type", "number");
+    i.setAttribute("value", 30);
+    i.style.border = "2px solid #ffffff";
+    i.style.borderRadius = "2px";
+    i.style.width = "60px";
+    i.style.height = "33px";
+    i.style.padding = "0px";
+    i.style.position = "absolute";
+    i.style.opacity = "0.7";
+    i.style.left = 100 + "px";
+    i.style.top = 274 + "px";
+    i.style.font = "bold 20px arial,serif";
+    i.style.textAlign = "center";
+    document.body.appendChild(i);
+    rpminput = i;
+
+    // decel input
+    var i = document.createElement("INPUT");
+//    i.addEventListener("mousedown", fooButtonDownEvent);
+    i.addEventListener("input", decelInput);
+    i.setAttribute("type", "number");
+    i.setAttribute("value", rpmdecel);
+    i.style.border = "2px solid #ffffff";
+    i.style.borderRadius = "2px";
+    i.style.width = "50px";
+    i.style.height = "33px";
+    i.style.padding = "0px";
+    i.style.position = "absolute";
+    i.style.opacity = "0.7";
+    i.style.left = 90 + "px";
+    i.style.top = 320 + "px";
+    i.style.font = "bold 20px arial,serif";
+    i.style.textAlign = "center";
+    document.body.appendChild(i);
+    decelinput = i;
+
+    // clicker
+    var b = document.createElement("BUTTON");
+    b.addEventListener("mousedown", fooButtonDownEvent);
+    b.style.border = "2px solid #ffffff";
+    b.style.borderRadius = "2px";
+    b.style.width = "2px";
+    b.style.height = "66px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "0.5";
+    b.style.left = 600 + "px";
+    b.style.top = -23 + "px";
+    document.body.appendChild(b);
+    clicker = b;
+
+    printCard(0);
+    wheelmsg.innerHTML = "RPM: " + Math.round(rpm) + "\nrot: " + rotateimage.rot;
+
+    // spin grab box
+    b = document.createElement("BUTTON");
+//    b.addEventListener("mousedown", fooButtonDownEvent);
+    b.addEventListener("mouseleave", leaveSpin);
+    b.style.border = "2px solid #ffffff";
+    b.style.borderRadius = "2px";
+    b.style.width = "100px";
+    b.style.height = "30px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "0.2";
+    b.style.left = 545 + "px";
+    b.style.top = 100 + "px";
+    document.body.appendChild(b);
+
+    b = document.getElementById("wheel1.png");
+    b.addEventListener("mousedown", fooButtonDownEvent);
+    b.style.border = "0px solid #ffffff";
+    b.style.borderRadius = "2px";
+    b.style.width = "100px";
+    b.style.height = "100px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "1.0";
+    b.style.left = 10 + "px";
+    b.style.top = 420 + "px";
+    b.src = "wheel1.png";
+    document.body.appendChild(b);
+
+    b = document.getElementById("wheel2.png");
+    b.addEventListener("mousedown", fooButtonDownEvent);
+    b.style.border = "0px solid #ffffff";
+    b.style.borderRadius = "2px";
+    b.style.width = "100px";
+    b.style.height = "100px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "1.0";
+    b.style.left = 120 + "px";
+    b.style.top = 420 + "px";
+    b.src = "wheel2.png";
+    document.body.appendChild(b);
+
+if (0) {
+    b = document.getElementById("wheel3.png");
+//    b.addEventListener("mousedown", fooButtonDownEvent);
+    b.style.border = "2px solid #ffffff";
+    b.style.borderRadius = "2px";
+    b.style.width = "100px";
+    b.style.height = "100px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "1.0";
+    b.style.left = 120 + "px";
+    b.style.top = 530 + "px";
+    b.src = "wheel3.png";
+    document.body.appendChild(b);
+
+    b = document.createElement("BUTTON");
+    b.addEventListener("mouseenter", leaveSpin);
+    b.style.border = "2px solid #ffffff";
+    b.style.width = "10px";
+    b.style.height = "30px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "0.0";
+    b.style.left = 685 + "px";
+    b.style.top = 120 + "px";
+    document.body.appendChild(b);
+    b = document.createElement("BUTTON");
+    b.addEventListener("mouseenter", leaveSpin);
+    b.style.border = "2px solid #ffffff";
+    b.style.width = "10px";
+    b.style.height = "30px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.opacity = "0.0";
+    b.style.left = 575 + "px";
+    b.style.top = 120 + "px";
+    document.body.appendChild(b);
+}
+}
+
+function decelInput()
+{
+    rpmdecel = decelinput.value;
+    rpmdecelperinterval = rpmdecel / framerate;
+}
+
+function spinButton()
+{
+    rpm = rpminput.value;
+
+    projmsg.innerHTML = "spin button    init RPM: " + rpm;
+
+    spinWheel();
+}
+
+function leaveSpin()
+{
+    rpm = speed / 30;
+
+    projmsg.innerHTML = "swipe speed: " + speed + "    init RPM:" + Math.round(rpm);
+
+    spinWheel();
+}
+
+function spinWheel()
+{
+    if (rId == null) {
+        rId = setInterval(rotateWheel, frameinterval);
+    }
+
+    var proj_rpm = rpm;
+    var proj_rps;
+    var proj_rpi;
+    var proj_degperinterval;
+    var proj_rot;
+
+    proj_rot = rotateimage.rot;
+
+    while (proj_rpm > 0) {
+        proj_rpm = proj_rpm - rpmdecelperinterval;
+        proj_rps = proj_rpm / 60.0;
+        proj_rpi = proj_rps / framerate;
+        proj_degperinterval = 360.0 * proj_rpi;
+        proj_rot += proj_degperinterval;
+        if (proj_rot >= 360) {
+            proj_rot -= 360;
+        }
+    }
+    proj_rpm = 0.0;
+
+    var cardrot = proj_rot - 2;
+    if (cardrot < 0) {
+        cardrot += 360;
+    }
+    curcardindex = 51 - Math.floor(cardrot / degpercard);
+    curcard = deck[curcardindex];
+
+    curcard_lopost = curcardindex * degpercard;
+    curcard_hipost = (curcardindex + 1) * degpercard;
+
+    projmsg.innerHTML += "\nprojected rot: " + proj_rot;
+    projmsg.innerHTML += "\nprojected card: " + curcard + " (" + curcardindex + ")";
+}
+
+function fooButtonDownEvent()
+{
+    projmsg.innerHTML = "Changing to wheel " + this.id;
+
+    rotateimage.src = this.id;
+}
+
+var rId = null;
+var rotateimage;
+
+var framerate = 50;
+var frameinterval = 1000 / framerate;
+var rpm = 0.0;
+var rps;
+var rpi;
+var degperinterval;
+var curcardindex = 0;
+var curcard = "8S";
+var curcard_lopost;
+var curcard_hipost;
+
+var rpmdecel = 2.0  // rpm/sec
+var rpmdecelperinterval = rpmdecel / framerate;
+
+function keyDownEvent(e)
+{
+//    statusmsg.innerHTML = e.code;
+
+    if (e.code == "KeyS") {
+        rpm = rpminput.value;
+
+        projmsg.innerHTML = "spin key   init RPM: " + rpm;
+
+        spinWheel();
+    }
+    if (e.code == "KeyN") {
+        if (rId == null) {
+            rpm = rpminput.value;
+            while (rpm > 0) {
+                rpm = rpm - rpmdecelperinterval;
+                rps = rpm / 60.0;
+                rpi = rps / framerate;
+                degperinterval = 360.0 * rpi;
+                rotateimage.rot += degperinterval;
+                if (rotateimage.rot >= 360) {
+                    rotateimage.rot -= 360;
+                }
+            }
+            rpm = 0.0;
+
+            rotateimage.style.rotate = rotateimage.rot + "deg";
+            printCard(rotateimage.rot);
+
+            wheelmsg.innerHTML = "RPM: " + Math.round(rpm) + "\nrot: " + rotateimage.rot;
+            projmsg.innerHTML = "";
+        }
+    }
+    if (e.code == "Minus") {
+        if (rId == null) {
+            rotateimage.rot--
+            if (rotateimage.rot < 0) {
+                rotateimage.rot += 360;
+            }
+
+            rotateimage.style.rotate = rotateimage.rot + "deg";
+            printCard(rotateimage.rot);
+
+            wheelmsg.innerHTML = "RPM: " + Math.round(rpm) + "\nrot: " + rotateimage.rot;
+            projmsg.innerHTML = "";
+        }
+    }
+    if (e.code == "Equal") {
+        if (rId == null) {
+            rotateimage.rot++;
+            if (rotateimage.rot >= 360) {
+                rotateimage.rot -= 360;
+            }
+
+            rotateimage.style.rotate = rotateimage.rot + "deg";
+            printCard(rotateimage.rot);
+
+            wheelmsg.innerHTML = "RPM: " + Math.round(rpm) + "\nrot: " + rotateimage.rot;
+            projmsg.innerHTML = "";
+        }
+    }
+}
+
+function keyUpEvent(e)
+{
+}
+
+function rotateWheel()
+{
+    if (rpm > 0) {
+        rpm = rpm - rpmdecelperinterval;
+        rps = rpm / 60.0;
+        rpi = rps / framerate;
+        degperinterval = 360.0 * rpi;
+        rotateimage.rot += degperinterval;
+        if (rotateimage.rot >= 360) {
+            rotateimage.rot -= 360;
+        }
+
+        rotateimage.style.rotate = rotateimage.rot + "deg";
+
+        printCard(rotateimage.rot);
+
+        wheelmsg.innerHTML = "RPM: " + Math.round(rpm) + "\nrot: " + rotateimage.rot;
+    }
+    else {
+        clearInterval(rId);
+        rId = null;
+        rpm = 0.0;
+
+        wheelmsg.innerHTML = "RPM: " + Math.round(rpm) + "\nrot: " + rotateimage.rot;
+    }
+}
+
+var clickerdeg;
+
+function printCard(rot)
+{
+    var cardrot = rot - 2;
+    if (cardrot < 0) {
+        cardrot += 360;
+    }
+    curcardindex = 51 - Math.floor(cardrot / degpercard);
+    curcard = deck[curcardindex];
+
+    curcard_lopost = curcardindex * degpercard;
+    curcard_hipost = (curcardindex + 1) * degpercard;
+
+    clickerdeg = 360 - rot;
+    if (clickerdeg >= 360) {
+        clickerdeg -= 360;
+    }
+
+    var cmp1 = clickerdeg + 1;
+    var cmp2 = clickerdeg;
+
+    if (cmp1 >= 360) {
+        cmp1 -= 360;
+    }
+    if (cmp1 >= 358 && curcardindex == 0) {
+        cmp1 -= 360;
+    }
+    if (cmp2 >= 358 && curcardindex == 0) {
+        cmp2 -= 360;
+    }
+    if (cmp1 <= curcard_lopost) {
+        // rotate clicker 2 units
+        clicker.style.rotate = 340 + "deg";
+    }
+    else if (cmp2 <= curcard_lopost) {
+        // rotate clicker 1 unit
+        clicker.style.rotate = 350 + "deg";
+
+//        click.pause();
+//        click.play();
+    }
+    else {
+        // unrotate clicker
+        clicker.style.rotate = 0 + "deg";
+    }
+
+    statusmsg.innerHTML = "curcardindex: " + curcardindex;
+    statusmsg.innerHTML += "\nclicker degree: " + clickerdeg;
+    statusmsg.innerHTML += "\nlo post: " + curcard_lopost;
+    statusmsg.innerHTML += "\nhi post: " + curcard_hipost;
+
+    cardtile.image.src = curcard + ".png";
+    debugmsg.innerHTML = "card: " + curcard;
+}
+
+function tile(width, height, image, x, y, type, xoffset, yoffset)
+{
+    this.image = document.getElementById(type);
+//    this.image.addEventListener("mouseenter", tileEnter);
+//    this.image.addEventListener("mouseleave", tileLeave);
+//    this.image.addEventListener("mousedown", tileDownEvent);
+    this.image.rot = 0;
+    this.image.src = image;
+    this.image.style.position = "absolute";
+    this.image.style.left = x + "px";
+    this.image.style.top = y + "px";
+    this.image.style.width = width + "px";
+    this.image.style.height = height + "px";
+}
+
+//<audio id="click" src="mixkit-camera-shutter-click-1133.wav">
+//<audio id="click" src="mixkit-classic-click-1117.wav">
+
+</script>
+
+<div style="text-align:left;width:480px;">
+  <pre id="debuglog" font-weight="bold"></pre>
+  <pre id="statuslog"></pre>
+  <pre id="projlog"></pre>
+  <pre id="turnlog"></pre>
+  <pre id="decelinput"></pre>
+  <pre id="spinrpmsuffixlog"></pre>
+  <pre id="decelsuffixlog"></pre>
+  <button id="rpminput"></button>
+</div>
+<audio id="click" src="mixkit-camera-shutter-click-1133.wav">
+</body>
+</html>
