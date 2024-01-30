@@ -16,6 +16,7 @@
 <img id="wheel6.png">
 <img id="wheel7.png">
 <img id="cardimage">
+<img id="swipebox">
 
 <script>
 
@@ -137,9 +138,9 @@ function startWheel()
         var as = Math.asin(yprime / hyp);
         var ac = Math.acos(xprime / hyp);
 
-//projmsg.innerHTML = "xy: " + x + ", " + y + "\n" + xprime + "\n" + yprime;
-//projmsg.innerHTML += "\nasin: " + as / Math.PI * 180;
-//projmsg.innerHTML += "\nacos: " + ac / Math.PI * 180;
+        projmsg.innerHTML = "xy: " + x + ", " + y + "\n" + xprime + "\n" + yprime;
+        projmsg.innerHTML += "\nasin: " + as / Math.PI * 180;
+        projmsg.innerHTML += "\nacos: " + ac / Math.PI * 180;
 
         if (as < 0) {
             deg = 360 - (ac / Math.PI * 180);
@@ -152,8 +153,8 @@ function startWheel()
             deg += 360;
         }
 
-//projmsg.innerHTML += "\ndeg: " + Math.trunc(deg);
-//projmsg.innerHTML += "\nhyp: " + hyp;
+        projmsg.innerHTML += "\ndeg: " + Math.trunc(deg);
+        projmsg.innerHTML += "\nhyp: " + hyp;
 
         if (mousedown && hyp < 0.85) {
             clearInterval(rId);
@@ -316,22 +317,19 @@ function startWheel()
     document.body.appendChild(b);
     clicker = b;
 
-    printCard(0);
-
     // spin swipe box
-    b = document.createElement("BUTTON");
-//    b.addEventListener("mousedown", fooButtonDownEvent);
+    b = document.getElementById("swipebox");
     b.addEventListener("mouseleave", leaveSpin);
-    b.style.border = "2px solid #ffffff";
+    b.style.border = "0px solid #ffffff";
     b.style.borderRadius = "2px";
     b.style.width = "100px";
     b.style.height = "30px";
     b.style.padding = "0px";
     b.style.position = "absolute";
-    b.style.opacity = "0.2";
+    b.style.opacity = "0.7";
     b.style.left = 545 + "px";
     b.style.top = 100 + "px";
-    document.body.appendChild(b);
+    b.src = "chevron.png";
 
     wheelButton("wheel1.png");
     wheelButton("wheel2.png");
@@ -341,35 +339,9 @@ function startWheel()
     wheelButton("wheel6.png");
     wheelButton("wheel7.png");
 
+    printCard(0);
+
 if (0) {
-    b = document.getElementById("wheel6.png");
-    b.addEventListener("mousedown", fooButtonDownEvent);
-    b.style.border = "0px solid #ffffff";
-    b.style.borderRadius = "2px";
-    b.style.width = "80px";
-    b.style.height = "80px";
-    b.style.padding = "0px";
-    b.style.position = "absolute";
-    b.style.opacity = "1.0";
-    b.style.left = 190 + "px";
-    b.style.top = 510 + "px";
-    b.src = "wheel6.png";
-    document.body.appendChild(b);
-
-    b = document.getElementById("wheel7.png");
-    b.addEventListener("mousedown", fooButtonDownEvent);
-    b.style.border = "0px solid #ffffff";
-    b.style.borderRadius = "2px";
-    b.style.width = "80px";
-    b.style.height = "80px";
-    b.style.padding = "0px";
-    b.style.position = "absolute";
-    b.style.opacity = "1.0";
-    b.style.left = 10 + "px";
-    b.style.top = 600 + "px";
-    b.src = "wheel7.png";
-    document.body.appendChild(b);
-
     b = document.createElement("BUTTON");
     b.addEventListener("mouseenter", leaveSpin);
     b.style.border = "2px solid #ffffff";
@@ -411,7 +383,6 @@ function wheelButton(image)
     b.style.left = 10 + (90 * (Math.trunc(n % 3))) + "px";
     b.style.top = 420 + (90 * (Math.trunc(n / 3))) + "px";
     b.src = image;
-    document.body.appendChild(b);
 
     return b;
 }
