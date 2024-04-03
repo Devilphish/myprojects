@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, first-scale=1.0"/>
 <style>
 
 </style>
@@ -394,8 +393,8 @@ function followPath()
 
         moveTileImageToTray(_T[tilenum]);
 
-        _T[deck[curtile]].deckpos = -1; 
-        tileUsed[deck[curtile]] = false;
+        _T[tilenum].deckpos = -1;
+        tileUsed[tilenum] = false;
         deck[curtile] = -1;
 
         renderDeck();
@@ -465,10 +464,7 @@ function followPath()
                 _B[nexttile].tilenum = -1;
             }
 
-            _T[t].image.rot = r * 90;
-            moveTileImageToBoard(_T[t], nexttile);
-
-            _B[nexttile].tilenum = t;
+            moveTileImageToBoard(_T[t], nexttile, r * 90);
 
             if (sq[t][rf0] != -sq[deck[tf1]][rf1]) {
                 tilesWithIndex[curtile]++;
@@ -520,13 +516,16 @@ function solve(animate)
 {
     var tiles = [];
 
+    fpcount = 0;
+
     for (var t = 0; t < 9; t++) {
         tiles[t] = t;
         deck[t] = -1;
         rots[t] = 0;
         _T[t].deckpos = -1;
+        moveTileImageToTray(_T[t]);
+        _B[t].tilenum = -1;
     }
-    fpcount = 0;
 
     renderDeck(9);
 
@@ -615,27 +614,237 @@ function startPuzzle()
     renderDeck(9);
 }
 
-function moveTileImageToTray(t)
+function arrayRemove(array, element)
 {
-    t.image.rot = 0;
-    t.image.style.rotate = t.image.rot + "deg";
-    t.image.style.opacity = "1.0";
-
-    t.image.style.width = t.trayw + "px";
-    t.image.style.height = t.trayh + "px";
-    t.image.style.left = t.trayx + "px";
-    t.image.style.top = t.trayy + "px";
+    for (var i = array.indexOf(element); i < (array.length - 1); i++) {
+        array[i] = array[i + 1];
+    }
+    array.length--;
 }
 
-function moveTileImageToBoard(t, p)
+var tmtiId;
+var bmtiId;
+var tmovetilearray = [];
+var bmovetilearray = [];
+var movetileinterval = 25;
+var movetilesteps = 20;
+var animate = true;
+
+function moveTileImageToTray(t)
 {
-    t.image.style.rotate = t.image.rot + "deg";
     t.image.style.opacity = "1.0";
 
-    t.image.style.width = _B[p].w + "px";
-    t.image.style.height = _B[p].h + "px";
-    t.image.style.left = _B[p].x + "px";
-    t.image.style.top = _B[p].y + "px";
+    if (!animate) {
+        t.image.style.width = t.trayw + "px";
+        t.image.style.height = t.trayh + "px";
+        t.image.style.left = t.trayx + "px";
+        t.image.style.top = t.trayy + "px";
+
+        if (t.deckpos != -1) {
+            _B[t.deckpos].tilenum = -1;
+        }
+    }
+    else {
+        if (tmovetilearray.includes(t)) {
+//            arrayRemove(tmovetilearray, t);
+              return;
+        }
+        if (bmovetilearray.includes(t)) {
+            arrayRemove(bmovetilearray, t);
+        }
+
+        tmovetilearray.push(t);
+
+        var end = {};
+        end.x = t.trayx;
+        end.y = t.trayy;
+        end.w = t.trayw;
+        end.h = t.trayh;
+        end.r = 0;
+        t.x = t.image.x;
+        t.y = t.image.y;
+        t.w = t.image.width;
+        t.h = t.image.height;
+        t.r = t.image.rot;
+        var diff = {};
+        diff.x = t.x - end.x;
+        diff.y = t.y - end.y;
+        diff.w = t.w - end.w;
+        diff.h = t.h - end.h;
+        diff.r = t.r - end.r;
+        t.step = {};
+        t.step.x = diff.x / movetilesteps;
+        t.step.y = diff.y / movetilesteps;
+        t.step.w = diff.w / movetilesteps;
+        t.step.h = diff.h / movetilesteps;
+        t.step.r = diff.r / movetilesteps;
+
+        t.movetilecount = 0;
+
+//        document.body.removeChild(t.image);
+//        document.body.appendChild(t.image);
+
+        if (tmovetilearray.length == 1) {
+            tmtiId = setInterval(tmovetile, movetileinterval);
+        }
+    }
+
+    function tmovetile() {
+        for (var i = 0; i < tmovetilearray.length; i++) {
+            var tile = tmovetilearray[i];
+            if (tile.movetilecount == movetilesteps) {
+                arrayRemove(tmovetilearray, tile);
+                i--;
+
+                tile.image.style.zIndex = "0";
+
+                if (tmovetilearray.length == 0) {
+                    clearInterval(tmtiId);
+                }
+
+                if (tile.deckpos != -1) {
+                    _B[tile.deckpos].tilenum = -1;
+                }
+            }
+            else {
+                tile.x -= tile.step.x;
+                tile.y -= tile.step.y;
+                tile.w -= tile.step.w;
+                tile.h -= tile.step.h;
+                tile.r -= tile.step.r;
+
+                tile.image.style.left = tile.x + "px";
+                tile.image.style.top = tile.y + "px";
+                tile.image.style.width = tile.w + "px";
+                tile.image.style.height = tile.h + "px";
+                tile.image.style.rotate = tile.r + "deg";
+                tile.image.rot = tile.r;
+                tile.image.style.zIndex = "1";
+
+                tile.movetilecount++;
+            }
+        }
+    }
+}
+
+function moveTileImageToBoard(t, p, r)
+{
+    t.image.style.opacity = "1.0";
+
+    if (!animate) {
+        t.image.style.width = _B[p].w + "px";
+        t.image.style.height = _B[p].h + "px";
+        t.image.style.rotate = t.image.rot + "deg";
+        if (t.image.style.border[0] == '2') {
+            t.image.style.left = _B[p].x - 2 + "px";
+            t.image.style.top = _B[p].y - 2 + "px";
+        }
+        else {
+            t.image.style.left = _B[p].x + "px";
+            t.image.style.top = _B[p].y + "px";
+        }
+
+        _B[p].tilenum = _T.indexOf(t);
+
+        if (document.body.contains(_B_buttons[p])) {
+            document.body.removeChild(_B_buttons[p]);
+        }
+    }
+    else {
+        document.body.appendChild(_B_buttons[p]);
+
+        if (tmovetilearray.includes(t)) {
+            arrayRemove(tmovetilearray, t);
+            if (t.deckpos != -1) {
+                _B[t.deckpos].tilenum = -1;
+            }
+        }
+        if (bmovetilearray.includes(t)) {
+            arrayRemove(bmovetilearray, t);
+            _B[t.p].tilenum = _T.indexOf(t);
+        }
+
+        bmovetilearray.push(t);
+
+        var end = {};
+        if (t.image.style.border[0] == '2') {
+            end.x = _B[p].x - 2;
+            end.y = _B[p].y - 2;
+        }
+        else {
+            end.x = _B[p].x;
+            end.y = _B[p].y;
+        }
+        end.w = _B[p].w;
+        end.h = _B[p].h;
+        end.r = r;
+        t.x = t.image.x;
+        t.y = t.image.y;
+        t.w = t.image.width;
+        t.h = t.image.height;
+        t.r = t.image.rot;
+        var diff = {};
+        diff.x = t.x - end.x;
+        diff.y = t.y - end.y;
+        diff.w = t.w - end.w;
+        diff.h = t.h - end.h;
+        diff.r = t.r - end.r;
+        t.step = {};
+        t.step.x = diff.x / movetilesteps;
+        t.step.y = diff.y / movetilesteps;
+        t.step.w = diff.w / movetilesteps;
+        t.step.h = diff.h / movetilesteps;
+        t.step.r = diff.r / movetilesteps;
+        t.p = p;
+
+        t.movetilecount = 0;
+
+        document.body.removeChild(t.image);
+        document.body.appendChild(t.image);
+
+        if (bmovetilearray.length == 1) {
+            bmtiId = setInterval(bmovetile, movetileinterval);
+        }
+    }
+
+    function bmovetile() {
+        for (var i = 0; i < bmovetilearray.length; i++) {
+            var tile = bmovetilearray[i];
+            if (tile.movetilecount == movetilesteps) {
+                arrayRemove(bmovetilearray, tile);
+                i--;
+
+                if (bmovetilearray.length == 0) {
+                    clearInterval(bmtiId);
+                }
+
+                tile.image.style.zIndex = "0";
+
+                _B[tile.p].tilenum = _T.indexOf(tile);
+
+                if (document.body.contains(_B_buttons[tile.p])) {
+                    document.body.removeChild(_B_buttons[tile.p]);
+                }
+            }
+            else {
+                tile.x -= tile.step.x;
+                tile.y -= tile.step.y;
+                tile.w -= tile.step.w;
+                tile.h -= tile.step.h;
+                tile.r -= tile.step.r;
+
+                tile.image.style.left = tile.x + "px";
+                tile.image.style.top = tile.y + "px";
+                tile.image.style.width = tile.w + "px";
+                tile.image.style.height = tile.h + "px";
+                tile.image.style.rotate = tile.r + "deg";
+                tile.image.rot = tile.r;
+                tile.image.style.zIndex = "1";
+
+                tile.movetilecount++;
+            }
+        }
+    }
 }
 
 function renderDeck()
@@ -644,16 +853,9 @@ function renderDeck()
     for (var i = 0; i < 9; i++) {
         if (deck[i] != -1) {
             var tile = _T[deck[i]];
-            tile.image.rot = rots[i] * 90;
-            moveTileImageToBoard(tile, i);
-
-            _B[i].tilenum = deck[i];;
+            moveTileImageToBoard(tile, i, rots[i] * 90);
 
             debugmsg.innerHTML += deck[i] + "" + rots[i] + " ";
-
-            if (document.body.contains(_B_buttons[i])) {
-                document.body.removeChild(_B_buttons[i]);
-            }
         }
         else {
             document.body.appendChild(_B_buttons[i]);
@@ -693,6 +895,7 @@ function keyDownEvent(e)
         // rotate tile under mouse
         if (iId == null && rId == null &&
             curtileImage != null && _T[curtileImage.n].deckpos != -1) {
+
             rotateImage = curtileImage;
             finalRot = rotateImage.rot + 90;
             if (finalRot == 360) finalRot = 0;
@@ -809,10 +1012,17 @@ function boardButtonDownEvent()
 
         curtileImage = selectedTile.image;
 
+        document.body.removeChild(curtileImage);
+        document.body.appendChild(curtileImage);
+
         deck[buttonPos] = selectedTilenum;
         rots[buttonPos] = selectedTile.image.rot / 90;
 
         renderDeck(9);
+
+        //addBorder(curtileImage);
+
+        document.body.style.cursor = "default";
 
         selectedTile = null;
 
@@ -836,16 +1046,76 @@ function trayButtonDownEvent()
         selectedTile.deckpos = -1;
 
         renderDeck(9);
+
     }
+
+    document.body.style.cursor = "default";
 
     selectedTile = null;
 }
 
+var borderedTileImage = null;
+
+function addBorder(ti)
+{
+    if (ti.style.border[0] == '4') {
+        return;
+    }
+
+    if (borderedTileImage != null) {
+        removeBorder(borderedTileImage);
+    }
+
+    var tile = _T[ti.n];
+    var deckpos = tile.deckpos;
+    if (deckpos != -1) {
+        ti.style.left = _B[deckpos].x - 4 + "px";
+        ti.style.top = _B[deckpos].y - 4 + "px";
+    }
+    else {
+        ti.style.left = tile.trayx - 4 + "px";
+        ti.style.top = tile.trayy - 4 + "px";
+    }
+//    ti.style.border = "4px solid #fa4a4a";
+    ti.style.border = "4px solid #dd45fc";
+
+    document.body.removeChild(ti);
+    document.body.appendChild(ti);
+
+    boarderedTileImage = ti;
+}
+
+function removeBorder(ti)
+{
+    if (ti.style.border[0] == '0') {
+        return;
+    }
+
+    var tile = _T[ti.n];
+    var deckpos = tile.deckpos;
+    if (deckpos != -1) {
+        ti.style.left = _B[deckpos].x + "px";
+        ti.style.top = _B[deckpos].y + "px";
+    }
+    else {
+        ti.style.left = tile.trayx + "px";
+        ti.style.top = tile.trayy + "px";
+    }
+    ti.style.border = "0px";
+
+    borderedTileImage = null;
+}
+
 function tileEnter()
 {
-    turnmsg.innerHTML = "tileEnter " + this.n;
+    turnmsg.innerHTML += " tileEnter " + this.n;
 
     curtileImage = this;
+
+    addBorder(this);
+
+    document.body.removeChild(this);
+    document.body.appendChild(this);
 }
 
 var movedTile = null;
@@ -853,6 +1123,8 @@ var movedTile = null;
 function tileLeave()
 {
     turnmsg.innerHTML = "tileLeave " + this.n;
+
+    removeBorder(this);
 
     if (movedTile != null) {
         curtileImage = movedTile.image;
@@ -868,6 +1140,8 @@ function tileDownEvent()
     if (selectedTile != null) {
         var thisTile = _T[this.n];
 
+        removeBorder(this);
+
         if (thisTile != selectedTile) {
             var saveTilenum = _B[thisTile.deckpos].tilenum;
             var saveTile = _T[saveTilenum];
@@ -880,6 +1154,11 @@ function tileDownEvent()
             thisTile.deckpos = selectedTile.deckpos;
 
             curtileImage = selectedTile.image;
+
+            //addBorder(curtileImage);
+
+            document.body.removeChild(curtileImage);
+            document.body.appendChild(curtileImage);
 
             deck[selectedTile.deckpos] = saveTilenum;
             rots[selectedTile.deckpos] = saveTile.image.rot / 90;
@@ -897,6 +1176,7 @@ function tileDownEvent()
         renderDeck(9);
 
         document.body.removeChild(_Tray_button);
+        document.body.style.cursor = "default";
 
         selectedTile = null;
     }
@@ -904,6 +1184,7 @@ function tileDownEvent()
         if (iId == null) {
             selectedTile = _T[this.n];
             this.style.opacity = "0.7";
+            document.body.style.cursor = 'move';
             document.body.appendChild(_Tray_button);
         }
     }
