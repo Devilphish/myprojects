@@ -138,10 +138,6 @@ function startWheel()
         var as = Math.asin(yprime / hyp);
         var ac = Math.acos(xprime / hyp);
 
-        projmsg.innerHTML = "xy: " + x + ", " + y + "\n" + xprime + "\n" + yprime;
-        projmsg.innerHTML += "\nasin: " + as / Math.PI * 180;
-        projmsg.innerHTML += "\nacos: " + ac / Math.PI * 180;
-
         if (as < 0) {
             deg = 360 - (ac / Math.PI * 180);
         }
@@ -153,8 +149,10 @@ function startWheel()
             deg += 360;
         }
 
-        projmsg.innerHTML += "\ndeg: " + Math.trunc(deg);
-        projmsg.innerHTML += "\nhyp: " + hyp;
+        coordmsg.innerHTML = "x, y: " + x + ", " + y + "\n\t" + xprime + "\n\t" + yprime;
+        coordmsg.innerHTML += "\ndeg, hyp: " + Math.trunc(deg) + ", " + Math.trunc(hyp * 300);
+        coordmsg.innerHTML += "\nasin: " + as / Math.PI * 180;
+        coordmsg.innerHTML += "\nacos: " + ac / Math.PI * 180;
 
         if (mousedown && hyp < 0.85) {
             clearInterval(rId);
@@ -193,7 +191,7 @@ function startWheel()
     debugmsg.style.left = "170px";
     debugmsg.style.font = "bold 30px arial,serif";
 
-    wheelmsg = document.getElementById('turnlog');
+    wheelmsg = document.getElementById('wheellog');
     wheelmsg.style.position = "absolute";
     wheelmsg.style.top = "10px";
     wheelmsg.style.left = "940px";
@@ -206,11 +204,22 @@ function startWheel()
     statusmsg.style.font = "bold 20px arial,serif";
 
     projmsg = document.getElementById('projlog');
+    projmsg.addEventListener("mousedown", toggleCheat);
     projmsg.style.position = "absolute";
     projmsg.style.top = "170px";
     projmsg.style.left = "940px";
     projmsg.style.font = "bold 20px arial,serif";
-    projmsg.style.opacity = "0.0";
+    projmsg.style.opacity = "1.0";
+    projmsg.hidden = false;
+
+    coordmsg = document.getElementById('coordlog');
+    coordmsg.addEventListener("mousedown", toggleCheat);
+    coordmsg.style.position = "absolute";
+    coordmsg.style.top = "320px";
+    coordmsg.style.left = "940px";
+    coordmsg.style.font = "bold 20px arial,serif";
+    coordmsg.style.opacity = "1.0";
+    coordmsg.hidden = false;
 
     rpmmsg = document.getElementById('stopbutton');
     rpmmsg.addEventListener("mousedown", stopButton);
@@ -326,7 +335,7 @@ function startWheel()
     b.style.height = "30px";
     b.style.padding = "0px";
     b.style.position = "absolute";
-    b.style.opacity = "0.7";
+    b.style.opacity = "0.3";
     b.style.left = 545 + "px";
     b.style.top = 100 + "px";
     b.src = "chevron.png";
@@ -365,6 +374,18 @@ if (0) {
     b.style.top = 120 + "px";
     document.body.appendChild(b);
 }
+}
+
+function toggleCheat()
+{
+    if (projmsg.hidden) {
+        projmsg.style.opacity = "1.0";
+        projmsg.hidden = false;
+    }
+    else {
+        projmsg.style.opacity = "0.0";
+        projmsg.hidden = true;
+    }
 }
 
 function wheelButton(image)
@@ -633,8 +654,8 @@ function printCard(rot)
         clicker.style.rotate = 0 + "deg";
     }
 
-    statusmsg.innerHTML = "clicker degree: " + clickerdeg;
-    statusmsg.innerHTML += "\ncurcardindex: " + curcardindex;
+    statusmsg.innerHTML = "clicker deg: " + clickerdeg;
+    statusmsg.innerHTML += "\ncard index: " + curcardindex;
     statusmsg.innerHTML += "\nlo post: " + curcard_lopost;
     statusmsg.innerHTML += "\nhi post: " + curcard_hipost;
 
@@ -667,7 +688,8 @@ function tile(width, height, image, x, y, type, xoffset, yoffset)
   <pre id="debuglog" font-weight="bold"></pre>
   <pre id="statuslog"></pre>
   <pre id="projlog"></pre>
-  <pre id="turnlog"></pre>
+  <pre id="coordlog"></pre>
+  <pre id="wheellog"></pre>
   <pre id="decelinput"></pre>
   <pre id="spinrpmsuffixlog"></pre>
   <pre id="decelsuffixlog"></pre>
