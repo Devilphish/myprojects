@@ -47,9 +47,12 @@ var decelmsg;
 var clicker;
 var click;
 var decelinput;
+var cardinput;
+var nspinsinput;
 var rpminput;
 var irpminput;
 var stopbutton;;
+var gobutton;;
 var spinrpmsuffix;
 var decelsuffix;
 var cardtile;
@@ -62,6 +65,28 @@ var deg = 0;
 var mousedown = false;
 var speed;
 var degspeed;
+
+var rId = null;
+var rotateimage;
+
+var framerate = 50;
+var frameinterval = 1000 / framerate;
+var rpm = 0.0;
+var rps;
+var rpi;
+var degperinterval;
+var curcardindex = 0;
+var curcard = "8S";
+var curcard_lopost;
+var curcard_hipost;
+
+var rpmdecel = 2.0;  // rpm/sec
+var rpmdecelperinterval = rpmdecel / framerate;
+
+var fixcard = "AS";
+var nfixspins = 2;
+
+var clickerdeg;
 
 function startWheel()
 {
@@ -227,7 +252,7 @@ function startWheel()
     coordmsg = document.getElementById('coordlog');
     coordmsg.addEventListener("mousedown", toggleCheat);
     coordmsg.style.position = "absolute";
-    coordmsg.style.top = "320px";
+    coordmsg.style.top = "365px";
     coordmsg.style.left = "940px";
     coordmsg.style.font = "bold 20px arial,serif";
     coordmsg.style.opacity = "1.0";
@@ -256,7 +281,7 @@ function startWheel()
     rpmmsg.innerHTML = "SPIN";
 
     rpmmsg = document.getElementById('irpminput');
-    rpmmsg.addEventListener("mousedown", spinButton);
+    rpmmsg.addEventListener("mousedown", ispinButton);
     rpmmsg.style.border = "2px solid #ffffff";
     rpmmsg.style.borderRadius = "4px";
     rpmmsg.style.position = "absolute";
@@ -265,6 +290,17 @@ function startWheel()
     rpmmsg.style.font = "bold 30px arial,serif";
     rpmmsg.style.background = "#7171f1";
     rpmmsg.innerHTML = "ISPIN";
+
+    rpmmsg = document.getElementById('gobutton');
+    rpmmsg.addEventListener("mousedown", goButton);
+    rpmmsg.style.border = "2px solid #ffffff";
+    rpmmsg.style.borderRadius = "4px";
+    rpmmsg.style.position = "absolute";
+    rpmmsg.style.width = "60px";
+    rpmmsg.style.top = "363px";
+    rpmmsg.style.font = "bold 30px arial,serif";
+    rpmmsg.style.background = "#7171f1";
+    rpmmsg.innerHTML = "GO";
 
     spinrpmsuffix = document.getElementById('spinrpmsuffixlog');
     spinrpmsuffix.style.position = "absolute";
@@ -323,6 +359,44 @@ function startWheel()
     document.body.appendChild(i);
     decelinput = i;
 
+    // card input
+    var i = document.createElement("INPUT");
+    i.addEventListener("input", cardInput);
+    i.setAttribute("type", "text");
+    i.setAttribute("value", fixcard);
+    i.style.border = "2px solid #ffffff";
+    i.style.borderRadius = "2px";
+    i.style.width = "50px";
+    i.style.height = "33px";
+    i.style.padding = "0px";
+    i.style.position = "absolute";
+    i.style.opacity = "0.7";
+    i.style.left = 90 + "px";
+    i.style.top = 365 + "px";
+    i.style.font = "bold 20px arial,serif";
+    i.style.textAlign = "center";
+    document.body.appendChild(i);
+    cardinput = i;
+
+    // nspins input
+    var i = document.createElement("INPUT");
+    i.addEventListener("input", nspinsInput);
+    i.setAttribute("type", "number");
+    i.setAttribute("value", nfixspins);
+    i.style.border = "2px solid #ffffff";
+    i.style.borderRadius = "2px";
+    i.style.width = "50px";
+    i.style.height = "33px";
+    i.style.padding = "0px";
+    i.style.position = "absolute";
+    i.style.opacity = "0.7";
+    i.style.left = 150 + "px";
+    i.style.top = 365 + "px";
+    i.style.font = "bold 20px arial,serif";
+    i.style.textAlign = "center";
+    document.body.appendChild(i);
+    nspinsinput = i;
+
     // clicker
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", fooButtonDownEvent);
@@ -362,31 +436,6 @@ function startWheel()
     wheelButton("wheel8.png");
 
     printCard(0);
-
-if (0) {
-    b = document.createElement("BUTTON");
-    b.addEventListener("mouseenter", leaveSpin);
-    b.style.border = "2px solid #ffffff";
-    b.style.width = "10px";
-    b.style.height = "30px";
-    b.style.padding = "0px";
-    b.style.position = "absolute";
-    b.style.opacity = "0.0";
-    b.style.left = 685 + "px";
-    b.style.top = 120 + "px";
-    document.body.appendChild(b);
-    b = document.createElement("BUTTON");
-    b.addEventListener("mouseenter", leaveSpin);
-    b.style.border = "2px solid #ffffff";
-    b.style.width = "10px";
-    b.style.height = "30px";
-    b.style.padding = "0px";
-    b.style.position = "absolute";
-    b.style.opacity = "0.0";
-    b.style.left = 575 + "px";
-    b.style.top = 120 + "px";
-    document.body.appendChild(b);
-}
 }
 
 function toggleCheat()
@@ -427,6 +476,16 @@ function decelInput()
     rpmdecelperinterval = rpmdecel / framerate;
 }
 
+function cardInput()
+{
+    fixcard = cardinput.value.toUpperCase();
+}
+
+function nspinsInput()
+{
+    nfixspins = nspinsinput.value;
+}
+
 function stopButton()
 {
     projmsg.innerHTML = "stop button";
@@ -447,6 +506,15 @@ function spinButton()
     spinWheel();
 }
 
+function ispinButton()
+{
+    rpm = rpminput.value;
+
+    projmsg.innerHTML = "ispin button\ninit RPM: " + rpm;
+
+    instaSpin();
+}
+
 function leaveSpin()
 {
     rpm = speed / 30;
@@ -456,20 +524,102 @@ function leaveSpin()
     spinWheel();
 }
 
-function spinWheel()
+var spin_result = {
+    projected_rot: 0,
+    total_deg: 0,
+    cardindex: 0,
+    card: 0,
+    card_lopost: 0,
+    card_hipost: 0,
+};
+
+//
+// Actual formula for initial RPM based on target card distance (in degrees):
+// i - rpm
+// t - seconds
+// r - revolutions
+//
+// r = i / 60 * t / 2
+//              t = i / 2    // here is hard-coded 2 rpm/sec deceleration
+// r = i / 60 * (i / 2) / 2
+// r = (i * i / 2) / 120
+// r = (i^2 / 2) / 120
+// r = i^2 / 240
+// i^2 = 240r             // general expr is i^2 = 120 * d * r
+// i = sq/240r            //   d - deceleration rpm/s
+//
+// JS code:
+//    var revs = totaldist / 360;
+//    var initrpm = Math.sqrt(revs * 240);
+// This is derived from calculating the area under the rotation speed
+// "curve" - a linear relation (straight line) of rpm / time descending
+// from left to right, and assuming a 2 rpm/s spin deceleration.
+//
+// Due to iterative nature of wheel spin mechanism, and rounding errors
+// based on lost fractional degrees for each iteration, the formula
+// can't be used to accurately model the wheel spin mechanism. Therefore,
+// a Monte Carlo exhaustive divide-and-conquer search is used.
+//
+function goButton()
 {
-    if (rId == null) {
-        rId = setInterval(rotateWheel, frameinterval);
+    projmsg.innerHTML = "go button\ncard: " + fixcard + "\n";
+
+    var fixcardindex = deck.indexOf(fixcard);
+    var lopost = fixcardindex * degpercard;
+    var hipost = (fixcardindex + 1) * degpercard;
+    var midpost = lopost + ((hipost - lopost) / 2);
+    var fixdist = 360 - rotateimage.rot - midpost;
+    if (fixdist < 0) {
+        fixdist += 360;
+    }
+    totaldist = (nfixspins * 360) + fixdist;
+
+    projmsg.innerHTML += "distance: " + totaldist;
+
+    var proj_rpm = 15.512;  // 1 revolution
+    var found = false;
+
+    var lorpm = 0;
+    var hirpm = 0;
+
+    while (!found) {
+        projectSpin(proj_rpm, spin_result);
+
+        if (spin_result.total_deg < (totaldist - 1)) {
+            lorpm = proj_rpm;
+            if (hirpm == 0) {
+                proj_rpm *= 2;
+            }
+            else {
+                proj_rpm = lorpm + ((hirpm - lorpm) / 2);
+            }
+
+            continue;
+        }
+        else if (spin_result.total_deg > (totaldist + 1)) {
+            hirpm = proj_rpm;
+            proj_rpm = lorpm + ((hirpm - lorpm) / 2);
+
+            continue;
+        }
+
+        found = true;
     }
 
-    var proj_rpm = rpm;
+    projmsg.innerHTML += "\nproj_rpm: " + proj_rpm;
+
+    rpm = proj_rpm;
+    spinWheel();
+}
+
+function projectSpin(init_rpm, result)
+{
+    var proj_rpm = init_rpm;
+    var proj_rot = rotateimage.rot;
     var proj_rps;
     var proj_rpi;
     var proj_degperinterval;
-    var proj_rot;
-
-    proj_rot = rotateimage.rot;
-    totaldeg = 0;
+    var total_deg = 0;
 
     while (proj_rpm > 0) {
         proj_rpm = proj_rpm - rpmdecelperinterval;
@@ -480,23 +630,52 @@ function spinWheel()
         if (proj_rot >= 360) {
             proj_rot -= 360;
         }
-        totaldeg += proj_degperinterval;
+        total_deg += proj_degperinterval;
     }
-    proj_rpm = 0.0;
+
+    result.projected_rot = proj_rot;
+    result.total_deg = total_deg;
 
     var cardrot = proj_rot - 2;
     if (cardrot < 0) {
         cardrot += 360;
     }
-    curcardindex = 51 - Math.floor(cardrot / degpercard);
-    curcard = deck[curcardindex];
+    result.cardindex = 51 - Math.floor(cardrot / degpercard);
+    result.card = deck[result.cardindex];
 
-    curcard_lopost = curcardindex * degpercard;
-    curcard_hipost = (curcardindex + 1) * degpercard;
+    result.card_lopost = result.cardindex * degpercard;
+    result.card_hipost = (result.cardindex + 1) * degpercard;
+}
 
-    projmsg.innerHTML += "\nprojected rot: " + proj_rot;
-    projmsg.innerHTML += "\nprojected card: " + curcard + " (" + curcardindex + ")";
+function instaSpin()
+{
+    var totaldeg = 0;
+
+    projmsg.innerHTML = "insta-spin\ninit RPM: " + rpminput.value;
+
+    projectSpin(rpminput.value, spin_result);
+
+    rotateimage.rot = spin_result.projected_rot;
+    rotateimage.style.rotate = rotateimage.rot + "deg";
+    printCard(rotateimage.rot);
+
+    projmsg.innerHTML += "\nprojected rot: " + spin_result.projected_rot;
+    projmsg.innerHTML += "\nprojected card: " + spin_result.card + " (" + spin_result.cardindex + ")";
+    totaldeg = spin_result.total_deg;
     projmsg.innerHTML += "\ntotal rot: " + totaldeg + "\n\t\t(" + totaldeg / 360 + ")";
+}
+
+function spinWheel()
+{
+    if (rId == null) {
+        rId = setInterval(rotateWheel, frameinterval);
+    }
+
+    projectSpin(rpm, spin_result);
+
+    projmsg.innerHTML += "\nprojected rot: " + spin_result.projected_rot;
+    projmsg.innerHTML += "\nprojected card: " + spin_result.card + " (" + spin_result.cardindex + ")";
+    projmsg.innerHTML += "\ntotal rot: " + spin_result.total_deg + "\n\t\t(" + spin_result.total_deg / 360 + ")";
 }
 
 function fooButtonDownEvent()
@@ -506,60 +685,24 @@ function fooButtonDownEvent()
     rotateimage.src = this.id;
 }
 
-var rId = null;
-var rotateimage;
-
-var framerate = 50;
-var frameinterval = 1000 / framerate;
-var rpm = 0.0;
-var rps;
-var rpi;
-var degperinterval;
-var curcardindex = 0;
-var curcard = "8S";
-var curcard_lopost;
-var curcard_hipost;
-
-var rpmdecel = 2.0  // rpm/sec
-var rpmdecelperinterval = rpmdecel / framerate;
-
-var totaldeg;
-
 function keyDownEvent(e)
 {
 //    statusmsg.innerHTML = e.code;
 
     if (e.code == "KeyS") {
+        if (document.activeElement == cardinput) {
+            return;
+        }
+
         rpm = rpminput.value;
 
         projmsg.innerHTML = "spin key\ninit RPM: " + rpm;
 
         spinWheel();
     }
-    if (e.code == "KeyN") {
+    if (e.code == "KeyI") {
         if (rId == null) {
-            rpm = rpminput.value;
-            totaldeg = 0;
-
-            projmsg.innerHTML = "insta-spin key\ninit RPM: " + rpm;
-
-            while (rpm > 0) {
-                rpm = rpm - rpmdecelperinterval;
-                rps = rpm / 60.0;
-                rpi = rps / framerate;
-                degperinterval = 360.0 * rpi;
-                rotateimage.rot += degperinterval;
-                if (rotateimage.rot >= 360) {
-                    rotateimage.rot -= 360;
-                }
-                totaldeg += degperinterval;
-            }
-            rpm = 0.0;
-
-            rotateimage.style.rotate = rotateimage.rot + "deg";
-            printCard(rotateimage.rot);
-
-            projmsg.innerHTML += "\ntotal rot: " + totaldeg + "\n\t\t(" + totaldeg / 360 + ")";
+            instaSpin();
         }
     }
     if (e.code == "Minus") {
@@ -619,8 +762,6 @@ function rotateWheel()
         wheelmsg.innerHTML = "RPM: " + Math.round(rpm) + "\nrot: " + rotateimage.rot;
     }
 }
-
-var clickerdeg;
 
 function printCard(rot)
 {
@@ -704,11 +845,14 @@ function tile(width, height, image, x, y, type, xoffset, yoffset)
   <pre id="coordlog"></pre>
   <pre id="wheellog"></pre>
   <pre id="decelinput"></pre>
+  <pre id="cardinput"></pre>
+  <pre id="nspinsinput"></pre>
   <pre id="spinrpmsuffixlog"></pre>
   <pre id="decelsuffixlog"></pre>
   <button id="rpminput"></button>
   <button id="irpminput"></button>
   <button id="stopbutton"></button>
+  <button id="gobutton"></button>
 </div>
 <audio id="click" src="mixkit-camera-shutter-click-1133.wav">
 </body>
