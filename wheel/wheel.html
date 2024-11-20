@@ -43,7 +43,6 @@ var statusmsg;
 var projmsg;
 var debugmsg;
 var wheelmsg;
-var decelmsg;
 var clicker;
 var click;
 var decelinput;
@@ -53,8 +52,6 @@ var rpminput;
 var irpminput;
 var stopbutton;;
 var gobutton;;
-var spinrpmsuffix;
-var decelsuffix;
 var cardtile;
 
 var timestamp = 0;
@@ -107,7 +104,7 @@ function startWheel()
     window.addEventListener('keydown', keyDownEvent);
     window.addEventListener('keyup', keyUpEvent);
 //    document.body.style.backgroundColor = "#7171f1";
-    document.body.style.backgroundColor = "#c0c0c0";
+    document.body.style.backgroundColor = "#404040";
 
     window.addEventListener('mousedown', function()
     {
@@ -153,7 +150,7 @@ function startWheel()
 
         rpm = degspeed * 60 / 360;
 
-        projmsg.innerHTML = "spin grab (speed: " + degspeed + ")\ninit RPM: " + rpm;
+        projmsg.innerHTML = "spin grab (speed: " + degspeed + ")\ninit RPM: " + frunc(rpm, 3);
 
         spinWheel();
     });
@@ -174,6 +171,15 @@ function startWheel()
         var as = Math.asin(yprime / hyp);
         var ac = Math.acos(xprime / hyp);
 
+        if (hyp != 0) {
+            as = Math.asin(yprime / hyp);
+            ac = Math.acos(xprime / hyp);
+        }
+        else {
+            as = 0;
+            ac = 0;
+        }
+
         if (as < 0) {
             deg = 360 - (ac / Math.PI * 180);
         }
@@ -186,10 +192,10 @@ function startWheel()
         }
 
         coordmsg.innerHTML = "cmx, cmy: " + currentmX + ", " + currentmY + "\n";
-        coordmsg.innerHTML += "x, y: " + x + ", " + y + "\n\t" + xprime + "\n\t" + yprime;
+        coordmsg.innerHTML += "x, y: " + x + ", " + y + "\n\t" + frunc(xprime, 2) + "\n\t" + frunc(yprime, 2);
         coordmsg.innerHTML += "\ndeg, hyp: " + Math.trunc(deg) + ", " + Math.trunc(hyp * 300);
-        coordmsg.innerHTML += "\nasin: " + as / Math.PI * 180;
-        coordmsg.innerHTML += "\nacos: " + ac / Math.PI * 180;
+        coordmsg.innerHTML += "\nasin: " + Math.trunc(as / Math.PI * 180);
+        coordmsg.innerHTML += "\nacos: " + Math.trunc(ac / Math.PI * 180);
 
         if (mousedown && hyp < 0.85) {
             clearInterval(rId);
@@ -233,12 +239,21 @@ function startWheel()
     wheelmsg.style.top = "10px";
     wheelmsg.style.left = "940px";
     wheelmsg.style.font = "bold 20px arial,serif";
+    wheelmsg.style.backgroundColor = "#c0c0c0";
+    wheelmsg.style.opacity = "1.0";
+    wheelmsg.style.border = "2px solid #80ff80";
+    wheelmsg.style.borderRadius = "7px";
+
 
     statusmsg = document.getElementById('statuslog');
     statusmsg.style.position = "absolute";
     statusmsg.style.top = "70px";
     statusmsg.style.left = "940px";
     statusmsg.style.font = "bold 20px arial,serif";
+    statusmsg.style.backgroundColor = "#c0c0c0";
+    statusmsg.style.opacity = "1.0";
+    statusmsg.style.border = "2px solid #80ff80";
+    statusmsg.style.borderRadius = "7px";
 
     projmsg = document.getElementById('projlog');
     projmsg.addEventListener("mousedown", toggleCheat);
@@ -248,6 +263,10 @@ function startWheel()
     projmsg.style.font = "bold 20px arial,serif";
     projmsg.style.opacity = "1.0";
     projmsg.hidden = false;
+    projmsg.style.backgroundColor = "#c0c0c0";
+    projmsg.style.opacity = "1.0";
+    projmsg.style.border = "2px solid #80ff80";
+    projmsg.style.borderRadius = "7px";
 
     coordmsg = document.getElementById('coordlog');
     coordmsg.addEventListener("mousedown", toggleCheat);
@@ -257,160 +276,159 @@ function startWheel()
     coordmsg.style.font = "bold 20px arial,serif";
     coordmsg.style.opacity = "1.0";
     coordmsg.hidden = false;
+    coordmsg.style.backgroundColor = "#c0c0c0";
+    coordmsg.style.opacity = "1.0";
+    coordmsg.style.border = "2px solid #80ff80";
+    coordmsg.style.borderRadius = "7px";
 
-    rpmmsg = document.getElementById('stopbutton');
-    rpmmsg.addEventListener("mousedown", stopButton);
-    rpmmsg.style.border = "2px solid #ffffff";
-    rpmmsg.style.borderRadius = "4px";
-    rpmmsg.style.position = "absolute";
-    rpmmsg.style.width = "100px";
-    rpmmsg.style.top = "170px";
-    rpmmsg.style.font = "bold 30px arial,serif";
-    rpmmsg.style.background = "#f17171";
-    rpmmsg.innerHTML = "STOP";
+    var b = document.getElementById('stopbutton');
+    b.addEventListener("mousedown", stopButton);
+    b.style.border = "2px solid #ffffff";
+    b.style.borderRadius = "4px";
+    b.style.position = "absolute";
+    b.style.width = "100px";
+    b.style.top = "170px";
+    b.style.font = "bold 30px arial,serif";
+    b.style.background = "#f17171";
+    b.innerHTML = "STOP";
 
-    rpmmsg = document.getElementById('rpminput');
-    rpmmsg.addEventListener("mousedown", spinButton);
-    rpmmsg.style.border = "2px solid #ffffff";
-    rpmmsg.style.borderRadius = "4px";
-    rpmmsg.style.position = "absolute";
-    rpmmsg.style.width = "100px";
-    rpmmsg.style.top = "220px";
-    rpmmsg.style.font = "bold 30px arial,serif";
-    rpmmsg.style.background = "#7171f1";
-    rpmmsg.innerHTML = "SPIN";
+    b = document.getElementById('rpminput');
+    b.addEventListener("mousedown", spinButton);
+    b.style.border = "2px solid #ffffff";
+    b.style.borderRadius = "4px";
+    b.style.position = "absolute";
+    b.style.width = "100px";
+    b.style.top = "220px";
+    b.style.font = "bold 30px arial,serif";
+    b.style.background = "#7171f1";
+    b.innerHTML = "SPIN";
 
-    rpmmsg = document.getElementById('irpminput');
-    rpmmsg.addEventListener("mousedown", ispinButton);
-    rpmmsg.style.border = "2px solid #ffffff";
-    rpmmsg.style.borderRadius = "4px";
-    rpmmsg.style.position = "absolute";
-    rpmmsg.style.width = "100px";
-    rpmmsg.style.top = "270px";
-    rpmmsg.style.font = "bold 30px arial,serif";
-    rpmmsg.style.background = "#7171f1";
-    rpmmsg.innerHTML = "ISPIN";
+    b = document.getElementById('irpminput');
+    b.addEventListener("mousedown", ispinButton);
+    b.style.border = "2px solid #ffffff";
+    b.style.borderRadius = "4px";
+    b.style.position = "absolute";
+    b.style.width = "100px";
+    b.style.top = "270px";
+    b.style.font = "bold 30px arial,serif";
+    b.style.background = "#7171f1";
+    b.innerHTML = "ISPIN";
 
-    rpmmsg = document.getElementById('gobutton');
-    rpmmsg.addEventListener("mousedown", goButton);
-    rpmmsg.style.border = "2px solid #ffffff";
-    rpmmsg.style.borderRadius = "4px";
-    rpmmsg.style.position = "absolute";
-    rpmmsg.style.width = "60px";
-    rpmmsg.style.top = "363px";
-    rpmmsg.style.font = "bold 30px arial,serif";
-    rpmmsg.style.background = "#7171f1";
-    rpmmsg.innerHTML = "GO";
+    b = document.getElementById('gobutton');
+    b.addEventListener("mousedown", goButton);
+    b.style.border = "2px solid #ffffff";
+    b.style.borderRadius = "4px";
+    b.style.position = "absolute";
+    b.style.width = "60px";
+    b.style.top = "363px";
+    b.style.font = "bold 30px arial,serif";
+    b.style.background = "#7171f1";
+    b.innerHTML = "GO";
 
-    spinrpmsuffix = document.getElementById('spinrpmsuffixlog');
-    spinrpmsuffix.style.position = "absolute";
-    spinrpmsuffix.style.top = "235px";
-    spinrpmsuffix.style.left = "187px";
-    spinrpmsuffix.style.font = "bold 20px arial,serif";
-    spinrpmsuffix.innerHTML = "rpm";
+    var s = document.getElementById('spinrpmsuffixlog');
+    s.style.position = "absolute";
+    s.style.top = "235px";
+    s.style.left = "187px";
+    s.style.font = "bold 20px arial,serif";
+    s.innerHTML = "rpm";
 
-    decelmsg = document.getElementById('decelinput');
-    decelmsg.style.position = "absolute";
-    decelmsg.style.top = "307px";
-    decelmsg.style.font = "bold 20px arial,serif";
-    decelmsg.innerHTML = "DECEL";
+    var d = document.getElementById('decelinput');
+    d.style.position = "absolute";
+    d.style.top = "307px";
+    d.style.font = "bold 20px arial,serif";
+    d.innerHTML = "DECEL";
 
-    decelsuffix = document.getElementById('decelsuffixlog');
-    decelsuffix.style.position = "absolute";
-    decelsuffix.style.top = "305px";
-    decelsuffix.style.left = "150px";
-    decelsuffix.style.font = "bold 20px arial,serif";
-    decelsuffix.innerHTML = "rpm/s";
+    d = document.getElementById('decelsuffixlog');
+    d.style.position = "absolute";
+    d.style.top = "305px";
+    d.style.left = "150px";
+    d.style.font = "bold 20px arial,serif";
+    d.innerHTML = "rpm/s";
 
     // rpm input
-    var i = document.createElement("INPUT");
-    i.setAttribute("type", "number");
-    i.setAttribute("value", 30);
-    i.style.border = "2px solid #ffffff";
-    i.style.borderRadius = "2px";
-    i.style.width = "60px";
-    i.style.height = "33px";
-    i.style.padding = "0px";
-    i.style.position = "absolute";
-    i.style.opacity = "0.7";
-    i.style.top = 249 + "px";
-    i.style.left = 118 + "px";
-    i.style.font = "bold 20px arial,serif";
-    i.style.textAlign = "center";
-    document.body.appendChild(i);
-    rpminput = i;
+    rpminput = document.createElement("INPUT");
+    rpminput.setAttribute("type", "number");
+    rpminput.setAttribute("value", 30);
+    rpminput.style.border = "2px solid #ffffff";
+    rpminput.style.borderRadius = "2px";
+    rpminput.style.width = "60px";
+    rpminput.style.height = "33px";
+    rpminput.style.padding = "0px";
+    rpminput.style.position = "absolute";
+    rpminput.style.opacity = "0.7";
+    rpminput.style.top = 249 + "px";
+    rpminput.style.left = 118 + "px";
+    rpminput.style.font = "bold 20px arial,serif";
+    rpminput.style.textAlign = "center";
+    document.body.appendChild(rpminput);
 
     // decel input
-    var i = document.createElement("INPUT");
-    i.addEventListener("input", decelInput);
-    i.setAttribute("type", "number");
-    i.setAttribute("value", rpmdecel);
-    i.style.border = "2px solid #ffffff";
-    i.style.borderRadius = "2px";
-    i.style.width = "50px";
-    i.style.height = "33px";
-    i.style.padding = "0px";
-    i.style.position = "absolute";
-    i.style.opacity = "0.7";
-    i.style.left = 90 + "px";
-    i.style.top = 320 + "px";
-    i.style.font = "bold 20px arial,serif";
-    i.style.textAlign = "center";
-    document.body.appendChild(i);
-    decelinput = i;
+    decelinput = document.createElement("INPUT");
+    decelinput.addEventListener("input", decelInput);
+    decelinput.setAttribute("type", "number");
+    decelinput.setAttribute("value", rpmdecel);
+    decelinput.style.border = "2px solid #ffffff";
+    decelinput.style.borderRadius = "2px";
+    decelinput.style.width = "50px";
+    decelinput.style.height = "33px";
+    decelinput.style.padding = "0px";
+    decelinput.style.position = "absolute";
+    decelinput.style.opacity = "0.7";
+    decelinput.style.left = 90 + "px";
+    decelinput.style.top = 320 + "px";
+    decelinput.style.font = "bold 20px arial,serif";
+    decelinput.style.textAlign = "center";
+    document.body.appendChild(decelinput);
 
     // card input
-    var i = document.createElement("INPUT");
-    i.addEventListener("input", cardInput);
-    i.setAttribute("type", "text");
-    i.setAttribute("value", fixcard);
-    i.style.border = "2px solid #ffffff";
-    i.style.borderRadius = "2px";
-    i.style.width = "50px";
-    i.style.height = "33px";
-    i.style.padding = "0px";
-    i.style.position = "absolute";
-    i.style.opacity = "0.7";
-    i.style.left = 90 + "px";
-    i.style.top = 365 + "px";
-    i.style.font = "bold 20px arial,serif";
-    i.style.textAlign = "center";
-    document.body.appendChild(i);
-    cardinput = i;
+    cardinput = document.createElement("INPUT");
+    cardinput.addEventListener("input", cardInput);
+    cardinput.setAttribute("type", "text");
+    cardinput.setAttribute("value", fixcard);
+    cardinput.style.border = "2px solid #ffffff";
+    cardinput.style.borderRadius = "2px";
+    cardinput.style.width = "50px";
+    cardinput.style.height = "33px";
+    cardinput.style.padding = "0px";
+    cardinput.style.position = "absolute";
+    cardinput.style.opacity = "0.7";
+    cardinput.style.left = 90 + "px";
+    cardinput.style.top = 365 + "px";
+    cardinput.style.font = "bold 20px arial,serif";
+    cardinput.style.textAlign = "center";
+    document.body.appendChild(cardinput);
 
     // nspins input
-    var i = document.createElement("INPUT");
-    i.addEventListener("input", nspinsInput);
-    i.setAttribute("type", "number");
-    i.setAttribute("value", nfixspins);
-    i.style.border = "2px solid #ffffff";
-    i.style.borderRadius = "2px";
-    i.style.width = "50px";
-    i.style.height = "33px";
-    i.style.padding = "0px";
-    i.style.position = "absolute";
-    i.style.opacity = "0.7";
-    i.style.left = 150 + "px";
-    i.style.top = 365 + "px";
-    i.style.font = "bold 20px arial,serif";
-    i.style.textAlign = "center";
-    document.body.appendChild(i);
-    nspinsinput = i;
+    nspinsinput = document.createElement("INPUT");
+    nspinsinput.addEventListener("input", nspinsInput);
+    nspinsinput.setAttribute("type", "number");
+    nspinsinput.setAttribute("value", nfixspins);
+    nspinsinput.style.border = "2px solid #ffffff";
+    nspinsinput.style.borderRadius = "2px";
+    nspinsinput.style.width = "50px";
+    nspinsinput.style.height = "33px";
+    nspinsinput.style.padding = "0px";
+    nspinsinput.style.position = "absolute";
+    nspinsinput.style.opacity = "0.7";
+    nspinsinput.style.left = 150 + "px";
+    nspinsinput.style.top = 365 + "px";
+    nspinsinput.style.font = "bold 20px arial,serif";
+    nspinsinput.style.textAlign = "center";
+    document.body.appendChild(nspinsinput);
 
     // clicker
-    var b = document.createElement("BUTTON");
-    b.addEventListener("mousedown", fooButtonDownEvent);
-    b.style.border = "2px solid #ffffff";
-    b.style.borderRadius = "2px";
-    b.style.width = "2px";
-    b.style.height = "66px";
-    b.style.padding = "0px";
-    b.style.position = "absolute";
-    b.style.opacity = "1.0";
-    b.style.left = 600 + "px";
-    b.style.top = -23 + "px";
-    document.body.appendChild(b);
-    clicker = b;
+    clicker = document.createElement("BUTTON");
+    clicker.addEventListener("mousedown", fooButtonDownEvent);
+    clicker.style.border = "2px solid #ffffff";
+    clicker.style.borderRadius = "2px";
+    clicker.style.width = "2px";
+    clicker.style.height = "66px";
+    clicker.style.padding = "0px";
+    clicker.style.position = "absolute";
+    clicker.style.opacity = "1.0";
+    clicker.style.left = 600 + "px";
+    clicker.style.top = -23 + "px";
+    document.body.appendChild(clicker);
 
     // spin swipe box
     b = document.getElementById("swipebox");
@@ -436,6 +454,12 @@ function startWheel()
     wheelButton("wheel8.png");
 
     printCard(0);
+}
+
+function frunc(x, dec_places)
+{
+     var shift = Math.pow(10, dec_places);
+     return Math.trunc(x * shift) / shift;
 }
 
 function toggleCheat()
@@ -501,7 +525,7 @@ function spinButton()
 {
     rpm = rpminput.value;
 
-    projmsg.innerHTML = "spin button\ninit RPM: " + rpm;
+    projmsg.innerHTML = "spin button\ninit RPM: " + frunc(rpm, 3);
 
     spinWheel();
 }
@@ -510,7 +534,7 @@ function ispinButton()
 {
     rpm = rpminput.value;
 
-    projmsg.innerHTML = "ispin button\ninit RPM: " + rpm;
+    projmsg.innerHTML = "ispin button\ninit RPM: " + frunc(rpm, 3);
 
     instaSpin();
 }
@@ -519,7 +543,7 @@ function leaveSpin()
 {
     rpm = speed / 30;
 
-    projmsg.innerHTML = "spin swipe (speed: " + speed + ")\ninit RPM: " + rpm;
+    projmsg.innerHTML = "spin swipe (speed: " + speed + ")\ninit RPM: " + frunc(rpm, 3);
 
     spinWheel();
 }
@@ -540,7 +564,7 @@ var spin_result = {
 // r - revolutions
 //
 // r = i / 60 * t / 2
-//              t = i / 2    // here is hard-coded 2 rpm/sec deceleration
+//              t = i / 2    // hard-coded 2 rpm/sec deceleration here
 // r = i / 60 * (i / 2) / 2
 // r = (i * i / 2) / 120
 // r = (i^2 / 2) / 120
@@ -552,8 +576,9 @@ var spin_result = {
 //    var revs = totaldist / 360;
 //    var initrpm = Math.sqrt(revs * 240);
 // This is derived from calculating the area under the rotation speed
-// "curve" - a linear relation (straight line) of rpm / time descending
-// from left to right, and assuming a 2 rpm/s spin deceleration.
+// "curve" - a linear plot (straight line) of rpm / time descending
+// from left to right, and assuming a 2 rpm/s spin deceleration. In other
+// words, integrate the rotation speed vs time plot from x=0 to f(x)=0.
 //
 // Due to iterative nature of wheel spin mechanism, and rounding errors
 // based on lost fractional degrees for each iteration, the formula
@@ -574,7 +599,7 @@ function goButton()
     }
     totaldist = (nfixspins * 360) + fixdist;
 
-    projmsg.innerHTML += "distance: " + totaldist;
+    projmsg.innerHTML += "distance: " + frunc(totaldist, 1);
 
     var proj_rpm = 15.512;  // 1 revolution
     var found = false;
@@ -606,7 +631,7 @@ function goButton()
         found = true;
     }
 
-    projmsg.innerHTML += "\nproj_rpm: " + proj_rpm;
+    projmsg.innerHTML += "\nprojected rpm: " + frunc(proj_rpm, 3);
 
     rpm = proj_rpm;
     spinWheel();
@@ -651,7 +676,7 @@ function instaSpin()
 {
     var totaldeg = 0;
 
-    projmsg.innerHTML = "insta-spin\ninit RPM: " + rpminput.value;
+    projmsg.innerHTML = "insta-spin\ninit RPM: " + frunc(rpminput.value, 3);
 
     projectSpin(rpminput.value, spin_result);
 
@@ -659,10 +684,10 @@ function instaSpin()
     rotateimage.style.rotate = rotateimage.rot + "deg";
     printCard(rotateimage.rot);
 
-    projmsg.innerHTML += "\nprojected rot: " + spin_result.projected_rot;
+    projmsg.innerHTML += "\nprojected rot: " + frunc(spin_result.projected_rot, 1);
     projmsg.innerHTML += "\nprojected card: " + spin_result.card + " (" + spin_result.cardindex + ")";
     totaldeg = spin_result.total_deg;
-    projmsg.innerHTML += "\ntotal rot: " + totaldeg + "\n\t\t(" + totaldeg / 360 + ")";
+    projmsg.innerHTML += "\ntotal rot: " + frunc(totaldeg, 1) + "\n\t\t(" + frunc(totaldeg / 360, 2) + ")";
 }
 
 function spinWheel()
@@ -673,9 +698,9 @@ function spinWheel()
 
     projectSpin(rpm, spin_result);
 
-    projmsg.innerHTML += "\nprojected rot: " + spin_result.projected_rot;
+    projmsg.innerHTML += "\nprojected rot: " + frunc(spin_result.projected_rot, 1);
     projmsg.innerHTML += "\nprojected card: " + spin_result.card + " (" + spin_result.cardindex + ")";
-    projmsg.innerHTML += "\ntotal rot: " + spin_result.total_deg + "\n\t\t(" + spin_result.total_deg / 360 + ")";
+    projmsg.innerHTML += "\ntotal rot: " + frunc(spin_result.total_deg, 1) + "\n\t\t(" + frunc(spin_result.total_deg / 360, 3) + ")";
 }
 
 function fooButtonDownEvent()
@@ -696,7 +721,7 @@ function keyDownEvent(e)
 
         rpm = rpminput.value;
 
-        projmsg.innerHTML = "spin key\ninit RPM: " + rpm;
+        projmsg.innerHTML = "spin key\ninit RPM: " + frunc(rpm, 3);
 
         spinWheel();
     }
@@ -759,7 +784,7 @@ function rotateWheel()
         rId = null;
         rpm = 0.0;
 
-        wheelmsg.innerHTML = "RPM: " + Math.round(rpm) + "\nrot: " + rotateimage.rot;
+        wheelmsg.innerHTML = "RPM: " + Math.round(rpm) + "\nrot: " + frunc(rotateimage.rot, 1);
     }
 }
 
@@ -808,14 +833,14 @@ function printCard(rot)
         clicker.style.rotate = 0 + "deg";
     }
 
-    statusmsg.innerHTML = "clicker deg: " + clickerdeg;
+    statusmsg.innerHTML = "clicker deg: " + frunc(clickerdeg, 1);
     statusmsg.innerHTML += "\ncard index: " + curcardindex;
-    statusmsg.innerHTML += "\nlo post: " + curcard_lopost;
-    statusmsg.innerHTML += "\nhi post: " + curcard_hipost;
+    statusmsg.innerHTML += "\nlo post: " + frunc(curcard_lopost, 1);
+    statusmsg.innerHTML += "\nhi post: " + frunc(curcard_hipost, 1);
 
     cardtile.image.src = curcard + ".png";
     debugmsg.innerHTML = "card: " + curcard;
-    wheelmsg.innerHTML = "RPM: " + Math.round(rpm) + "\nrot: " + rotateimage.rot;
+    wheelmsg.innerHTML = "RPM: " + Math.round(rpm) + "\nrot: " + frunc(rotateimage.rot, 1);
 }
 
 function tile(width, height, image, x, y, type, xoffset, yoffset)
