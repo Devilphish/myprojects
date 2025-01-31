@@ -25,6 +25,8 @@ body {
 
 <script>
 
+var gclientId = -1;
+
 var sandbox = 0;
 var debugButton;
 var fineButton;
@@ -35,10 +37,12 @@ var drillAnimation;
 var shuffleAnimation = [];
 var myStatusButton;
 var myAddPlayerButton;
+var myConnectButton;
 var myGamePiece;
 var myBackground;
 var myBackground2;
 var myShedIcon;
+var myConnectIcon;
 var myCapIcon;
 var myPipeIcon;
 var myDerickIcon;
@@ -138,10 +142,10 @@ var cursorPipe = {
     mode: "pipe",
     type: "tool",
     imagesrc: "bluepipe.png",
-    width: 30,
+    width: 39,
     height: 100,
     xoffset: 22,
-    yoffset: 60
+    yoffset: 50
 };
 
 var drillCursors = [ cursorDerrick0, cursorDerrick1, cursorDerrick2, cursorDerrick3 ];
@@ -155,7 +159,7 @@ var playercolors = [ "blue", "yellow", "red", "white" ];
 var bankPlayer = {
     name: "the BANK",
     color: "black",
-    money: 1000000000,
+    money: 1000000000,  // One BILLLLLIIIIIOOOOOONNNNN dollars
     plots: [],
     nwells: 0,
     pipelines: 0,
@@ -182,11 +186,11 @@ var cardNone = {
 };
 
 var turn = {
-    playernum: 0,
+    playernum: -1,
     player: {},
     card: cardInit,
     drillsused: 0,
-    propertybought: 0,
+    propertybought: false,
     capsrequired: 0,
     npiperemove: 0,
     fineable: 0,
@@ -194,7 +198,7 @@ var turn = {
     removedpipe: {},
 }
 
-var statusiId;
+var statusiId = null;
 
 function updatePlayersDisplay()
 {
@@ -206,13 +210,16 @@ function updatePlayersDisplay()
 
         if (i == turn.playernum) {
             if (gameMode == "start" && !turn.propertybought) {
-                d.actiondiv.innerText = "buy house";
+                d.actiondiv.innerText = "buy plot";
             }
             else if (gameMode == "draw") {
                 d.actiondiv.innerText = "draw card";
             }
             else if (turn.fineable == 1) {
                 d.actiondiv.innerText = "pay fine";
+            }
+            else if (turn.fineable == 2) {
+                d.actiondiv.innerText = "";
             }
             else if (turn.card.ndrills > 0) {
                 d.actiondiv.innerText = "drills: " + turn.drillsused + " of " + turn.card.ndrills;
@@ -255,7 +262,7 @@ function updatePlayersDisplay()
 
     if (errmsg.length == 0) {
         myStatusButton.style.opacity = "0.0";
-        myStatusButton.hidden = 1;
+        myStatusButton.hidden = true;
     }
     else {
         for (var i = 0; i < errmsg.length; i++) {
@@ -265,17 +272,21 @@ function updatePlayersDisplay()
             myTurnResultDiv.scrollTop += height;
 
             myStatusButton.style.opacity = "0.7";
-            myStatusButton.hidden = 0;
+            myStatusButton.hidden = false;
             myStatusButton.innerHTML = msg;
 
-            clearInterval(statusiId);
-            statusiId = setInterval(clearstatus, 1000);
+            if (statusiId == null) {
+                statusiId = setInterval(clearstatus, 2000);
+//                clearInterval(statusiId);
+//                statusiId = null;
+            }
 
             function clearstatus() {
                 myStatusButton.style.opacity = "0.0";
-                myStatusButton.hidden = 1;
+                myStatusButton.hidden = true;
 
                 clearInterval(statusiId);
+                statusiId = null;
             }
 
             statusmsg.innerHTML = msg;
@@ -323,7 +334,7 @@ function payPipeRoyalty()
 {
     for (var i = 0; i < turn.player.plots.length; i++) {
         var royalty;
-        var p = plots[turn.player.plots[i] - 1];
+        var p = turn.player.plots[i];
 
         for (var j = 0; j < p.pipepadsfrom.length; j++) {
             var pipepad = p.pipepadsfrom[j];
@@ -337,6 +348,23 @@ function payPipeRoyalty()
     }
 
     updatePlayersDisplay();
+}
+
+function nEmptyHoles(player)
+{
+    var nEmpty = 0;
+
+    for (var i = 0; i < player.plots.length; i++) {
+        var p = player.plots[i];
+
+        for (var j = 0; j < p.holes.length; j++) {
+            if (p.holes[j].drill == -1) {
+                nEmpty++;
+            }
+        }
+    }
+
+    return nEmpty;
 }
 
 function initDeck()
@@ -359,10 +387,12 @@ var shedbuttons = [];
 
 function buyButtonDownEvent()
 {
-    toolable = 1;
+    toolable = true;
+
+if (turn.removedpipepad == pipepadNone) errmsg.push("FOOBAR"); else errmsg.push("WHAAAT?");
 
     if (curcursor.type == "tool" && curcursor.mode != "buy") {
-        toolable = 0;
+        toolable = false;
         errmsg.push("must put tool down to pick up new tool");
     }
 
@@ -382,7 +412,6 @@ function buyButtonDownEvent()
             }
         }
         else {
-//            if (curcursor.mode != "drill" && curcursor.mode != "cap") {
             if (curcursor.type != "tool") {
                 cursorShed.imagesrc = turn.player.color + "shed.png";
                 setCursor(cursorShed);
@@ -416,7 +445,7 @@ function putAwayCap()
     myCapIcon.button.style.opacity = "0.0";
 
     for (var i = 0; i < turn.player.plots.length; i++) {
-        var p = plots[turn.player.plots[i] - 1];
+        var p = turn.player.plots[i];
 
         for (var j = 0; j < p.holes.length; j++) {
             var h = p.holes[j];
@@ -428,12 +457,12 @@ function putAwayCap()
     }
 }
 
-function capButtonDownEvent()
+function captoolButtonDownEvent()
 {
-    toolable = 1;
+    toolable = true;
 
     if (curcursor.type == "tool" && curcursor.mode != "cap") {
-        toolable = 0;
+        toolable = false;
         errmsg.push("must put tool down to pick up new tool");
     }
 
@@ -442,7 +471,6 @@ function capButtonDownEvent()
             putAwayCap();
         }
         else {
-//            if (curcursor.mode != "drill" && curcursor.mode != "buy") {
             if (curcursor.type != "tool") {
                 cursorCap.imagesrc = turn.player.color + "cap.png";
                 setCursor(cursorCap);
@@ -450,7 +478,7 @@ function capButtonDownEvent()
                 myCapIcon.button.style.opacity = "0.2";
 
                 for (var i = 0; i < turn.player.plots.length; i++) {
-                    var p = plots[turn.player.plots[i] - 1];
+                    var p = turn.player.plots[i];
 
                     for (var j = 0; j < p.holes.length; j++) {
                         var h = p.holes[j];
@@ -468,7 +496,7 @@ function capButtonDownEvent()
     updatePlayersDisplay();
 }
 
-function capButtonUpEvent()
+function captoolButtonUpEvent()
 {
 }
 
@@ -478,14 +506,14 @@ function enablePipepadRemoveButtons()
 {
     turn.npiperemove = 0;
     for (var i = 0; i < turn.player.plots.length; i++) {
-        var p = plots[turn.player.plots[i] - 1];
+        var p = turn.player.plots[i];
         var plotpipesto = 0;
         for (var j = 0; j < p.pipepadsto.length; j++) {
             plotpipesto += p.pipepadsto[j].pipes.length;
         }
         var minwells = plotpipesto + 3;
         if (plotpipesto > 0 && p.nwells < minwells) {
-            turn.npiperemove += Math.min(plotpipesto, minwells - p.nwells);
+            turn.npiperemove = Math.min(plotpipesto, minwells - p.nwells);
 
             for (var j = 0; j < p.pipepadsto.length; j++) {
                 var ppt = p.pipepadsto[j];
@@ -513,90 +541,80 @@ function removePipepadButtons()
 
 function pipetoolButtonDownEvent()
 {
-    toolable = 1;
+    toolable = true;
 
     if (curcursor.type == "tool" && curcursor.mode != "pipe") {
-        toolable = 0;
+        toolable = false;
         errmsg.push("must put tool down to pick up new tool");
     }
 
     if (toolable) {
         if (curcursor.mode == "pipe") {
-            var removeable = 1;
+            // returning pipe to tool tray, either after:
+            //   - removing it from the board (due to caps)
+            //   - picking it up and not using it
+            var removeable = true;
             if (turn.removedpipepad != pipepadNone && turn.npiperemove == 0) {
-                removeable = 0;
+                removeable = false;
                 errmsg.push("not allowed to remove a pipe");
             }
             if (sandbox) {
-                removeable = 1;
+                removeable = true;
             }
 
             if (removeable) {
                 if (turn.removedpipepad != pipepadNone) {
-                    // complete pipe data removal (already removed graphic)
-                    var pp = turn.removedpipepad;
-                    var pipe = turn.removedpipe;
-                    if (pp.pipes.length == 0) {
-                        arrayRemove(plots[pipe.to - 1].pipepadsto, pp);
-                        arrayRemove(plots[pipe.from - 1].pipepadsfrom, pp);
-
-                        pp.owner = -1;
-                    }
-                    turn.npiperemove--;
+                    // returning removed pipe (picked up from board)
+                    httpRequestPipeRemove(turn.removedpipepad, null);
                 }
-
-                setCursor(cursorKingOil);
-                myPipeIcon.image.src = turn.player.color + "pipe.png";
-                myPipeIcon.button.style.opacity = "0.0";
-                turn.removedpipepad = pipepadNone;
-
-                removePipepadButtons();  // should be just the one
-                enablePipepadRemoveButtons();
+                else {
+                    // returning unused pipe (picked up from tool tray)
+                    completePipeRemove(null);
+                }
             }
         }
         else {
-//            if (curcursor.mode != "drill" && curcursor.mode != "cap") {
             if (curcursor.type != "tool") {
+                // picking up pipe from tool tray
                 cursorPipe.imagesrc = turn.player.color + "pipe.png";
                 setCursor(cursorPipe);
                 myPipeIcon.image.src = turn.player.color + "pipe_outline.png";
                 myPipeIcon.button.style.opacity = "0.3";
 
-                for (var i = 0; i < turn.player.plots.length; i++) {
-                    for (var j = 0; j < pipepads.length; j++) {
-                        var p = pipepads[j];
-                        var ownA = (plots[p.plotnumA - 1].owner ==
-                                    turn.playernum);
-                        var ownB = (plots[p.plotnumB - 1].owner ==
-                                    turn.playernum);
-                        if ((ownA || ownB) &&  // you own at least one pad plot
-                            !(ownA && ownB) &&  // you don't own both pad plots
-                            (p.owner == -1 || p.owner == turn.playernum)) {
+                // enable qualified pipepad buttons
+                for (var j = 0; j < pipepads.length; j++) {
+                    var p = pipepads[j];
+                    var ownA = (plots[p.plotnumA - 1].owner ==
+                                turn.playernum);
+                    var ownB = (plots[p.plotnumB - 1].owner ==
+                                turn.playernum);
+                    if ((ownA || ownB) &&  // you own at least one pad plot
+                        !(ownA && ownB) &&  // you don't own both pad plots
+                        (p.owner == -1 || p.owner == turn.playernum)) {
 
-                            var pipefrom;
-                            var pipeto;
+                        var pipefrom;
+                        var pipeto;
 
-                            if (plots[p.plotnumA - 1].owner == turn.playernum) {
-                                pipefrom = p.plotnumB;
-                                pipeto = p.plotnumA;
-                            }
-                            else {
-                                pipefrom = p.plotnumA;
-                                pipeto = p.plotnumB;
-                            }
+                        if (plots[p.plotnumA - 1].owner == turn.playernum) {
+                            pipefrom = p.plotnumB;
+                            pipeto = p.plotnumA;
+                        }
+                        else {
+                            pipefrom = p.plotnumA;
+                            pipeto = p.plotnumB;
+                        }
 
-                            var plot = plots[pipeto - 1];
-                            var plotpipesto = 0;
-                            for (var k = 0; k < plot.pipepadsto.length; k++) {
-                                plotpipesto += plot.pipepadsto[k].pipes.length;
-                            }
-                            var minwells = plotpipesto + 4;
+                        var plot = plots[pipeto - 1];
+                        var plotpipesto = 0;
+                        for (var k = 0; k < plot.pipepadsto.length; k++) {
+                            plotpipesto += plot.pipepadsto[k].pipes.length;
+                        }
+                        var minwells = plotpipesto + 4;
 
-                            if (plot.nwells >= minwells && plotpipesto < 3) {
-                                p.button.style.opacity = "0.5";
-                                document.body.appendChild(p.button);
-                                pipepadbuttons.push(p.button);
-                            }
+                        if (plot.nwells >= minwells && plotpipesto < 3) {
+                            p.button.style.opacity = "0.5";
+                            document.body.appendChild(p.button);
+                            pipepadbuttons.push(p.button);
                         }
                     }
                 }
@@ -607,17 +625,65 @@ function pipetoolButtonDownEvent()
     updatePlayersDisplay();
 }
 
+function completePipeRemove(pipepad)
+{
+    var pp = null;
+    var pipe;
+
+    if (turn.removedpipepad != pipepadNone) {
+        // complete pipe data removal (already removed graphic)
+        pp = turn.removedpipepad;
+        pipe = turn.removedpipe;
+    }
+    else if (pipepad != null) {
+        pp = pipepad;
+        pipe = pipepad.pipes.pop();
+    }
+
+    if (pp != null) {
+        if (pp.pipes.length == 0) {
+            arrayRemove(plots[pipe.to - 1].pipepadsto, pp);
+            arrayRemove(plots[pipe.from - 1].pipepadsfrom, pp);
+
+            pp.owner = -1;
+        }
+        turn.npiperemove--;
+    }
+    turn.removedpipepad = pipepadNone;
+
+    setCursor(cursorKingOil);
+    myPipeIcon.image.src = turn.player.color + "pipe.png";
+    myPipeIcon.button.style.opacity = "0.0";
+
+    removePipepadButtons();  // should be just the one
+    enablePipepadRemoveButtons();
+}
+
 function pipeButtonUpEvent()
 {
 }
 
-function putAwayDrill()
-{
-    cursorsave = null;
-    setCursor(cursorKingOil);
-    myDerrickIcon.image.src = "derrick0.png";
-    myDerrickIcon.button.style.opacity = "0.0";
+var holebuttons = [];
 
+function enableDrillButtons()
+{
+    for (var i = 0; i < turn.player.plots.length; i++) {
+        var p = turn.player.plots[i];
+
+        for (var j = 0; j < p.holes.length; j++) {
+            if (p.holes[j].drill == -1) {
+                // only change undrilled holes
+                var h = p.holes[j];
+                h.button.style.opacity = "0.3";
+                document.body.appendChild(h.button);
+                holebuttons.push(h.button);
+            }
+        }
+    }
+}
+
+function removeDrillButtons()
+{
     while (holebuttons.length) {
         var b = holebuttons.pop();
 
@@ -628,14 +694,25 @@ function putAwayDrill()
     }
 }
 
-var holebuttons = [];
+function putAwayDrill()
+{
+    cursorsave = null;
+    setCursor(cursorKingOil);
+
+    myDerrickIcon.image.src = "derrick0.png";
+    myDerrickIcon.button.style.opacity = "0.0";
+//    myDerrickIcon.update();
+    updateGameArea();
+
+    removeDrillButtons();
+}
 
 function drilltoolButtonDownEvent()
 {
-    toolable = 1;
+    toolable = true;
 
     if (curcursor.type == "tool" && curcursor.mode != "drill") {
-        toolable = 0;
+        toolable = false;
         errmsg.push("must put tool down to pick up new tool");
     }
 
@@ -644,25 +721,12 @@ function drilltoolButtonDownEvent()
             putAwayDrill();
         }
         else {
-//            if (curcursor.mode != "buy" && curcursor.mode != "cap") {
             if (curcursor.type != "tool") {
                 setCursor(cursorDerrick0);
                 myDerrickIcon.image.src = "derrick0_outline.png";
                 myDerrickIcon.button.style.opacity = "0.2";
 
-                for (var i = 0; i < turn.player.plots.length; i++) {
-                    var p = plots[turn.player.plots[i] - 1];
-
-                    for (var j = 0; j < p.holes.length; j++) {
-                        if (p.holes[j].drill == -1) {
-                            // only change undrilled holes
-                            var h = p.holes[j];
-                            h.button.style.opacity = "0.3";
-                            document.body.appendChild(h.button);
-                            holebuttons.push(h.button);
-                        }
-                    }
-                }
+                enableDrillButtons();
             }
         }
     }
@@ -670,7 +734,7 @@ function drilltoolButtonDownEvent()
     updatePlayersDisplay();
 }
 
-function drillButtonUpEvent()
+function drilltoolButtonUpEvent()
 {
 }
 
@@ -678,41 +742,240 @@ function nextButtonDownEvent()
 {
     this.addEventListener("mouseleave", nextButtonUpEvent);
 
-    nextable = 1;
-    if (gameMode == "draw") {
-        nextable = 0;
+    nextable = true;
+    if (gclientId == -1) {
+        nextable = false;
+        errmsg.push("must connect to server");
+    }
+    else if (gameMode == "draw") {
+        nextable = false;
         errmsg.push("must draw card");
     }
-    else if (gameMode == "start" && turn.propertybought == 0) {
-        nextable = 0;
+    else if (gameMode == "start" && !turn.propertybought) {
+        nextable = false;
         errmsg.push("must buy property to start game");
     }
     else if (curcursor.type == "tool") {
-        nextable = 0;
+        nextable = false;
         errmsg.push("must put tool down to clock out");
     }
     else if (turn.fineable == 1) {
-        nextable = 0;
+        nextable = false;
         errmsg.push("must pay fine");
     }
     else if (turn.card.ndrills > 0 && turn.drillsused == 0 &&
              turn.fineable == 0) {
-        nextable = 0;
+        nextable = false;
         errmsg.push("must drill at least once before clocking out");
     }
     else if (turn.capsrequired > 0) {
-        nextable = 0;
+        nextable = false;
         errmsg.push("must cap " + turn.capsrequired + " more wells before clocking out");
     }
     else if (turn.npiperemove > 0) {
-        nextable = 0;
+        nextable = false;
         errmsg.push("must remove " + turn.npiperemove + " more pipelines before clocking out");
     }
     if (sandbox) {
-        nextable = 1;
+        nextable = true;
     }
 
     if (nextable) {
+        httpRequestNext();
+    }
+
+    updatePlayersDisplay();
+}
+
+var botIId;
+
+function botNextSetInterval()
+{
+    botIId = setInterval(botNext, 1000);
+}
+
+function botNext()
+{
+    if (drillAnimation.active) {
+        return;
+    }
+
+    clearInterval(botIId);
+
+    httpRequestNext();
+}
+
+function botDrill(callback)
+{
+    var player = turn.player;
+    for (i = 0; i < player.plots.length; i++) {
+        var p = player.plots[i];
+        for (j = 0; j < p.holes.length; j++) {
+            var h = p.holes[j];
+            if (h.drill == -1) {
+                errmsg.push("botDrill hole " + h.num + " plot " + (h.plot - 1));
+                updatePlayersDisplay();
+
+                httpRequestDrill(h, callback);
+
+                return;
+            }
+        }
+    }
+}
+
+function botCap(callback)
+{
+    var player = turn.player;
+    for (i = 0; i < player.plots.length; i++) {
+        var p = player.plots[i];
+        for (j = 0; j < p.holes.length; j++) {
+            var h = p.holes[j];
+            if (h.drill > 0) {
+                errmsg.push("botCap hole " + h.num + " plot " + (h.plot - 1));
+                updatePlayersDisplay();
+
+                httpRequestCap(h, callback);
+
+                return;
+            }
+        }
+    }
+}
+
+function botActionSetInterval()
+{
+    botIId = setInterval(botAction, 1000);
+}
+
+function botAction()
+{
+    var callback;
+
+    clearInterval(botIId);
+
+    if (turn.card.type != "fire") {
+        if (turn.fineable) {
+            if (turn.card.plotbuy) {
+                callback = botBuyPlotSetInterval;
+            }
+            else {
+                callback = botNextSetInterval;
+            }
+
+            httpRequestFine(callback);
+
+            return;
+        }
+    }
+
+    if (turn.card.type == "fire") {
+        if (turn.capsrequired > 1) {
+            callback = botActionSetInterval;
+        }
+        else {
+            callback = botNextSetInterval;
+        }
+
+        if (turn.capsrequired > 0) {
+            botCap(callback);
+        }
+        else {
+            botNextSetInterval();
+        }
+    }
+    else {
+        // "depletion" or "production" card
+        if (turn.card.type == "production" && turn.card.ndrills > (turn.drillsused + 1)) {
+            callback = botActionSetInterval;
+        }
+        else if (turn.card.plotbuy) {
+            callback = botBuyPlotSetInterval;
+        }
+        else {
+            callback = botNextSetInterval;
+        }
+
+        var emptyHoles = nEmptyHoles(turn.player);
+        if (emptyHoles > 0 && (turn.drillsused == 0 || (turn.player.money > 18000 && emptyHoles > 3) || (turn.card.plotbuy && !(emptyHoles > 3 && turn.player.money < 30000)))) {
+            botDrill(callback);
+        }
+        else {
+            if (turn.card.plotbuy) {
+                callback = botBuyPlotSetInterval;
+            }
+            else {
+                callback = botNextSetInterval;
+            }
+            callback();
+        }
+    }
+}
+
+function botBuyPlotSetInterval()
+{
+    botIId = setInterval(botBuyPlot, 1000);
+}
+
+function botBuyPlot()
+{
+    clearInterval(botIId);
+
+    if (nEmptyHoles(turn.player) > 3 && turn.player.money < 30000) {
+//        botNextSetInterval();
+        httpRequestRendezvous(botNextSetInterval);
+
+        return;
+    }
+
+    for (var i = 0; i < plots.length; i++) {
+        var p = plots[i];
+        if (p.owner == -1) {
+            var callback;
+
+            if (gameMode == "start") {
+                callback = botNextSetInterval;
+            }
+            else {
+// should be buy pipe or next
+                callback = botNextSetInterval;
+            }
+            httpRequestBuy(p, callback);
+
+            break;
+        }
+    }
+}
+
+function botDrawSetInterval()
+{
+    botIId = setInterval(botDraw, 1000);
+}
+
+function botDraw()
+{
+    if (shuffleAnimation[0].active) {
+        return;
+    }
+
+    clearInterval(botIId);
+
+    if (gameMode == "start") {
+        botBuyPlotSetInterval();
+    }
+    else {
+//        drawcardButtonDownEvent();
+//        drawcardButtonUpEvent();
+
+        httpRequestDraw(botActionSetInterval);
+
+        errmsg.push("botDraw called");
+        updatePlayersDisplay();
+    }
+}
+
+function completeNext()
+{
         turn.player.display.style.backgroundColor = "grey";
 
         turn.playernum++;
@@ -723,6 +986,7 @@ function nextButtonDownEvent()
                 gameMode = "";
                 for (var i = 0; i < 3; i++) {
                     detenterotationinput[i].disabled = true;
+                    detenterotationinput[i].style.opacity = "0.0";
                 }
                 myAddPlayerButton.style.opacity = "0.0";
                 myAddPlayerButton.disabled = true;
@@ -746,7 +1010,7 @@ function nextButtonDownEvent()
         }
 
         turn.player = players[turn.playernum];
-        turn.propertybought = 0;
+        turn.propertybought = false;
         turn.drillsused = 0;
         turn.capsrequired = 0;
         turn.npiperemove = 0;
@@ -763,9 +1027,17 @@ function nextButtonDownEvent()
         if (curstate.autodrawEnable) {
             drawcardButtonDownEvent();
         }
-    }
 
     updatePlayersDisplay();
+
+    if (turn.player.bot && turn.player.clientId == gclientId) {
+        if (gameMode == "start") {
+            httpRequestRendezvous(botBuyPlotSetInterval);
+        }
+        else {
+            httpRequestRendezvous(botDrawSetInterval);
+        }
+    }
 }
 
 function nextButtonUpEvent()
@@ -779,49 +1051,63 @@ var lastContShuffleEnable = false;
 
 function drawcardButtonDownEvent()
 {
-    this.addEventListener("mouseleave", drawcardButtonUpEvent);
+    myDrawIcon.button.addEventListener("mouseleave", drawcardButtonUpEvent);
 
     debugmsg.innerText = "DOWN DRAW card";
 
-    drawable = 1;
+    drawable = true;
 
-    if (curcursor.type == "tool") {
-        drawable = 0;
+    if (gclientId == -1) {
+        drawable = false;
+        errmsg.push("must connect to server");
+    }
+    else if (curcursor.type == "tool") {
+        drawable = false;
         errmsg.push("must put tool down to draw card");
     }
     else if (shuffleAnimation[0].active) {
-        drawable = 0;
+        drawable = false;
         errmsg.push("can't draw while shuffling");
     }
     else if (deck.length == 0) {
-        drawable = 0;
+        drawable = false;
         errmsg.push("deck empty");
     }
-    else if (gameMode == "start" && turn.propertybought == 0) {
-        drawable = 0;
+    else if (gameMode == "start" && !turn.propertybought) {
+        drawable = false;
         errmsg.push("must buy property to start game");
     }
     else if (gameMode != "draw") {
-        drawable = 0;
+        drawable = false;
         errmsg.push("cannot draw card");
     }
     if (sandbox) {
-        if (deck.length) {
-            drawable = 1;
+        if (deck.length > 0) {
+            drawable = true;
         }
     }
 
     cardnum = -1;
     if (drawable) {
-        if (curstate.contshuffleEnable &&
-            curstate.contshuffleEnable != lastContShuffleEnable) {
-            initDeck();
-        }
-        lastContShuffleEnable = curstate.contshuffleEnable;
+//        if (curstate.contshuffleEnable && !lastContShuffleEnable) {
+//            initDeck();
+//        }
+//        lastContShuffleEnable = curstate.contshuffleEnable;
 
-        cardnum = Math.floor((Math.random() * deck.length) + 1) - 1;
-        turn.card = deck[cardnum];
-        myCardStatusDiv.style.backgroundColor = "lightblue";
+//        cardnum = Math.floor((Math.random() * deck.length) + 1) - 1;
+//        turn.card = deck[cardnum];
+
+        httpRequestDraw();
+    }
+
+    updatePlayersDisplay();
+}
+
+function completeDraw(card)
+{
+    myCardStatusDiv.style.backgroundColor = "lightblue";
+
+    turn.card = card;
 
         if (turn.card.type == "fire") {
             // wells = 0: cap 0, 1-5: cap 1, 6-10: cap 2, 11 or more: cap 3
@@ -831,8 +1117,8 @@ function drawcardButtonDownEvent()
             }
 
             actionMode();
-            if (curstate.autotoolEnable && turn.capsrequired > 0) {
-                capButtonDownEvent();
+            if (curstate.autotoolEnable && turn.player.clientId == gclientId && !turn.player.bot && turn.capsrequired > 0) {
+                captoolButtonDownEvent();
             }
 
             myCardStatusDiv.innerText = "CURRENT CARD\nFIRE\n";
@@ -863,33 +1149,33 @@ function drawcardButtonDownEvent()
             myCardStatusDiv.innerText += "\nproperty for sale " + turn.card.plotbuy;
 
             // player must drill, check player has any empty holes
-            var emptyfound = 0;
+            var emptyfound = false;
 
             for (var i = 0; i < turn.player.plots.length; i++) {
-                var p = plots[turn.player.plots[i] - 1];
+                var p = turn.player.plots[i];
 
                 for (var j = 0; j < p.holes.length; j++) {
                     if (p.holes[j].drill == -1) {
-                        emptyfound = 1;
+                        emptyfound = true;
 
                         break;
                     }
                 }
 
-                if (emptyfound == 1) {
+                if (emptyfound) {
                     break;
                 }
             }
 
             actionMode();
 
-            if (emptyfound == 0) {
+            if (!emptyfound) {
                 turn.fineable = 1;
 
                 errmsg.push("no empty drill sites available, must pay fine");
             }
             else {
-                if (curstate.autotoolEnable) {
+                if (curstate.autotoolEnable && turn.player.clientId == gclientId && !turn.player.bot) {
                     drilltoolButtonDownEvent();
                 }
             }
@@ -900,11 +1186,12 @@ function drawcardButtonDownEvent()
         payCardRoyalty();
 
         if (!curstate.contshuffleEnable) {
-            // remove chosen card from deck[] (can't use arrayRemove())
-            for (var i = cardnum; i < (deck.length - 1); i++) {
-                deck[i] = deck[i + 1];
-            }
-            deck.length--;
+            arrayRemove(deck, turn.card);
+//            // remove chosen card from deck[] (can't use arrayRemove())
+//            for (var i = cardnum; i < (deck.length - 1); i++) {
+//                deck[i] = deck[i + 1];
+//            }
+//            deck.length--;
         }
 
 //        if (!(curstate.autotoolEnable && turn.capsrequired > 0)) {
@@ -913,14 +1200,13 @@ function drawcardButtonDownEvent()
         }
 
         debugmsg.innerText = "DOWN DRAW card " + cardnum + " (" + deck.length + ")";
-    }
 
     updatePlayersDisplay();
 }
 
 function drawcardButtonUpEvent()
 {
-    this.removeEventListener("mouseleave", drawcardButtonUpEvent);
+    myDrawIcon.button.removeEventListener("mouseleave", drawcardButtonUpEvent);
 
     debugmsg.innerText = "UP DRAW card";
 
@@ -974,95 +1260,144 @@ function completeDrill(h)
     errmsg.push(depthmsg + " well - $" + drillDepthCost[h.drill + 1]);
 }
 
+function drillHole(hole)
+{
+    var curwell = 3;
+    for (var disc = 2; disc >= 0; disc--) {
+        var rotatedspoke = hole.spoke - (detenterotationinput[disc].value * 4);
+        if (rotatedspoke < 0) {
+            rotatedspoke += 48;
+        }
+        if (discs[disc][rotatedspoke][hole.ring] == 1) {
+            break;
+        }
+        else {
+            curwell--;
+        }
+    }
+
+    return curwell;
+}
+
+var tmpwells = [];
+var tmpcaps = [];
+var depthcolors = [ "", "darkbluewell.png", "medbluewell.png", "lightbluewell.png" ];
+
+function drillAllHoles()
+{
+    tmpwells.length = 0;
+    tmpcaps.length = 0;
+
+    for (var i = 0; i < plots.length; i++) {
+        var p = plots[i];
+
+        for (var j = 0; j < p.holes.length; j++) {
+            var h = p.holes[j];
+
+            if (h.drill == -1) {
+                var depth = drillHole(h);
+                if (depth > 0) {
+                    var well = new component(18, 60, depthcolors[depth],
+                        h.left - 16, h.top - 60, "image");
+                    tmpwells.push(well);
+                }
+                else {
+                    var cap= new component(25, 25, "bluecap.png",
+                        h.left - 21, h.top - 25, "image");
+                    tmpcaps.push(cap);
+                }
+            }
+        }
+    }
+}
+
 function wellButtonDownEvent()
 {
     var h = this.hole;
     var curwell = -1;
     var cost = 0;
 
-    drillable = 1;
-    capable = 1;
+    drillable = true;
+    capable = true;
 
     this.addEventListener("mouseleave", wellButtonUpEvent);
 
     if (gameMode == "draw") {
-        drillable = 0;
-        capable = 0;
+        drillable = false;
+        capable = false;
         errmsg.push("must draw card");
     }
     else if (curcursor.mode == "drill") {
-        capable = 0;
+        capable = false;
         if (turn.propertybought) {
-            drillable = 0;
+            drillable = false;
             errmsg.push("cannot drill after buying property");
         }
         else if (turn.drillsused == turn.card.ndrills) {
-            drillable = 0;
+            drillable = false;
             errmsg.push("no more drills permitted");
         }
         else if (plots[h.plot - 1].owner != turn.playernum) {
-            drillable = 0;
+            drillable = false;
             errmsg.push("don't own plot " + h.plot);
         }
         else if (h.drill != -1) {
-            drillable = 0;
+            drillable = false;
             errmsg.push("already drilled");
         }
     }
     else if (curcursor.mode == "cap") {
-        drillable = 0;
+        drillable = false;
         if (turn.card.type != "fire") {
-            capable = 0;
+            capable = false;
             errmsg.push("no caps permitted");
         }
         else if (plots[h.plot - 1].owner != turn.playernum) {
-            capable = 0;
+            capable = false;
             errmsg.push("don't own plot " + h.plot);
         }
         else if (h.drill == -1) {
-            capable = 0;
+            capable = false;
             errmsg.push("no well to cap");
         }
         else if (h.drill == 0) {
-            capable = 0;
+            capable = false;
             errmsg.push("already capped");
         }
         else if (turn.capsrequired == 0) {
-            capable = 0;
+            capable = false;
             errmsg.push("no more caps permitted");
         }
     }
     else {
-        drillable = 0;
-        capable = 0;
+        drillable = false;
+        capable = false;
         errmsg.push("curcursor.mode != cap or drill");
     }
     if (sandbox) {
         if (curcursor.mode == "drill") {
-            drillable = 1;
-            capable = 0;
+            drillable = true;
+            capable = false;
         }
         else if (curcursor.mode == "cap") {
-            capable = 1;
-            drillable = 0;
+            capable = true;
+            drillable = false;
         }
     }
 
     if (drillable) {
-        curwell = 3;
-        for (var disc = 2; disc >= 0; disc--) {
-            var rotatedspoke = h.spoke - (detenterotationinput[disc].value * 4);
-            if (rotatedspoke < 0) {
-                rotatedspoke += 48;
-            }
-            if (discs[disc][rotatedspoke][h.ring] == 1) {
-                break;
-            }
-            else {
-                curwell--;
-            }
-        }
-        h.drill = curwell;
+        httpRequestDrill(h);
+    }
+    else if (capable) {
+        httpRequestCap(h);
+    }
+
+    updatePlayersDisplay();
+}
+
+function continueDrill(h)
+{
+        h.drill = drillHole(h);
 
         if (curstate.drillAnimationEnable) {
             startDrillAnimation(h);
@@ -1078,8 +1413,14 @@ function wellButtonDownEvent()
 
         h.button.style.opacity = "0.0";
         // don't removeChild button now, wait until up event
-    }
-    else if (capable) {
+
+    debugmsg.innerText = "DOWN WELL " + h.button.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring;
+
+    updatePlayersDisplay();
+}
+
+function completeCap(h)
+{
         h.drill = 0;
         turn.player.nwells--;
         turn.capsrequired--;
@@ -1092,9 +1433,8 @@ function wellButtonDownEvent()
         caps[caps.length++] = new component(25, 25, turn.player.color + "cap.png", h.left - 21, h.top - 25, "image");
 
         enablePipepadRemoveButtons();
-    }
 
-    debugmsg.innerText = "DOWN WELL " + this.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring;
+    debugmsg.innerText = "DOWN WELL " + h.button.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring;
 
     updatePlayersDisplay();
 }
@@ -1106,20 +1446,26 @@ function wellButtonUpEvent()
     this.removeEventListener("mouseleave", wellButtonUpEvent);
 
     if (drillable || capable) {
-        document.body.removeChild(this);
+        if (document.body.contains(this)) {
+            document.body.removeChild(this);
+        }
     }
 
     if (curcursor.mode == "drill" || drillAnimation.active) {
-        if (curstate.autotoolEnable) {
+        if (curstate.autotoolEnable && !turn.player.bot) {
             if (turn.drillsused == turn.card.ndrills) {
                 putAwayDrill();
-                actionMode();
+                if (gameMode != "draw") {
+                    actionMode();
+                }
             }
         }
     }
     else if (curcursor.mode == "cap") {
         putAwayCap();
-        actionMode();
+        if (gameMode != "draw") {
+            actionMode();
+        }
     }
 
     if (!drillAnimation.active && cursorsave != null) {
@@ -1130,74 +1476,585 @@ function wellButtonUpEvent()
     debugmsg.innerText = "  UP WELL " + this.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring;
 }
 
+var response = false;
+
+function httpRequestWait()
+{
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = true;
+            var waitResponse = JSON.parse(this.responseText);
+
+            switch (waitResponse.status) {
+              case "join_OK":
+                namenum++;
+
+                errmsg.push("httpRequestWait join_OK: " + waitResponse.name);
+
+                continueJoin(waitResponse.name, waitResponse.clientId);
+
+                break;
+
+              case "buy_OK":
+                var plotnum = Number(waitResponse.plot);
+
+                errmsg.push("httpRequestWait buy_OK plotnum " + waitResponse.plot);
+
+                completeBuy(plots[plotnum]);
+
+                break;
+
+              case "next_OK":
+                errmsg.push("httpRequestWait next_OK");
+
+                completeNext();
+
+                break;
+
+              case "fine_OK":
+                errmsg.push("httpRequestWait fine_OK");
+
+                completeFine();
+
+                break;
+
+              case "draw_OK":
+                var card = waitResponse.card;
+
+                errmsg.push("httpRequestWait draw_OK card " + JSON.stringify(card));
+
+                completeDraw(card);
+
+                break;
+
+              case "drill_OK":
+                var plotnum = Number(waitResponse.plot);
+                var holenum = Number(waitResponse.hole);
+                var hole = plots[plotnum].holes[holenum];
+
+                errmsg.push("httpRequestWait drill_OK plot " + waitResponse.plot + " hole " + waitResponse.hole + " depth " + waitResponse.drillDepth);
+
+                continueDrill(hole);
+
+                break;
+
+              case "cap_OK":
+                var plotnum = Number(waitResponse.plot);
+                var holenum = Number(waitResponse.hole);
+                var hole = plots[plotnum].holes[holenum];
+
+                errmsg.push("httpRequestWait cap_OK plot " + waitResponse.plot + " hole " + waitResponse.hole);
+
+                completeCap(hole);
+
+                break;
+
+              case "pipe_OK":
+                var pipepad = pipepads[Number(waitResponse.pipepadnum)];
+
+                errmsg.push("httpRequestWait pipe_OK pipeid " + pipepad.id);
+
+                completePipe(pipepad);
+
+                break;
+
+              case "piperemove_OK":
+                // only remove graphic for now, will get data removed later
+                var pipepad = pipepads[Number(waitResponse.pipepadnum)];
+                var pipe = pipepad.pipes[pipepad.pipes.length - 1];
+                arrayRemove(pipes, pipe);
+
+                errmsg.push("httpRequestWait piperemove_OK pipeid " + pipepad.id);
+
+                completePipeRemove(pipepad);
+
+                break;
+
+              case "rotation_OK":
+                detenterotationinput[0].setAttribute("value", waitResponse.disc0);
+                detenterotationinput[1].setAttribute("value", waitResponse.disc1);
+                detenterotationinput[2].setAttribute("value", waitResponse.disc2);
+
+                errmsg.push("httpRequestWait rotation_OK disc 0 " + detenterotationinput[0].value + " disc 1 " + detenterotationinput[1].value + " disc 2 " + detenterotationinput[2].value);
+
+                break;
+
+              case "namechange_OK":
+                var player = players[Number(waitResponse.player)];
+
+                player.name = waitResponse.name;
+                player.display.nameinput.setAttribute("value", waitResponse.name);
+                if (player.name == "HAL") {
+                    player.bot = true;
+                }
+                else {
+                    player.bot = false;
+                }
+
+                errmsg.push("httpRequestWait namechange_OK playernum " + waitResponse.player + " name " + waitResponse.name);
+
+                break;
+
+              default:
+                errmsg.push("httpRequestWait " + waitResponse.status);
+                break;
+            }
+
+            httpRequestWait();
+        }
+    }
+
+    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=wait", true);
+    xhttp.send();
+}
+
+var rendezvousComplete = true;
+
+function httpRequestRendezvous(callback)
+{
+    var xhttp = new XMLHttpRequest();
+
+    rendezvousComplete = false;
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = true;
+            var rendezvousResponse = JSON.parse(this.responseText);
+
+            switch (rendezvousResponse.status) {
+              case "rendezvous_OK":
+//                errmsg.push("httpRequestRendezvous rendezvous_OK clientId=" + rendezvousResponse.clientId);
+
+                rendezvousComplete = true;
+
+                if (callback != null && callback != undefined) {
+                    callback();
+                }
+
+                break;
+
+              default:
+                errmsg.push("httpRequestRendezvous " + rendezvousResponse.status);
+                break;
+            }
+            updatePlayersDisplay();
+        }
+    }
+
+    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=rendezvous", true);
+    xhttp.send();
+}
+
+function httpRequestConnect()
+{
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = true;
+            var connectResponse = JSON.parse(this.responseText);
+
+            switch (connectResponse.status) {
+              case "connect_OK":
+//                errmsg.push("httpRequestConnect connect_OK clientId=" + connectResponse.clientId);
+//                updatePlayersDisplay();
+
+                gclientId = connectResponse.clientId;
+
+                var curPlayers = connectResponse.players;
+                for (var i = 0; i < curPlayers.length; i++) {
+                    namenum++;
+
+                    continueJoin(curPlayers[i].name, curPlayers[i].clientId);
+                }
+                for (var i = 0; i < 3; i++) {
+                    detenterotationinput[i].setAttribute("value", connectResponse.discrotations[i]);
+                }
+
+                myConnectIcon.image.src = "connect.png";
+
+                httpRequestWait();
+
+                break;
+
+              default:
+                errmsg.push("httpRequestConnect " + connectResponse.status);
+                break;
+            }
+        }
+    }
+
+    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=-1&action=connect", true);
+    xhttp.send();
+}
+
+function httpRequestNamechange(player, callback)
+{
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = true;
+            var namechangeResponse = JSON.parse(this.responseText);
+
+            switch (namechangeResponse.status) {
+              case "namechange_OK":
+                errmsg.push("httpRequestRotation namechange_OK clientId=" + namechangeResponse.clientId + " player=" + namechangeResponse.name);
+
+                player.name = namechangeResponse.name;
+                player.display.nameinput.setAttribute("value", namechangeResponse.name);
+
+                httpRequestRendezvous(callback);
+
+                break;
+
+              default:
+                errmsg.push("httpRequestConnect " + namechangeResponse.status);
+                break;
+            }
+        }
+    }
+
+    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + players.indexOf(player) + "&action=namechange&name=" + player.name, true);
+    xhttp.send();
+}
+
+function httpRequestRotation(callback)
+{
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = true;
+            var rotationResponse = JSON.parse(this.responseText);
+
+            switch (rotationResponse.status) {
+              case "rotation_OK":
+                errmsg.push("httpRequestRotation rotation_OK clientId=" + rotationResponse.clientId + " disc0=" + rotationResponse.disc0 + " disc1=" + rotationResponse.disc1 + " disc2=" + rotationResponse.disc2);
+
+                detenterotationinput[0].setAttribute("value", rotationResponse.disc0);
+                detenterotationinput[1].setAttribute("value", rotationResponse.disc1);
+                detenterotationinput[2].setAttribute("value", rotationResponse.disc2);
+
+                httpRequestRendezvous(callback);
+
+                break;
+
+              default:
+                errmsg.push("httpRequestConnect " + rotationResponse.status);
+                break;
+            }
+        }
+    }
+
+    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=-1&action=rotation&disc0=" + detenterotationinput[0].value + "&disc1=" + detenterotationinput[1].value + "&disc2=" + detenterotationinput[2].value, true);
+    xhttp.send();
+}
+
+function httpRequestJoin(name, callback)
+{
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = true;
+            var joinResponse = JSON.parse(this.responseText);
+
+            if (joinResponse.status == "join_OK") {
+                namenum++;
+
+                errmsg.push("httpRequestJoin join_OK: " + name);
+
+                continueJoin(name, joinResponse.clientId);
+
+                httpRequestRendezvous(callback);
+            }
+            else {
+            }
+        }
+    }
+
+    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=-1&action=join&name=" + name, true);
+    xhttp.send();
+}
+
+function httpRequestDrill(hole, callback)
+{
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = true;
+            var drillResponse = JSON.parse(this.responseText);
+
+            if (drillResponse.status == "drill_OK") {
+                continueDrill(hole);
+
+                httpRequestRendezvous(callback);
+            }
+            else {
+            }
+        }
+    }
+
+    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=drill&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
+    xhttp.send();
+}
+
+function httpRequestPipe(pipepad, callback)
+{
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = true;
+            var pipeResponse = JSON.parse(this.responseText);
+
+            if (pipeResponse.status == "pipe_OK") {
+                completePipe(pipepad);
+
+                httpRequestRendezvous(callback);
+            }
+            else {
+            }
+        }
+    }
+
+    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=pipe&pipepadnum=" + pipepads.indexOf(pipepad), true);
+    xhttp.send();
+}
+
+function httpRequestPipeRemove(pipepad, callback)
+{
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = true;
+            var pipeRemoveResponse = JSON.parse(this.responseText);
+
+            if (pipeRemoveResponse.status == "piperemove_OK") {
+                completePipeRemove(null);
+
+                httpRequestRendezvous(callback);
+            }
+            else {
+            }
+        }
+    }
+
+    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=piperemove&pipepadnum=" + pipepads.indexOf(pipepad), true);
+    xhttp.send();
+}
+
+function httpRequestCap(hole, callback)
+{
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = true;
+            var capResponse = JSON.parse(this.responseText);
+
+            if (capResponse.status == "cap_OK") {
+                completeCap(hole);
+
+                httpRequestRendezvous(callback);
+            }
+            else {
+            }
+        }
+    }
+
+    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=cap&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
+    xhttp.send();
+}
+
+function httpRequestDraw(callback)
+{
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = true;
+            var drawResponse = JSON.parse(this.responseText);
+
+            if (drawResponse.status == "draw_OK") {
+                var card = drawResponse.card;
+                completeDraw(card);
+
+                httpRequestRendezvous(callback);
+            }
+            else {
+            }
+        }
+    }
+
+    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=draw", true);
+    xhttp.send();
+}
+
+function httpRequestBuy(plot, callback)
+{
+    if (!rendezvousComplete) {
+        errmsg.push("Waiting for rendezvous");
+
+        return;
+    }
+
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = true;
+            var buyResponse = JSON.parse(this.responseText);
+
+            if (buyResponse.status == "buy_OK") {
+                var plotnum = Number(buyResponse.plot);
+                completeBuy(plots[plotnum]);
+
+                httpRequestRendezvous(callback);
+            }
+            else {
+            }
+        }
+    }
+
+    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=buy&plot=" + (plot.plotnum - 1), true);
+    xhttp.send();
+}
+
+function httpRequestNext()
+{
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = true;
+            var nextResponse = JSON.parse(this.responseText);
+
+            if (nextResponse.status == "next_OK") {
+                completeNext();
+
+                if (turn.player.clientId == gclientId) {
+                    httpRequestRendezvous(null);
+                }
+            }
+            else {
+            }
+        }
+    }
+
+    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=next", true);
+    xhttp.send();
+}
+
+function httpRequestFine(callback)
+{
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = true;
+            var fineResponse = JSON.parse(this.responseText);
+
+            if (fineResponse.status == "fine_OK") {
+                completeFine();
+
+                httpRequestRendezvous(callback);
+            }
+            else {
+            }
+        }
+    }
+
+    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=fine", true);
+    xhttp.send();
+}
+
+//var downShedButton;
+
 function shedButtonDownEvent()
 {
     var p = this.plot;
 
     this.addEventListener("mouseleave", shedButtonUpEvent);
 
-    buyable = 1;
+    buyable = true;
     if (gameMode == "draw") {
-        buyable = 0;
+        buyable = false;
         errmsg.push("must draw card");
     }
     else if (curcursor.mode != "buy") {
-        buyable = 0;
+        buyable = false;
         errmsg.push("curcursor.mode != buy");
     }
     else if (turn.card.ndrills > 0 && turn.drillsused == 0 &&
              turn.fineable == 0) {
-        buyable = 0;
+        buyable = false;
         errmsg.push("must drill at least once before buying property");
     }
     else if (turn.card.plotbuy == 0) {
-        buyable = 0;
+        buyable = false;
         errmsg.push("no property buy permitted");
     }
     else if (p.owner != -1) {
-        buyable = 0;
+        buyable = false;
         errmsg.push("plot " + p.plotnum + " already owned");
     }
     else if (turn.propertybought) {
-        buyable = 0;
+        buyable = false;
         errmsg.push("already bought property this turn");
     }
     if (sandbox) {
-        buyable = 1;
+        buyable = true;
     }
 
     if (buyable) {
-        turn.propertybought = 1;
-        p.owner = turn.playernum;
-        turn.player.plots[turn.player.plots.length++] = p.plotnum;
-        transferMoney(turn.player, bankPlayer, p.price);
+//        downShedButton = this;
+        httpRequestBuy(p);
+    }
 
-        errmsg.push("buy plot " + p.id + " for $" + p.price);
+    updatePlayersDisplay();
+}
 
-        sheds[sheds.length++] = new component(40, 40, turn.player.color + "shed.png", p.shedpadleft - 28, p.shedpadtop - 27, "image");
+function completeBuy(p)
+{
+    turn.propertybought = true;
+    p.owner = turn.playernum;
+//        turn.player.plots[turn.player.plots.length++] = p;
+    turn.player.plots.push(p);
+    transferMoney(turn.player, bankPlayer, p.price);
 
-        this.style.opacity = "0.0";
+    errmsg.push("buy plot " + p.id + " for $" + p.price);
 
-        if (gameMode == "start") {
-            setCursor(cursorKingOil);
-        }
-        else {
-            actionMode();
-        }
-        myShedIcon.image.src = turn.player.color + "shed.png";
-        myShedIcon.button.style.opacity = "0.0";
+    sheds[sheds.length++] = new component(40, 40, turn.player.color + "shed.png", p.shedpadleft - 28, p.shedpadtop - 27, "image");
 
-        while (shedbuttons.length) {
-            var b = shedbuttons.pop();
+//    downShedButton.style.opacity = "0.0";
+    p.shedbutton.style.opacity = "0.0";
 
-            b.style.opacity = "0.0";
-            if (document.body.contains(b)) {
-                document.body.removeChild(b);
-            }
+    if (gameMode == "start") {
+        setCursor(cursorKingOil);
+    }
+    else {
+        actionMode();
+    }
+    myShedIcon.image.src = turn.player.color + "shed.png";
+    myShedIcon.button.style.opacity = "0.0";
+
+    while (shedbuttons.length) {
+        var b = shedbuttons.pop();
+
+        b.style.opacity = "0.0";
+        if (document.body.contains(b)) {
+            document.body.removeChild(b);
         }
     }
 
-    debugmsg.innerText = "DOWN SHED " + this.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
+//    debugmsg.innerText = "DOWN SHED " + downShedButton.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
+    debugmsg.innerText = "DOWN SHED " + p.shedbutton.id + " plot: " + p.plotnum + " $" + p.price + " owner: " + p.owner;;
 
     updatePlayersDisplay();
 }
@@ -1223,56 +2080,56 @@ function pipepadButtonDownEvent()
 
     this.addEventListener("mouseleave", pipepadButtonUpEvent);
 
-    pipeable = 1;
-    removepipeable = 1;
+    pipeable = true;
+    removepipeable = true;
     if (gameMode == "draw") {
-        pipeable = 0;
-        removepipeable = 0;
+        pipeable = false;
+        removepipeable = false;
         errmsg.push("must draw card");
     }
     else if (curcursor.mode == "pipe") {
-        removepipeable = 0;
+        removepipeable = false;
         if (turn.removedpipepad != pipepadNone && turn.removedpipepad != pp) {
-            pipeable = 0;
+            pipeable = false;
             errmsg.push("can place removed pipe only on pipe pad from which pipe was removed (pipe pad " + turn.removedpipepad.id + ")");
         }
         else if (pp.owner != -1 && pp.owner != turn.playernum) {
-            pipeable = 0;
+            pipeable = false;
             errmsg.push("pipe site " + pp.id + " already owned");
         }
         else if (plots[pp.plotnumA - 1].owner != turn.playernum &&
                  plots[pp.plotnumB - 1].owner != turn.playernum) {
-            pipeable = 0;
+            pipeable = false;
             errmsg.push("don't own either pipe site plot of " + pp.id + " (" + pp.plotnumA + "," + pp.plotnumB + ")");
         }
         else if (plots[pp.plotnumA - 1].owner == turn.playernum &&
                  plots[pp.plotnumB - 1].owner == turn.playernum) {
-            pipeable = 0;
+            pipeable = false;
             errmsg.push("you own both pipe site plots of " + pp.id);
         }
     }
     else if (curcursor.mode == "action") {
-        pipeable = 0;
+        pipeable = false;
         if (pp.pipes.length == 0) {
-            removepipeable = 0;
+            removepipeable = false;
             errmsg.push("curcursor.mode != pipe");
         }
     }
     else {
-        pipeable = 0;
-        removepipeable = 0;
+        pipeable = false;
+        removepipeable = false;
         errmsg.push("curcursor.mode != pipe");
     }
     if (sandbox) {
         if (curcursor.mode == "pipe") {
-            pipeable = 1;
-            removepipeable = 0;
+            pipeable = true;
+            removepipeable = false;
         }
         else if (curcursor.mode == "action") {
             if (pp.pipes.length > 0) {
-                removepipeable = 1;
+                removepipeable = true;
             }
-            pipeable = 0;
+            pipeable = false;
         }
     }
 
@@ -1288,103 +2145,19 @@ function pipepadButtonDownEvent()
         myPipeIcon.image.src = turn.player.color + "pipe.png";
         myPipeIcon.button.style.opacity = "0.0";
 
-if (0) {
-        // can this happen?  don't think so, remove
-        if (turn.npiperemove == 0) {
-            this.style.opacity = "0.0";
-            document.body.removeChild(this);
-            pipepadbuttons.pop();
-
-        }
-}
-else {
         removePipepadButtons();  // should be just the one
-}
         enablePipepadRemoveButtons();
     }
     else if (pipeable) {
-        var pipefrom;
-        var pipeto;
-
-        if (plots[pp.plotnumA - 1].owner == turn.playernum) {
-            pipefrom = pp.plotnumB;
-            pipeto = pp.plotnumA;
-        }
-        else {
-            pipefrom = pp.plotnumA;
-            pipeto = pp.plotnumB;
-        }
-
-        var plot = plots[pipeto - 1];
-        var plotpipesto = 0;
-        for (var i = 0; i < plot.pipepadsto.length; i++) {
-            plotpipesto += plot.pipepadsto[i].pipes.length;
-        }
-        // we're about to add another pipe
-        plotpipesto++;
-        var minwells = plotpipesto + 3;
-        if (turn.removedpipepad == pipepadNone && plot.nwells < minwells && sandbox == 0) {
-            errmsg.push("not enough wells for " + plotpipesto + " pipes to plot " + plot.id);
-        }
-        else if (plotpipesto > 3) {
-            errmsg.push("pipes to " + plot.id + " maxed out (3)");
-        }
-        else {
-            var leftoffset;
-            var topoffset;
-            var width;
-            var height;
-            var count = pp.pipes.length;
-            if (pp.pipeorientation == "vertical") {
-                leftoffset = pp.pipepadleft - 24 - ((count - 1) * 5);
-                topoffset = pp.pipepadtop - 60 + ((count - 1) * 5);
-                width = 30;
-                height = 100;
-            }
-            else {
-                leftoffset = pp.pipepadleft - 57 - ((count - 1) * 5);
-                topoffset = pp.pipepadtop - 20 + ((count - 1) * 5);
-                width = 100;
-                height = 30;
-            }
-            var pipe;
-            pipe = new component(width, height, turn.player.color + "pipe_" + pp.pipeorientation + ".png", leftoffset, topoffset, "image");
-
-            transferMoney(turn.player, bankPlayer, 25000);
-
-            pipe.from = pipefrom;
-            pipe.to = pipeto;
-            pipe.pipepad = pp;
-
-            pp.pipes.push(pipe);
-            pipes[pipes.length++] = pipe;
-
-            if (pp.pipes.length == 1) {
-                // this is the 1st pipe on this pipepad
-                var pipepadsfrom = plots[pipe.from - 1].pipepadsfrom;
-                var pipepadsto = plots[pipe.to - 1].pipepadsto;
-                pipepadsfrom[pipepadsfrom.length++] = pp;
-                pipepadsto[pipepadsto.length++] = pp;
-
-                pp.owner = turn.playernum;
-            }
-
-            setCursor(cursorKingOil);
-            myPipeIcon.image.src = turn.player.color + "pipe.png";
-            myPipeIcon.button.style.opacity = "0.0";
-
-            removePipepadButtons();
-            enablePipepadRemoveButtons();
-
-            errmsg.push("place pipeline from " + plots[pipe.from - 1].id + " to " + plots[pipe.to - 1].id);
-        }
+        httpRequestPipe(pp);
     }
     else if (removepipeable) {
-        // only remove graphic for now, will get data removed later
         var pipe = pp.pipes.pop();
-        arrayRemove(pipes, pipe);
         turn.removedpipepad = pp;
         turn.removedpipe = pipe;
+
+        // only remove graphic for now, will get data removed later
+        arrayRemove(pipes, pipe);
 
         cursorPipe.imagesrc = turn.player.color + "pipe.png";
         setCursor(cursorPipe);
@@ -1405,6 +2178,88 @@ else {
     updatePlayersDisplay();
 }
 
+function completePipe(pp)
+{
+        var pipefrom;
+        var pipeto;
+
+        if (plots[pp.plotnumA - 1].owner == turn.playernum) {
+            pipefrom = pp.plotnumB;
+            pipeto = pp.plotnumA;
+        }
+        else {
+            pipefrom = pp.plotnumA;
+            pipeto = pp.plotnumB;
+        }
+
+// not needed, already validated, button wouldn't be here if not
+//        var plot = plots[pipeto - 1];
+//        var plotpipesto = 0;
+//        for (var i = 0; i < plot.pipepadsto.length; i++) {
+//            plotpipesto += plot.pipepadsto[i].pipes.length;
+//        }
+//        var minwells = plotpipesto + 4;
+//        if (turn.removedpipepad == pipepadNone && plot.nwells < minwells && sandbox == 0) {
+//            errmsg.push("not enough wells for " + (plotpipesto + 1) + " pipes to plot " + plot.id);
+//        }
+//        else if (plotpipesto > 2) {
+//            errmsg.push("pipes to " + plot.id + " maxed out (3)");
+//        }
+//        else {
+
+        var leftoffset;
+        var topoffset;
+        var width;
+        var height;
+        var count = pp.pipes.length;
+        if (pp.pipeorientation == "vertical") {
+            leftoffset = pp.pipepadleft - 24 - ((count - 1) * 5);
+            topoffset = pp.pipepadtop - 60 + ((count - 1) * 5);
+            width = 30;
+            height = 100;
+        }
+        else {
+            leftoffset = pp.pipepadleft - 57 - ((count - 1) * 5);
+            topoffset = pp.pipepadtop - 20 + ((count - 1) * 5);
+            width = 100;
+            height = 30;
+        }
+        var pipe;
+        pipe = new component(width, height, turn.player.color + "pipe_" + pp.pipeorientation + ".png", leftoffset, topoffset, "image");
+
+        transferMoney(turn.player, bankPlayer, 25000);
+
+        pipe.from = pipefrom;
+        pipe.to = pipeto;
+//        pipe.pipepad = pp;
+
+        pp.pipes.push(pipe);
+        pipes[pipes.length++] = pipe;
+
+        if (pp.pipes.length == 1) {
+            // this is the 1st pipe on this pipepad
+            var pipepadsfrom = plots[pipe.from - 1].pipepadsfrom;
+            var pipepadsto = plots[pipe.to - 1].pipepadsto;
+            pipepadsfrom[pipepadsfrom.length++] = pp;
+            pipepadsto[pipepadsto.length++] = pp;
+
+            pp.owner = turn.playernum;
+        }
+
+        setCursor(cursorKingOil);
+        myPipeIcon.image.src = turn.player.color + "pipe.png";
+        myPipeIcon.button.style.opacity = "0.0";
+
+        removePipepadButtons();
+        enablePipepadRemoveButtons();
+
+        errmsg.push("placed pipeline from " + plots[pipe.from - 1].id + " to " + plots[pipe.to - 1].id);
+
+//        }
+
+    updatePlayersDisplay();
+}
+
 function pipepadButtonUpEvent()
 {
     this.removeEventListener("mouseleave", pipepadButtonUpEvent);
@@ -1414,28 +2269,40 @@ function pipepadButtonUpEvent()
 
 function fineButtonDownEvent()
 {
-    this.addEventListener("mouseleave", fineButtonUpEvent);
+    fineButton.addEventListener("mouseleave", fineButtonUpEvent);
+    fineButton.style.backgroundColor = "red";
 
-    if (turn.fineable == 1 || sandbox == 1) {
-        transferMoney(turn.player, bankPlayer, 10000);
-        turn.fineable = 2;
+    if (turn.fineable == 0) {
+        errmsg.push("no fine needed");
+    }
+    else if (turn.fineable == 1 || sandbox == 1) {
+//        transferMoney(turn.player, bankPlayer, 10000);
+//        turn.fineable = 2;
+//
+//        errmsg.push(turn.player.name + " fined $10000");
+
+        httpRequestFine();
 
         fineButton.innerHTML = "FINED!";
-
-        errmsg.push(turn.player.name + " fined $10000");
     }
     else if (turn.fineable == 2) {
         errmsg.push("already paid fine");
     }
 
-    fineButton.style.backgroundColor = "red";
-
     updatePlayersDisplay();
+}
+
+function completeFine()
+{
+    transferMoney(turn.player, bankPlayer, 10000);
+    turn.fineable = 2;
+
+    errmsg.push(turn.player.name + " fined $10000");
 }
 
 function fineButtonUpEvent()
 {
-    this.removeEventListener("mouseleave", fineButtonUpEvent);
+    fineButton.removeEventListener("mouseleave", fineButtonUpEvent);
 
     fineButton.innerHTML = "IT'S FINE";
 
@@ -1444,18 +2311,36 @@ function fineButtonUpEvent()
 
 function randomButtonDownEvent()
 {
+    var changed = false;
+
     this.addEventListener("mouseleave", randomButtonUpEvent);
 
     randomButton.style.backgroundColor = "red";
 
+    if (gclientId == -1) {
+        errmsg.push("must connect to server");
+        updatePlayersDisplay();
+
+        return;
+    }
+
     for (var i = 0; i < 3; i++) {
         if (detenterotationinput[i].disabled == false) {
             var randomvalue = Math.floor((Math.random() * 12) + 1) - 1;
-            detenterotationinput[i].value = randomvalue;
+//            detenterotationinput[i].style.opacity = "0.0";
+            detenterotationinput[i].setAttribute("value", randomvalue);
+
+            changed = true;
         }
         else {
             errmsg.push("disc rotations locked");
+
+            break;
         }
+    }
+
+    if (changed) {
+        httpRequestRotation();
     }
 
     updatePlayersDisplay();
@@ -1476,6 +2361,23 @@ function debugButtonDownEvent()
     if (sandbox == 3) {
         sandbox = 0;
 
+        if (gameMode != "start") {
+            for (var i = 0; i < 3; i++) {
+                detenterotationinput[i].disabled = true;
+                detenterotationinput[i].style.opacity = "0.0";
+            }
+        }
+        debugButton.style.backgroundColor = "lightgrey";
+        debugButton.style.opacity = "0.0";
+
+        while (tmpwells.length) {
+            tmpwells.pop();
+        }
+        while (tmpcaps.length) {
+            tmpcaps.pop();
+        }
+    }
+    else if (sandbox == 2) {
         while (sandboxbuttons.length) {
             var b = sandboxbuttons.pop();;
             b.style.opacity = "0.0";
@@ -1483,15 +2385,6 @@ function debugButtonDownEvent()
                 document.body.removeChild(b);
             }
         }
-
-        for (var i = 0; i < 3; i++) {
-            detenterotationinput[i].disabled = true;
-        }
-        debugButton.style.backgroundColor = "lightgrey";
-        debugButton.style.opacity = "0.0";
-    }
-    else if (sandbox == 2) {
-        startShuffleAnimation();
 
         debugButton.style.backgroundColor = "green";
     }
@@ -1524,6 +2417,7 @@ function debugButtonDownEvent()
 
         for (var i = 0; i < 3; i++) {
             detenterotationinput[i].disabled = false;
+            detenterotationinput[i].style.opacity = "0.7";
         }
         debugButton.style.backgroundColor = "lightgreen";
         debugButton.style.opacity = "0.7";
@@ -1601,7 +2495,7 @@ function makeCapButton()
 {
     myCapIcon = new component(40, 40, turn.player.color + "cap.png", 285, 755, "image", 0, 0);
     var b = document.createElement("BUTTON");
-    b.addEventListener("mousedown", capButtonDownEvent);
+    b.addEventListener("mousedown", captoolButtonDownEvent);
     b.style.border = "0px";
     b.style.width = "40px";
     b.style.height = "40px";
@@ -1618,11 +2512,11 @@ function makeCapButton()
 
 function makePipeButton()
 {
-    myPipeIcon = new component(30, 100, turn.player.color + "pipe.png", 290, 644, "image", 0, 0);
+    myPipeIcon = new component(39, 100, turn.player.color + "pipe.png", 290, 644, "image", 0, 0);
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", pipetoolButtonDownEvent);
     b.style.border = "0px";
-    b.style.width = "30px";
+    b.style.width = "39px";
     b.style.height = "100px";
     b.style.padding = "0px";
     b.style.position = "absolute";
@@ -1748,7 +2642,7 @@ function makeRandomButton()
     b.style.height = "33px";
     b.style.padding = "0px";
     b.style.position = "absolute";
-    b.style.opacity = "1.0";
+    b.style.opacity = "0.8";
     b.style.top = 940 + "px";
     b.style.left = 605 + "px";
     b.style.cursor = "url('cursor.png'), pointer";
@@ -1767,6 +2661,7 @@ function makeRotationButtons()
         x.style.width = "20px";
         x.style.padding = "0px";
         x.style.position = "absolute";
+        x.style.opacity = "0.7";
         x.style.left = 597 + (i * 30) + "px";
         x.style.top = 917 + "px";
         x.style.textAlign = "center";
@@ -1807,13 +2702,13 @@ function makeDebugDisplay()
 
 function statusButtonDownEvent()
 {
-    if (myStatusButton.hidden == 1) {
+    if (myStatusButton.hidden) {
         myStatusButton.style.opacity = "0.7";
-        myStatusButton.hidden = 0;
+        myStatusButton.hidden = false;
     }
     else {
         myStatusButton.style.opacity = "0.0";
-        myStatusButton.hidden = 1;
+        myStatusButton.hidden = true;
     }
 
     debugmsg.innerText = "STATUS DOWN EVENT";
@@ -1827,10 +2722,10 @@ function makeStatusDisplay()
     myStatusButton.style.width = 300 + "px";
     myStatusButton.style.height = 80 + "px";
     myStatusButton.style.left = 475 + "px";
-    myStatusButton.style.top = 475 + "px";
+    myStatusButton.style.top = 350 + "px";
     myStatusButton.style.backgroundColor = "grey";
     myStatusButton.style.opacity = "0.0";
-    myStatusButton.hidden = 1;
+    myStatusButton.hidden = true;
     myStatusButton.style.font = "bold 20px arial,serif";
     document.body.appendChild(myStatusButton);
 
@@ -1846,6 +2741,13 @@ function makeTurnDisplay()
     turnmsg.style.position = "absolute";
     turnmsg.style.left = 40 + "px";
     turnmsg.style.top = 942 + "px";
+}
+
+function playerDisplayButtonDownEvent()
+{
+    if (gameMode == "start" && players[0].bot && !turn.propertybought) {
+        httpRequestRendezvous(botBuyPlotSetInterval);
+    }
 }
 
 function makePlayerDisplay()
@@ -1872,31 +2774,63 @@ function makePlayerDisplay()
     return d;
 }
 
-function addPlayer(name)
+function addPlayer(name, display)
 {
     // 'new Object()' example, should use Object literal (they be same)
     var player = new Object();
-        player.name = name;
-        player.color = playercolors[players.length];
-        player.plots = [];
-        player.money = 80000;
-        player.nwells = 0;
-        player.pipelines = 0;
-        player.msg = [];
-        player.display = {};
+    player.name = name;
+    player.color = playercolors[players.length];
+    player.plots = [];
+    player.money = 80000;
+    player.nwells = 0;
+    player.pipelines = 0;
+    player.msg = [];
+    player.display = {};
+    if (player.name == "HAL") {
+        player.bot = true;
+    }
+    else {
+        player.bot = false;
+    }
+
+    if (players.length == 0) {
+        turn.playernum = 0;
+        turn.player = player;
+        display.style.backgroundColor = "lightblue";
+
+        makeBuyButton();
+        makeCapButton();
+        makePipeButton();
+    }
 
     players.push(player);
 
     return player;
 }
 
+var nameExt = [ "", "oid", "Sign", "ized" ];
+var namenum = 0;
+
 function addPlayerButtonDownEvent()
+{
+    if (gclientId == -1) {
+        errmsg.push("must connect to server");
+        updatePlayersDisplay();
+
+        return;
+    }
+
+    var initName = "Unit" + nameExt[namenum];
+    httpRequestJoin(initName);
+}
+
+function continueJoin(initName, clientId)
 {
     var display = makePlayerDisplay();
 
     var x = document.createElement("INPUT");
     x.setAttribute("type", "text");
-    x.setAttribute("value", "Unit");
+    x.setAttribute("value", initName);
     x.style.border = "2px solid #6060ff";
     x.style.borderRadius = "7px";
     x.style.width = 100 + "px";
@@ -1917,10 +2851,22 @@ function addPlayerButtonDownEvent()
     x.style.font = "bold 20px arial,serif";
     x.onchange = function () {
         this.player.name = this.value;
+        if (this.player.name == "HAL") {
+            this.player.bot = true;
+            if (gameMode == "start" && turn.playernum == 0) {
+            }
+        }
+        else {
+            this.player.bot = false;
+        }
+
+        httpRequestNamechange(this.player, null);
     }
     document.body.appendChild(x);
 
-    var p = addPlayer(x.value);
+    var p = addPlayer(x.value, display);
+
+    p.clientId = clientId;
 
 // is this needed?
     x.player = p;
@@ -1928,6 +2874,9 @@ function addPlayerButtonDownEvent()
     p.display = display;
 
     var d = document.createElement("DIV");
+    if (players.indexOf(p) == 0) {
+        d.addEventListener("mousedown", playerDisplayButtonDownEvent);
+    }
     d.style.width = 100 + "px";
     d.style.height = 25 + "px";
     d.style.position = "absolute";
@@ -1943,6 +2892,9 @@ function addPlayerButtonDownEvent()
     display.scorediv = d
 
     var d = document.createElement("DIV");
+    if (players.indexOf(p) == 0) {
+        d.addEventListener("mousedown", playerDisplayButtonDownEvent);
+    }
     d.style.width = 200 + "px";
     d.style.height = 25 + "px";
     d.style.position = "absolute";
@@ -1957,6 +2909,9 @@ function addPlayerButtonDownEvent()
     display.statdiv = d
 
     var d = document.createElement("DIV");
+    if (players.indexOf(p) == 0) {
+        d.addEventListener("mousedown", playerDisplayButtonDownEvent);
+    }
     d.style.width = 200 + "px";
     d.style.height = 25 + "px";
     d.style.position = "absolute";
@@ -1974,6 +2929,8 @@ function addPlayerButtonDownEvent()
         myAddPlayerButton.style.opacity = "0.0";
         myAddPlayerButton.disabled = true;
     }
+
+    updatePlayersDisplay();
 }
 
 function makeAddPlayerButton()
@@ -1996,6 +2953,36 @@ function makeAddPlayerButton()
     b.innerText = "+";
 
     myAddPlayerButton = b;
+}
+
+function connectButtonDownEvent()
+{
+    if (gclientId == -1) {
+        httpRequestConnect();
+    }
+}
+
+function makeConnectButton()
+{
+    myConnectIcon = new component(60, 60, "noconnect.png", 255, 150, "image", 0, 0);
+    var b = document.createElement("BUTTON");
+    b.addEventListener("mousedown", connectButtonDownEvent);
+    b.style.borderRadius = "30px";
+    b.style.width = "60px";
+    b.style.height = "60px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.top = 160 + "px";
+    b.style.left = 265 + "px";
+    b.style.backgroundColor = "grey";
+    b.style.opacity = "0.3";
+    b.style.font = "bold 20px arial,serif";
+    b.style.cursor = "url('cursor.png'), pointer";
+    document.body.appendChild(b);
+
+//    b.innerText = "";
+
+    myConnectButton = b;
 }
 
 function makeCardStatusDisplay()
@@ -2039,6 +3026,7 @@ function makeTurnResultDisplay()
 }
 
 var oilspill;
+var oilstrike;
 var ss;
 var dat;
 var att;
@@ -2050,7 +3038,7 @@ var curstate = {
     drillAnimationEnable: false,
     autotoolEnable: true,
     autodrawEnable: false,
-    soundEnable: true,
+    soundEnable: false,
     contshuffleEnable: false,
 };
 
@@ -2082,6 +3070,10 @@ function toggleCSDownEvent()
 function startGame()
 {
     ss = document.getElementById("sadsack");
+
+    window.onbeforeunload = function(event) {
+        return confirm("Confirm refresh");
+    };
 
     var t = document.getElementById("DATText");
     t.style.position = "absolute";
@@ -2144,7 +3136,7 @@ function startGame()
     t.style.color = "white";
 
     myGamePiece = new component(60, 60, "KingOilIcon.png", 0, 0, "image", 20, 20);
-    myGamePiece.enabled = 0;
+    myGamePiece.enabled = false;
     myBackground = new component(1000, 1000, "ko_board.png", 100, 0, "image", 0, 0);
     myBackground2 = new component(217, 783, "oil_spill.png", 0, 100, "image", 0, 0);
 
@@ -2156,29 +3148,31 @@ function startGame()
 
     makeAddPlayerButton();
 
-    addPlayerButtonDownEvent();
-    turn.playernum = 0;
-    turn.player = players[0];
-    players[0].display.style.backgroundColor = "lightblue";
+//    addPlayerButtonDownEvent();
+//    continueJoin("Unit");
+//    turn.player = players[0];
+//    players[0].display.style.backgroundColor = "lightblue";
 
     makeCardStatusDisplay();
     makeTurnResultDisplay();
 
-    makeBuyButton();
-    makeCapButton();
-    makePipeButton();
+//    makeBuyButton();
+//    makeCapButton();
+//    makePipeButton();
     makeDrillButton();
     makeNextButton();
     makeDrawButton();
     makeCardDisplay();
     makeDebugButton();
     makeFineButton();
+    makeConnectButton();
     for (var i = 0; i < plots.length; i++) {
         var p = plots[i];
 
         for (var j = 0; j < p.holes.length; j++) {
             var h = p.holes[j];
             h.well = {};
+            h.num = j;
 
             var x = document.createElement("BUTTON");
             initWellButton(x);
@@ -2219,16 +3213,18 @@ function startGame()
     makeRotationDisplay();
 
     drillAnimation = new component(36, 167, "derrick3_nobit.png", 0, 0, "image");
-    drillAnimation.active = 0;
+    drillAnimation.active = false;
+    oilstrike = new component(100, 50, "spill.png", 570, 895, "image");
+    oilstrike.active = false;
 
     var side = -1;
     for (var i = 0; i < cards.length; i++) {
         shuffleAnimation[i] = new component(192, 50, "wildcat_shuffle.png", 520 + i / 2 + (side * 75), 470 - i, "image");
-        shuffleAnimation[i].active = 0;
+        shuffleAnimation[i].active = false;
         side = -side;
     }
 
-    oilspill = new component(80, 40, "spill.png", 500, 900, "image");
+    oilspill = new component(120, 60, "spill.png", 570, 895, "image");
 
     initDeck();
 
@@ -2254,14 +3250,13 @@ function startShuffleAnimation()
     function shufflecards() {
         if (shufflecount == cards.length) {
             for (var i = 0; i < cards.length; i++) {
-                shuffleAnimation[i].active = 0;
+                shuffleAnimation[i].active = false;
             }
-
             clearInterval(siId);
             myCardIcon.image.src = "wildcat.png";
         }
         else {
-            shuffleAnimation[shufflecount].active = 1;
+            shuffleAnimation[shufflecount].active = true;
             shuffleAnimation[shufflecount].update();
             shufflecount++;
         }
@@ -2290,6 +3285,7 @@ function startMoneyAnimation(from, to, amount)
     m.style.textAlign = "center";
     m.style.color = "red";
     m.innerText = "$300000";
+
     moneyarray.push(m);
     document.body.appendChild(m);
 
@@ -2328,7 +3324,7 @@ function startMoneyAnimation(from, to, amount)
                 document.body.removeChild(money);
                 arrayRemove(moneyarray, money);
                 i--;
-                money.remove();
+                money.remove();     // redundant to removeChild(money) above?
 
                 if (moneyarray.length == 0) {
                     clearInterval(miId);
@@ -2376,11 +3372,14 @@ function startDrillAnimation(hole)
     drillAnimation.y = topatopa;
     // drillAnimation.width never changes
     drillAnimation.height = height;
-    drillAnimation.active = 1;
-    cursorsave = curcursor;
-    setCursor(cursorKingOil);
+    drillAnimation.active = true;
     drillAnimation.image.src = "derrick3_nobit.png";
     drillAnimation.update();
+
+    cursorsave = curcursor;
+    setCursor(cursorKingOil);
+
+    removeDrillButtons();
 
     frame = 3;
     shake = 750 / shakeInterval;
@@ -2406,14 +3405,16 @@ function startDrillAnimation(hole)
 
         if (frame == -1) {
             clearInterval(iId);
-            drillAnimation.active = 0;
+            drillAnimation.active = false;
+            oilstrike.active = false;
             if (cursorsave != null) {
                 setCursor(cursorsave);
                 cursorsave = null;
-            }
 
-            oilspill.x = 500;
-            oilspill.y = 900;
+                if (turn.drillsused != turn.card.ndrills && !turn.player.bot) {
+                    enableDrillButtons();
+                }
+            }
         }
         else if (frame == depth || frame == 1) {
             shakeOffset = 0;
@@ -2421,8 +3422,9 @@ function startDrillAnimation(hole)
             completeDrill(h);
 
             if (h.drill > 0) {
-                oilspill.x = drillAnimation.x - 20;
-                oilspill.y = drillAnimation.y + height - 20;
+                oilstrike.x = drillAnimation.x - 20;
+                oilstrike.y = drillAnimation.y + height - 20;
+                oilstrike.active = true;
             }
             else {
                 topatopa += 20;
@@ -2458,6 +3460,10 @@ function keyDownEvent(e)
 {
     debugmsg.innerText = "KEY DOWN " + e.code;
 
+    if (sandbox != 2) {
+        return;
+    }
+
     if (e.code == "KeyD") {
         dummyhole.drill = drillnum;
         startDrillAnimation(dummyhole);
@@ -2469,20 +3475,16 @@ function keyDownEvent(e)
     else if (e.code == "KeyS") {
         startShuffleAnimation();
     }
-    else if (e.code == "KeyW") {
-//debugmsg.innerText += "'" + players[0].color + "'";
-//debugmsg.innerText += "'" + players[1].color + "'";
-//debugmsg.innerText += "'" + players[2].color + "'";
-//debugmsg.innerText += "'" + players[3].color + "'";
-//if (players[2].display != null)
-//debugmsg.innerText += "'" + players[0].display + "'";
-//debugmsg.innerText += "'" + players[0].display.firstElementChild + "'\n";
-//debugmsg.innerText += "'" + players[1].display + "'";
-//debugmsg.innerText += "'" + players[1].display.firstElementChild + "'\n";
-//debugmsg.innerText += "'" + players[2].display + "'";
-//debugmsg.innerText += "'" + players[2].display.firstElementChild + "'\n";
-//debugmsg.innerText += "'" + players[3].display + "'";
-//debugmsg.innerText += "'" + players[3].display.firstElementChild + "'";
+    else if (e.code == "KeyA") {
+        drillAllHoles();
+    }
+    else if (e.code == "KeyX") {
+        while (tmpwells.length) {
+            tmpwells.pop();
+        }
+        while (tmpcaps.length) {
+            tmpcaps.pop();
+        }
     }
 }
 
@@ -2507,13 +3509,7 @@ var myGameArea = {
             myGameArea.x = e.pageX - myGamePiece.xoffset;
             myGameArea.y = e.pageY - myGamePiece.yoffset;
             debugmsg.innerText = "X: " + e.pageX + " Y: " + e.pageY;
-        })
-//        window.addEventListener('mousedown', function (e) {
-//            myGamePiece.image.src = "derrick1.png";
-//        });
-//        window.addEventListener('mouseup', function (e) {
-//            myGamePiece.image.src = "derrick0.png";
-//        });
+        });
     },
     clear: function() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -2521,7 +3517,7 @@ var myGameArea = {
     stop: function() {
         clearInterval(this.interval);
     }
-}
+};
 
 function component(width, height, image, x, y, type, xoffset, yoffset)
 {
@@ -2537,7 +3533,7 @@ function component(width, height, image, x, y, type, xoffset, yoffset)
     this.xoffset = xoffset;
     this.yoffset = yoffset;
     this.update = function() {
-        ctx = myGameArea.context;
+        var ctx = myGameArea.context;
         if (this.type == "image") {
             ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
         }
@@ -2555,9 +3551,12 @@ function updateGameArea()
     myBackground.update();
     myBackground2.update();
     myDerrickIcon.update();
-    myShedIcon.update();
-    myCapIcon.update();
-    myPipeIcon.update();
+    if (turn.playernum != -1) {
+        myShedIcon.update();
+        myCapIcon.update();
+        myPipeIcon.update();
+    }
+    myConnectIcon.update();
     myNextIcon.update();
     myDrawIcon.update();
     myCardIcon.update();
@@ -2571,13 +3570,22 @@ function updateGameArea()
     for (var i = 0; i < caps.length; i++) {
         caps[i].update();
     }
+    for (var i = 0; i < tmpcaps.length; i++) {
+        tmpcaps[i].update();
+    }
     for (var i = 0; i < wells.length; i++) {
         wells[i].update();
+    }
+    for (var i = 0; i < tmpwells.length; i++) {
+        tmpwells[i].update();
     }
     for (var i = 0; i < cards.length; i++) {
         if (shuffleAnimation[i].active) {
             shuffleAnimation[i].update();
         }
+    }
+    if (oilstrike.active) {
+        oilstrike.update();
     }
     if (drillAnimation.active) {
         drillAnimation.update();
@@ -2609,16 +3617,21 @@ function setCursor(c)
     curcursor = c;
 
     if (c == cursorKingOil) {
-        myGamePiece.enabled = 0;
+        myGamePiece.enabled = false;
     }
     else {
-        myGamePiece.enabled = 1;
+        myGamePiece.enabled = true;
     }
     myGamePiece.image.src = c.imagesrc;
     myGamePiece.width = c.width;
     myGamePiece.height = c.height;
     myGamePiece.xoffset = c.xoffset;
     myGamePiece.yoffset = c.yoffset;
+//    if (myGamePiece.enabled) {
+//        myGamePiece.x = myGameArea.x - myGamePiece.xoffset;
+//        myGamePiece.y = myGameArea.y - myGamePiece.yoffset;
+//        myGamePiece.update();
+//    }
 }
 
 </script>
@@ -2638,7 +3651,7 @@ function setCursor(c)
 <pre id="ADTText"> Autodraw </pre>
 <input id="autodrawToggle" type="checkbox"/>
 <pre id="STText"> Sound Effects </pre>
-<input id="soundToggle" type="checkbox" checked="true"/>
+<input id="soundToggle" type="checkbox"/>
 <pre id="CSTText"> Continuous<br>      Shuffle </pre>
 <input id="shuffleToggle" type="checkbox"/>
 </div>

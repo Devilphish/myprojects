@@ -277,3 +277,5 @@ const plots = [
     ]
   }
 ]
+
+module.exports = { plots };

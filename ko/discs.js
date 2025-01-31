@@ -159,3 +159,5 @@ const discs = [
     [ 0, 0, 0, 0, 0, 0, 1 ]
   ]
 ]
+
+module.exports = { discs };

@@ -64,3 +64,5 @@ var cards = [
     { type: "production", royalty: 4000, ndrills: 4, plotbuy: 0,
       imagesrc: "card_production_4000_4_none_shopped.png" },
 ]
+
+module.exports = { cards };

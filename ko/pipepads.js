@@ -72,3 +72,4 @@ var pipepads = [
     { id: "17-18", plotnumA: 17, plotnumB: 18, owner: -1, pipes: [],
       pipepadleft: 724, pipepadtop: 784, pipeorientation: "horizontal" },
 ]
+module.exports = { pipepads };
