@@ -3,6 +3,11 @@
 <head>
 <style>
 
+canvas { 
+    border:1px solid #d3d3d3;
+    background-color: #222222;
+}   
+
 </style>
 </head>
 <body onload="startWheel()">
@@ -85,7 +90,9 @@ var nfixspins = 2;
 
 var clickerdeg;
 
-function neon_log(x, y, h, w, vskew, hskew, color, bgcolor)
+var context;
+
+function neon_log(x, y, w, h, vskew, hskew, color, bgcolor)
 {
     var borderwidth = Math.max(Math.abs(vskew), Math.abs(hskew)) + 1;
 
@@ -93,8 +100,8 @@ function neon_log(x, y, h, w, vskew, hskew, color, bgcolor)
     log.style.position = "absolute";
     log.style.left = x + "px";
     log.style.top = y + "px";
-    log.style.height = h + "px";
     log.style.width = w + "px";
+    log.style.height = h + "px";
     log.style.fontFamily = '"Seven Segment"';
 //    log.style.font = "bold 20px arial,serif";
     log.style.font = "bold 20px \"Seven Segment\",regular";
@@ -154,21 +161,138 @@ function neon_log(x, y, h, w, vskew, hskew, color, bgcolor)
     return log;
 }
 
+function neon_line(xs, ys, xe, ye)
+{
+    var w = Math.abs(xs - xe);
+    var h = Math.abs(ys - ye);
+
+    var rgbset = [
+        "#ffffff", "#80ff80", "#60cf60", "#40af40", "#208f20", "#006f00"
+    ];
+
+    for (var i = 0; i < 6; i++) {
+        context.strokeStyle = rgbset[i];
+        context.beginPath();
+        if (w > h) {
+            // vertical edge on end
+            context.moveTo(xs, ys + i);
+            context.lineTo(xe, ye + i);
+            context.stroke();
+            context.beginPath();
+            context.moveTo(xs, ys - 1 - i);
+            context.lineTo(xe, ye - 1 - i);
+        }
+        else {
+            // horizontal edge on end
+            context.moveTo(xs + i, ys);
+            context.lineTo(xe + i, ye);
+            context.stroke();
+            context.beginPath();
+            context.moveTo(xs - 1 - i, ys);
+            context.lineTo(xe - 1 - i, ye);
+        }
+        context.stroke();
+    }
+}
+
 function startWheel()
 {
+//var link = document.createElement('link');
+//link.setAttribute('rel', 'stylesheet');
+//link.setAttribute('type', 'text/css');
+//link.setAttribute('href', '/users/roberttivy/Library/Fonts?family=Seven Segment:300,400,700');
+//document.head.appendChild(link);
+
+//const url_to_font_name = '/users/roberttivy/Library/Fonts/Seven Segment.ttf';
+//const font_name = new FontFace('Seven Segment', `url(${url_to_font_name})`);
+//const font_name = new FontFace("Seven Segment", url_to_font_name);
+//document.fonts.add(font_name);
+//font_name.load().then(
+//  () => {
+//    console.log('loaded');
+//    cardmsg.textContent += `Seven Segment font: ${font_name.status}\n`; // > Seven Segment font: loaded
+
+//    const ctx = canvas.getContext("2d");
+//    ctx.font = '36px "FontFamily Bitter"';
+//    ctx.fillText("Bitter font loaded", 20, 50);
+//  },
+//  (err) => {
+//    console.log('not loaded');
+//    console.error(err);
+//  },
+//);
+// Work that does not require 'font_name' to be loaded…
+// await font_name.load()
+// Work that requires 'font_name' to be loaded…
+
+    var w = 1250;
+    var h = 700;
+
+    canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    canvas.backgroundColor = "#222222";
+    document.body.insertBefore(canvas, document.body.childNodes[0]);
+
+    context = canvas.getContext("2d");
+//    context.fillStyle = "#a07070";
+//    context.fillRect(100, 100, 200, 200);
+
+    // mid sq
+    neon_line(w / 4, h / 4, w * 3 / 4, h / 4);
+    neon_line(w * 3 / 4, h / 4, w * 3 / 4, h * 3 / 4);
+    neon_line(w * 3 / 4, h * 3 / 4, w / 4, h * 3 / 4);
+    neon_line(w / 4, h * 3 / 4, w / 4, h / 4);
+
+    // corner diag
+    neon_line(w * 3 / 4, h / 4, w, 0);
+    neon_line(w * 3 / 4, h * 3 / 4, w, h);
+    neon_line(0, 0, w / 4, h / 4);
+    neon_line(0, h, w / 4, h * 3 / 4);
+
+    // l/r mid diag
+    neon_line(w * 3 / 4 + 6, h / 4 + (h / 2 / 3), w, h / 3);
+    neon_line(w * 3 / 4 + 6, h / 4 + (h / 2 * 2 / 3), w, h * 2 / 3);
+    neon_line(w / 4 - 6, h / 4 + (h / 2 / 3), 0, h / 3);
+    neon_line(w / 4 - 6, h / 4 + (h / 2 * 2 / 3), 0, h * 2 / 3);
+
+    // top/bot mid diag
+    neon_line(w / 4 + (w / 2 / 3), h / 4 - 6, w / 3, 0);
+    neon_line(w / 4 + (w / 2 * 2 / 3), h / 4 - 6, w * 2 / 3, 0);
+    neon_line(w / 4 + (w / 2 / 3), h * 3 / 4 + 6, w / 3, h);
+    neon_line(w / 4 + (w / 2 * 2 / 3), h * 3 / 4 + 6, w * 2 / 3, h);
+
     var tw = 600;
     var th = 600;
     var tx = 300;
     var ty = 30;
     var tileName = "wheel.png";
 
-    click = document.getElementById("click");
-    click.load();
+//    click = document.getElementById("click");
+//    click.load();
 
-    var wheeltile = new tile(tw, th, tileName, tx, ty, tileName, 0, 0);
+    var wheeltile = new tile(tw, th, tileName, tx, ty, tileName);
     rotateimage = wheeltile.image;
 
-    cardtile = new tile(100, 150, "8S.png", 180, 70, "cardimage", 0, 0);
+//    var cardbg = neon_log(165, 35, 120, 170, 2, 2, "#888888", "#444444");
+    cardtile = new tile(100, 150, "8S.png", 180, 70, "cardimage");
+
+    var log = document.createElement("PRE");
+    log.style.position = "absolute";
+    log.style.left = 170 + "px";
+    log.style.top = 40 + "px";
+    log.style.width = 120 + "px";
+    log.style.height = 170 + "px";
+    log.style.fontFamily = '"Seven Segment"';
+//    log.style.font = "bold 20px arial,serif";
+    log.style.font = "bold 20px \"Seven Segment\",regular";
+    log.style.color = "#88888";
+    log.style.backgroundColor = "#888888";
+    log.style.opacity = "0.5";
+    log.style.border = "0px";
+    log.style.borderRadius = "7px";
+//    log.style.padding = "4px";
+    document.body.insertBefore(log, cardtile.image);
 
     window.addEventListener('keydown', keyDownEvent);
     window.addEventListener('keyup', keyUpEvent);
@@ -297,13 +421,13 @@ function startWheel()
         timestamp = now;
     });
 
-    cardmsg = neon_log(165, 0, 25, 135, 2, 2, "#80ff00", "#107010");
-    wheelmsg = neon_log(840, 10, 43, 140, 2, -2, "#80ff00", "#107010");
-    statusmsg = neon_log(940, 90, 85, 220, 1, -2, "#80ff00", "#107010");
-    projmsg = neon_log(940, 195, 160, 280, 0, -2, "#ffc0c0", "#a01010"); //r
-//    projmsg = neon_log(940, 195, 160, 280, 0, -2, "#80ff00", "#107010"); //g
-//    projmsg = neon_log(940, 195, 160, 280, 0, -2, "#c0c0ff", "#3030c0"); //b
-    coordmsg = neon_log(940, 375, 140, 230, -1, -2, "#80ff00", "#107010");
+    cardmsg = neon_log(157, 0, 135, 25, 2, 2, "#80ff00", "#107010");
+    wheelmsg = neon_log(840, 10, 140, 43, 2, -2, "#80ff00", "#107010");
+    statusmsg = neon_log(920, 115, 220, 85, 1, -2, "#80ff00", "#107010");
+    projmsg = neon_log(940, 245, 280, 160, 0, -2, "#ffc0c0", "#a01010"); //r
+//    projmsg = neon_log(940, 195, 280, 160, 0, -2, "#80ff00", "#107010"); //g
+//    projmsg = neon_log(940, 195, 280, 160, 0, -2, "#c0c0ff", "#3030c0"); //b
+    coordmsg = neon_log(920, 475, 230, 140, -1, -2, "#80ff00", "#107010");
 
     projmsg.addEventListener("mousedown", toggleCheat);
     coordmsg.addEventListener("mousedown", toggleCheat);
@@ -883,7 +1007,7 @@ function printCard(rot)
     wheelmsg.innerHTML = "  RPM: " + Math.round(rpm) + "\n  rot: " + frunc(rotateimage.rot, 1);
 }
 
-function tile(width, height, image, x, y, type, xoffset, yoffset)
+function tile(width, height, image, x, y, type)
 {
     this.image = document.getElementById(type);
 //    this.image.addEventListener("mouseenter", tileEnter);
@@ -897,9 +1021,6 @@ function tile(width, height, image, x, y, type, xoffset, yoffset)
     this.image.style.width = width + "px";
     this.image.style.height = height + "px";
 }
-
-//<audio id="click" src="mixkit-camera-shutter-click-1133.wav">
-//<audio id="click" src="mixkit-classic-click-1117.wav">
 
 </script>
 
@@ -917,5 +1038,6 @@ function tile(width, height, image, x, y, type, xoffset, yoffset)
   <button id="gobutton"></button>
 </div>
 <audio id="click" src="mixkit-camera-shutter-click-1133.wav">
+//<audio id="click" src="mixkit-classic-click-1117.wav">
 </body>
 </html>
