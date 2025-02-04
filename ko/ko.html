@@ -17,13 +17,23 @@ body {
 </head>
 <body onload="startGame()">
 
-<script src="discs.js"></script>
-<script src="plots.js"></script>
-<script src="pipepads.js"></script>
-<script src="cards.js"></script>
-<script src="rotation.js"></script>
+<!--
+<script type="text/javascript" src="http://localhost:8000/discs.js"></script>
+<script type="text/javascript" src="http://localhost:8000/plots.js"></script>
+<script type="text/javascript" src="http://localhost:8000/pipepads.js"></script>
+<script type="text/javascript" src="http://localhost:8000/cards.js"></script>
+<script type="text/javascript" src="http://localhost:8000/rotation.js"></script>
+-->
+<script type="text/javascript" src="discs.js"></script>
+<script type="text/javascript" src="plots.js"></script>
+<script type="text/javascript" src="pipepads.js"></script>
+<script type="text/javascript" src="cards.js"></script>
+<script type="text/javascript" src="rotation.js"></script>
 
 <script>
+
+//var host = 'localhost';
+var host = '192.168.5.171';
 
 var gclientId = -1;
 
@@ -31,6 +41,9 @@ var sandbox = 0;
 var debugButton;
 var fineButton;
 var randomButton;
+
+var chatdiv;
+var chatinput;
 
 var detenterotationinput = [];
 var drillAnimation;
@@ -1462,7 +1475,9 @@ function wellButtonUpEvent()
         }
     }
     else if (curcursor.mode == "cap") {
-        putAwayCap();
+        if (!(curstate.autotoolEnable && turn.player.clientId == gclientId && !turn.player.bot && turn.capsrequired > 0)) {
+            putAwayCap();
+        }
         if (gameMode != "draw") {
             actionMode();
         }
@@ -1578,6 +1593,25 @@ function httpRequestWait()
                 detenterotationinput[2].setAttribute("value", waitResponse.disc2);
 
                 errmsg.push("httpRequestWait rotation_OK disc 0 " + detenterotationinput[0].value + " disc 1 " + detenterotationinput[1].value + " disc 2 " + detenterotationinput[2].value);
+                updatePlayersDisplay();
+
+                break;
+
+              case "chat_OK":
+                var name;
+errmsg.push("chat_OK msg [" + waitResponse.msg + "]");
+updatePlayersDisplay();
+                if (Number(waitResponse.player) == -1) {
+                    name = "client " + waitResponse.clientId;
+                }
+                else {
+                    name = players[Number(waitResponse.player)].name;
+                }
+
+                chatdiv.innerText += name + ": " + waitResponse.msg + "\n";
+
+                var height = Number(chatdiv.style.height.substr(0, chatdiv.style.height.indexOf("p")));
+                chatdiv.scrollTop += height;
 
                 break;
 
@@ -1594,6 +1628,7 @@ function httpRequestWait()
                 }
 
                 errmsg.push("httpRequestWait namechange_OK playernum " + waitResponse.player + " name " + waitResponse.name);
+                updatePlayersDisplay();
 
                 break;
 
@@ -1606,7 +1641,7 @@ function httpRequestWait()
         }
     }
 
-    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=wait", true);
+    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=wait", true);
     xhttp.send();
 }
 
@@ -1643,7 +1678,38 @@ function httpRequestRendezvous(callback)
         }
     }
 
-    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=rendezvous", true);
+    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=rendezvous", true);
+    xhttp.send();
+}
+
+function httpRequestChat(msg, callback)
+{
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            response = true;
+            var chatResponse = JSON.parse(this.responseText);
+
+            switch (chatResponse.status) {
+              case "chat_OK":
+//                errmsg.push("httpRequestChat chat_OK clientId=" + chatResponse.clientId);
+//                updatePlayersDisplay();
+
+                var msg = chatResponse.msg;
+
+                httpRequestRendezvoud(callback);
+
+                break;
+
+              default:
+                errmsg.push("httpRequestChat " + connectResponse.status);
+                break;
+            }
+        }
+    }
+
+    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=chat&msg=" + msg, true);
     xhttp.send();
 }
 
@@ -1686,7 +1752,7 @@ function httpRequestConnect()
         }
     }
 
-    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=-1&action=connect", true);
+    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=-1&action=connect", true);
     xhttp.send();
 }
 
@@ -1717,7 +1783,7 @@ function httpRequestNamechange(player, callback)
         }
     }
 
-    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + players.indexOf(player) + "&action=namechange&name=" + player.name, true);
+    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + players.indexOf(player) + "&action=namechange&name=" + player.name, true);
     xhttp.send();
 }
 
@@ -1749,7 +1815,7 @@ function httpRequestRotation(callback)
         }
     }
 
-    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=-1&action=rotation&disc0=" + detenterotationinput[0].value + "&disc1=" + detenterotationinput[1].value + "&disc2=" + detenterotationinput[2].value, true);
+    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=-1&action=rotation&disc0=" + detenterotationinput[0].value + "&disc1=" + detenterotationinput[1].value + "&disc2=" + detenterotationinput[2].value, true);
     xhttp.send();
 }
 
@@ -1776,7 +1842,7 @@ function httpRequestJoin(name, callback)
         }
     }
 
-    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=-1&action=join&name=" + name, true);
+    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=-1&action=join&name=" + name, true);
     xhttp.send();
 }
 
@@ -1799,7 +1865,7 @@ function httpRequestDrill(hole, callback)
         }
     }
 
-    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=drill&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
+    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=drill&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
     xhttp.send();
 }
 
@@ -1822,7 +1888,7 @@ function httpRequestPipe(pipepad, callback)
         }
     }
 
-    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=pipe&pipepadnum=" + pipepads.indexOf(pipepad), true);
+    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=pipe&pipepadnum=" + pipepads.indexOf(pipepad), true);
     xhttp.send();
 }
 
@@ -1845,7 +1911,7 @@ function httpRequestPipeRemove(pipepad, callback)
         }
     }
 
-    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=piperemove&pipepadnum=" + pipepads.indexOf(pipepad), true);
+    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=piperemove&pipepadnum=" + pipepads.indexOf(pipepad), true);
     xhttp.send();
 }
 
@@ -1868,7 +1934,7 @@ function httpRequestCap(hole, callback)
         }
     }
 
-    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=cap&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
+    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=cap&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
     xhttp.send();
 }
 
@@ -1892,7 +1958,7 @@ function httpRequestDraw(callback)
         }
     }
 
-    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=draw", true);
+    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=draw", true);
     xhttp.send();
 }
 
@@ -1922,7 +1988,7 @@ function httpRequestBuy(plot, callback)
         }
     }
 
-    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=buy&plot=" + (plot.plotnum - 1), true);
+    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=buy&plot=" + (plot.plotnum - 1), true);
     xhttp.send();
 }
 
@@ -1947,7 +2013,7 @@ function httpRequestNext()
         }
     }
 
-    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=next", true);
+    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=next", true);
     xhttp.send();
 }
 
@@ -1970,7 +2036,7 @@ function httpRequestFine(callback)
         }
     }
 
-    xhttp.open("GET", "http://localhost:8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=fine", true);
+    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=fine", true);
     xhttp.send();
 }
 
@@ -3226,11 +3292,66 @@ function startGame()
 
     oilspill = new component(120, 60, "spill.png", 570, 895, "image");
 
+    chatdiv = document.createElement("DIV");
+    chatdiv.style.border = "3px solid #6060ff";
+    chatdiv.style.borderRadius = "7px";
+    chatdiv.style.width = 240 + "px";
+    chatdiv.style.height = 50 + "px";
+    chatdiv.style.position = "absolute";
+    chatdiv.style.left = 770 + "px";
+    chatdiv.style.top = 120 + "px";
+    chatdiv.style.backgroundColor = "grey";
+    chatdiv.style.opacity = "1.0";
+    chatdiv.style.font = "bold 20px arial,serif";
+    chatdiv.style.textAlign = "left";
+    chatdiv.style.color = "#a0a0ff";
+    chatdiv.style.overflow = "scroll";
+    chatdiv.innerText = "";
+
+    document.body.appendChild(chatdiv);
+
+    chatinput = document.createElement("INPUT");
+    chatinput.style.border = "3px solid #6060ff";
+    chatinput.style.borderRadius = "7px";
+    chatinput.style.width = 240 + "px";
+    chatinput.style.height = 20 + "px";
+    chatinput.style.position = "absolute";
+    chatinput.style.left = 770 + "px";
+    chatinput.style.top = 175 + "px";
+    chatinput.style.backgroundColor = "grey";
+    chatinput.style.opacity = "1.0";
+    chatinput.style.font = "bold 20px arial,serif";
+    chatinput.style.textAlign = "left";
+    chatinput.style.color = "#ffa0a0";
+    chatinput.setAttribute("value", "chat here");
+    chatinput.onchange = function () {
+        var newmsg = this.value;
+        var name;
+
+        if (turn.player.name == undefined) {
+            name = "client " + gclientId;
+        }
+        else {
+            name = turn.player.name;
+        }
+
+        chatdiv.innerText += name + ": " + this.value + "\n";
+        chatinput.value = "";
+
+        var height = Number(chatdiv.style.height.substr(0, chatdiv.style.height.indexOf("p")));
+        chatdiv.scrollTop += height;
+
+        httpRequestChat(newmsg, null);
+    }
+
+    document.body.appendChild(chatinput);
+
     initDeck();
 
     updatePlayersDisplay();
 
     myTurnResultDiv.innerText = "START GAME";
+    myTurnResultDiv.innerText += "\nURL " + window.location.href;
     myGameArea.start();
 }
 

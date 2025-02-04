@@ -54,6 +54,7 @@ var cardNone = {
 var pipepadNone = {
     id: "none"
 }
+
 var turn = {
     playernum: -1,
     player: {},
@@ -79,7 +80,7 @@ var server = http.createServer(function (req, res)
     res.writeHead(200, {'Content-Type': 'text/html', 'Access-Control-Allow-Origin': '*' });
     var q = url.parse(req.url, true).query;
 
-    console.log(req.url);
+//    console.log(req.url);
 
 // playing around
 //    for (let key in req) {
@@ -114,7 +115,7 @@ var server = http.createServer(function (req, res)
         if (hole.drill == -1) {
             q.drillDepth = drillHole(hole);
             q.status = "drill_OK";
-            q.turn = turn;
+//            q.turn = turn;
         }
         else {
             q.drillDepth = -1;
@@ -138,7 +139,7 @@ var server = http.createServer(function (req, res)
         if (hole.drill > 0) {
             capWell(hole);
             q.status = "cap_OK";
-            q.turn = turn;
+//            q.turn = turn;
         }
         else {
             q.status = "cap_ENOWELL";
@@ -185,7 +186,7 @@ var server = http.createServer(function (req, res)
         if (plot.owner == -1) {
             buyPlot(plot);
             q.status = "buy_OK";
-            q.turn = turn;
+//            q.turn = turn;
         }
         else {
             q.status = "buy_EALREADYOWNED";
@@ -226,6 +227,17 @@ var server = http.createServer(function (req, res)
             // run bot player in 20 ms
             botIId = setInterval(runBot, 20);
         }
+
+        break;
+
+      case "chat":
+        printHeader(q);
+
+        q.status = "chat_OK";
+
+        processWaitlist(q);
+
+        console.log("status: " + q.status + " clientId: " + q.clientId);
 
         break;
 
@@ -339,6 +351,8 @@ var server = http.createServer(function (req, res)
     }
 });
 
+//const host = '192.168.5.171';
+//server.listen(8080, host);
 server.listen(8080);
 
 startGame();
