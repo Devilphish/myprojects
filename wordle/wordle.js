@@ -6,7 +6,7 @@ for (var i = 0; i < 5; i++) {
   d.style.width = "48px";
   d.style.height = "40px";
   d.style.position = "absolute";
-  d.style.left = 100 + (i * 58) + "px";
+  d.style.left = 100 + (i * 57) + "px";
   d.style.top = "50px";
   d.style.color = "white";
   d.style.backgroundColor = "#00000";
@@ -20,6 +20,63 @@ for (var i = 0; i < 5; i++) {
   letters[i] = d;
 }
 
+var d = document.createElement("DIV");
+d.style.width = "200px";
+d.style.height = "44px";
+d.style.position = "absolute";
+d.style.left = "415px";
+d.style.top = "50px";
+d.style.color = "white";
+d.style.backgroundColor = "#00000";
+d.style.border = "2px solid #3a3a3c";
+d.style.font = "17px arial bold";
+d.style.textAlign = "center";
+d.style.paddingTop = "4px";
+d.style.paddingLeft = "4px";
+d.innerHTML = "Use '.' or ' ' (space) for 'any letter'";
+document.body.appendChild(d);
+
+var f = document.createElement("IFRAME");
+f.style.width = "1000px";
+f.style.height = "658px";
+f.style.position = "absolute";
+f.style.left = "0px";
+f.style.top = "12px";
+f.style.color = "white";
+f.style.backgroundColor = "#00000";
+f.style.border = "0px";
+document.body.appendChild(f);
+var mframedoc = f.contentDocument;
+var mframewin = f.contentWindow;
+
+f = document.createElement("IFRAME");
+f.style.width = "163px";
+f.style.height = "480px";
+f.style.position = "absolute";
+f.style.left = "420px";
+f.style.top = "133px";
+f.style.color = "white";
+f.style.backgroundColor = "#00000";
+f.style.border = "2px solid #3a3a3c";
+document.body.appendChild(f);
+var oframedoc = f.contentDocument;
+var oframewin = f.contentWindow;
+
+var d = document.createElement("DIV");
+d.style.width = "100px";
+d.style.height = "22px";
+d.style.position = "absolute";
+d.style.left = "448px";
+d.style.top = "110px";
+d.style.color = "white";
+d.style.backgroundColor = "#00000";
+d.style.font = "17px arial bold";
+d.style.textAlign = "center";
+d.style.paddingTop = "4px";
+d.style.paddingLeft = "4px";
+d.innerHTML = "OBSCURE";
+document.body.appendChild(d);
+
 var canvas = document.createElement("canvas");
 canvas.style.width = "1000px";
 canvas.style.height = "666px";
@@ -32,18 +89,37 @@ var letterIndex = 0;
 var guess;
 var rowIndex = 110;
 
-function drawWord(word)
+function drawWord(word, type)
 {
+    var rowInc;
     var divs = [];
 
     for (var i = 0; i < 5; i++) {
+        var doc;
         var d = document.createElement("DIV");
+
+        if (type == "main") {
+            d.style.width = "52px";
+            d.style.height = "44px";
+            d.style.left = 100 + (i * 57) + "px";
+            d.style.top = rowIndex + "px";
+            d.style.paddingTop = "8px";
+            d.style.font = "32px arial bold";
+            rowInc = 57;
+            d.doc = mframedoc;
+        }
+        else {  // "obscure"
+            d.style.width = "26px";
+            d.style.height = "22px";
+            d.style.left = 10 + (i * 29) + "px";
+            d.style.top = rowIndex + "px";
+            d.style.paddingTop = "4px";
+            d.style.font = "16px arial bold";
+            rowInc = 29;
+            d.doc = oframedoc;
+        }
         d.style.transform = "scaleY(0.0)";
-        d.style.width = "52px";
-        d.style.height = "44px";
         d.style.position = "absolute";
-        d.style.left = 100 + (i * 58) + "px";
-        d.style.top = rowIndex + "px";
         d.style.color = "white";
         if (guess[i] == ".") {
             d.style.backgroundColor = "#b59f3b";
@@ -51,12 +127,10 @@ function drawWord(word)
         else {
             d.style.backgroundColor = "#538d4e";
         }
-        d.style.font = "32px arial bold";
         d.style.textAlign = "center";
-        d.style.paddingTop = "7px";
         d.innerHTML = word[i];
 
-        document.body.appendChild(d);
+        d.doc.body.appendChild(d);
 
         divs[i] = d;
 
@@ -65,7 +139,7 @@ function drawWord(word)
             { transform: "scaleY(1.0)" },
         ], {
             duration: 500,
-            delay: 200 * i,
+            delay: 100 * i,
         });
         animation.onfinish = (event) => {
             event.target.element.style.transform = "scaleY(1.0)";
@@ -75,7 +149,7 @@ function drawWord(word)
         animation.play();
     }
 
-    rowIndex += 58;
+    rowIndex += rowInc;
 
     return divs;
 }
@@ -101,7 +175,8 @@ function keyDownEvent(e)
         while (solutionDivs.length > 0) {
            var divs = solutionDivs.pop();
            for (var i = 0; i < 5; i++) {
-               document.body.removeChild(divs[i]);
+               var d = divs[i];
+               d.doc.body.removeChild(d);
            }
         }
         rowIndex = 110;
@@ -196,7 +271,7 @@ function searchWordles(guess)
 
         if (match) {
             words.push(word);
-            solutionDivs.push(drawWord(word.toUpperCase()));
+            solutionDivs.push(drawWord(word.toUpperCase(), "main"));
 
             console.log(word);
         }
@@ -205,6 +280,7 @@ function searchWordles(guess)
         console.log("No matching words");
     }
 
+    rowIndex = 10;
     for (var word of Oa) {
         match = true;
         for (var l = 0; l < 5; l++) {
@@ -219,6 +295,8 @@ function searchWordles(guess)
 
         if (match) {
             words.push(word + "*");
+            solutionDivs.push(drawWord(word.toUpperCase(), "obscure"));
+
             console.log(word + '*');
         }
     }
