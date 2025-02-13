@@ -33,7 +33,7 @@ body {
 <script>
 
 //var host = 'localhost';
-var host = '192.168.5.171';
+var host = window.location.hostname;
 
 var gclientId = -1;
 
@@ -50,6 +50,8 @@ var drillAnimation;
 var shuffleAnimation = [];
 var myStatusButton;
 var myAddPlayerButton;
+var myHelpFrame;
+var myHelpButton;
 var myConnectButton;
 var myGamePiece;
 var myBackground;
@@ -401,8 +403,6 @@ var shedbuttons = [];
 function buyButtonDownEvent()
 {
     toolable = true;
-
-if (turn.removedpipepad == pipepadNone) errmsg.push("FOOBAR"); else errmsg.push("WHAAAT?");
 
     if (curcursor.type == "tool" && curcursor.mode != "buy") {
         toolable = false;
@@ -802,18 +802,18 @@ function nextButtonDownEvent()
 
 var botIId;
 
-function botNextSetInterval()
+function botNextSetTimeout()
 {
-    botIId = setInterval(botNext, 1000);
+    botIId = setTimeout(botNext, 1000);
 }
 
 function botNext()
 {
     if (drillAnimation.active) {
+        botIId = setTimeout(botNext, 1000);
+
         return;
     }
-
-    clearInterval(botIId);
 
     httpRequestNext();
 }
@@ -856,87 +856,86 @@ function botCap(callback)
     }
 }
 
-function botActionSetInterval()
+function botActionSetTimeout()
 {
-    botIId = setInterval(botAction, 1000);
+    botIId = setTimeout(botAction, 1000);
 }
 
 function botAction()
 {
     var callback;
 
-    clearInterval(botIId);
-
-    if (turn.card.type != "fire") {
-        if (turn.fineable) {
-            if (turn.card.plotbuy) {
-                callback = botBuyPlotSetInterval;
-            }
-            else {
-                callback = botNextSetInterval;
-            }
-
-            httpRequestFine(callback);
-
-            return;
-        }
-    }
-
-    if (turn.card.type == "fire") {
-        if (turn.capsrequired > 1) {
-            callback = botActionSetInterval;
+    if (turn.fineable) {
+        if (turn.card.plotbuy) {
+            callback = botBuyPlotSetTimeout;
         }
         else {
-            callback = botNextSetInterval;
+            callback = botNextSetTimeout;
         }
 
+        httpRequestFine(callback);
+
+        return;
+    }
+
+    switch (turn.card.type) {
+      case "fire":
         if (turn.capsrequired > 0) {
+            if (turn.capsrequired > 1) {
+                callback = botActionSetTimeout;
+            }
+            else {
+                callback = botNextSetTimeout;
+            }
+
             botCap(callback);
         }
         else {
-            botNextSetInterval();
-        }
-    }
-    else {
-        // "depletion" or "production" card
-        if (turn.card.type == "production" && turn.card.ndrills > (turn.drillsused + 1)) {
-            callback = botActionSetInterval;
-        }
-        else if (turn.card.plotbuy) {
-            callback = botBuyPlotSetInterval;
-        }
-        else {
-            callback = botNextSetInterval;
+            botNextSetTimeout();
         }
 
+        break;
+     
+      case "depletion":
+      case "production":
+        // maybe keep a running total of empty holes in player object
         var emptyHoles = nEmptyHoles(turn.player);
-        if (emptyHoles > 0 && (turn.drillsused == 0 || (turn.player.money > 18000 && emptyHoles > 3) || (turn.card.plotbuy && !(emptyHoles > 3 && turn.player.money < 30000)))) {
-            botDrill(callback);
+        if (emptyHoles > 0 &&
+            turn.drillsused < turn.card.ndrills &&
+            (turn.drillsused == 0 ||
+             (turn.player.money > 18000 && emptyHoles > 3) ||
+             (turn.card.plotbuy &&
+              !(emptyHoles > 3 && turn.player.money < 30000)))) {
+            botDrill(botActionSetTimeout);
         }
         else {
             if (turn.card.plotbuy) {
-                callback = botBuyPlotSetInterval;
+                botBuyPlot();
             }
             else {
-                callback = botNextSetInterval;
+                botNext();
             }
-            callback();
         }
+
+        break;
+     
+      default:
+        errmsg.push("BAD CARD TYPE '" + turn.card.type + "'");
+        updatePlayersDisplay();
+
+        break;
     }
 }
 
-function botBuyPlotSetInterval()
+function botBuyPlotSetTimeout()
 {
-    botIId = setInterval(botBuyPlot, 1000);
+    botIId = setTimeout(botBuyPlot, 1000);
 }
 
 function botBuyPlot()
 {
-    clearInterval(botIId);
-
     if (nEmptyHoles(turn.player) > 3 && turn.player.money < 30000) {
-//        botNextSetInterval();
-        httpRequestRendezvous(botNextSetInterval);
+        httpRequestRendezvous(botNextSetTimeout);
 
         return;
     }
@@ -947,11 +946,11 @@ function botBuyPlot()
             var callback;
 
             if (gameMode == "start") {
-                callback = botNextSetInterval;
+                callback = botNextSetTimeout;
             }
             else {
 // should be buy pipe or next
-                callback = botNextSetInterval;
+                callback = botNextSetTimeout;
             }
             httpRequestBuy(p, callback);
 
@@ -960,27 +959,24 @@ function botBuyPlot()
     }
 }
 
-function botDrawSetInterval()
+function botDrawSetTimeout()
 {
-    botIId = setInterval(botDraw, 1000);
+    botIId = setTimeout(botDraw, 1000);
 }
 
 function botDraw()
 {
     if (shuffleAnimation[0].active) {
+        botIId = setTimeout(botDraw, 1000);
+
         return;
     }
 
-    clearInterval(botIId);
-
     if (gameMode == "start") {
-        botBuyPlotSetInterval();
+        botBuyPlotSetTimeout();
     }
     else {
-//        drawcardButtonDownEvent();
-//        drawcardButtonUpEvent();
-
-        httpRequestDraw(botActionSetInterval);
+        httpRequestDraw(botActionSetTimeout);
 
         errmsg.push("botDraw called");
         updatePlayersDisplay();
@@ -1045,10 +1041,10 @@ function completeNext()
 
     if (turn.player.bot && turn.player.clientId == gclientId) {
         if (gameMode == "start") {
-            httpRequestRendezvous(botBuyPlotSetInterval);
+            httpRequestRendezvous(botBuyPlotSetTimeout);
         }
         else {
-            httpRequestRendezvous(botDrawSetInterval);
+            httpRequestRendezvous(botDrawSetTimeout);
         }
     }
 }
@@ -1185,7 +1181,7 @@ function completeDraw(card)
             if (!emptyfound) {
                 turn.fineable = 1;
 
-                errmsg.push("no empty drill sites available, must pay fine");
+                errmsg.push("no available drill sites, must pay fine");
             }
             else {
                 if (curstate.autotoolEnable && turn.player.clientId == gclientId && !turn.player.bot) {
@@ -1399,7 +1395,7 @@ function wellButtonDownEvent()
     }
 
     if (drillable) {
-        httpRequestDrill(h);
+        httpRequestDrill(h, null);
     }
     else if (capable) {
         httpRequestCap(h);
@@ -1408,24 +1404,25 @@ function wellButtonDownEvent()
     updatePlayersDisplay();
 }
 
-function continueDrill(h)
+function continueDrill(h, callback)
 {
-        h.drill = drillHole(h);
+    h.drill = drillHole(h);
 
-        if (curstate.drillAnimationEnable) {
-            startDrillAnimation(h);
-        }
-        else {
-            cursorsave = curcursor;
-            setCursor(drillCursors[h.drill]);
+    if (curstate.drillAnimationEnable) {
+        startDrillAnimation(h, callback);
+    }
+    else {
+        cursorsave = curcursor;
+        setCursor(drillCursors[h.drill]);
 
-            // count it before drilling
-            turn.drillsused++;
-            completeDrill(h);
-        }
+        // count it before drilling
+        turn.drillsused++;
 
-        h.button.style.opacity = "0.0";
-        // don't removeChild button now, wait until up event
+        completeDrill(h);
+    }
+
+    h.button.style.opacity = "0.0";
+    // don't removeChild button now, wait until up event
 
     debugmsg.innerText = "DOWN WELL " + h.button.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring;
 
@@ -1498,6 +1495,10 @@ function httpRequestWait()
     var xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
+        if (gclientId != -1) {
+            myConnectIcon.image.src = "connect.png";
+        }
+
         if (this.readyState == 4 && this.status == 200) {
             response = true;
             var waitResponse = JSON.parse(this.responseText);
@@ -1506,7 +1507,7 @@ function httpRequestWait()
               case "join_OK":
                 namenum++;
 
-                errmsg.push("httpRequestWait join_OK: " + waitResponse.name);
+                errmsg.push("join_OK: " + waitResponse.name);
 
                 continueJoin(waitResponse.name, waitResponse.clientId);
 
@@ -1515,21 +1516,21 @@ function httpRequestWait()
               case "buy_OK":
                 var plotnum = Number(waitResponse.plot);
 
-                errmsg.push("httpRequestWait buy_OK plotnum " + waitResponse.plot);
+                errmsg.push("buy_OK plotnum " + waitResponse.plot);
 
                 completeBuy(plots[plotnum]);
 
                 break;
 
               case "next_OK":
-                errmsg.push("httpRequestWait next_OK");
+                errmsg.push("next_OK");
 
                 completeNext();
 
                 break;
 
               case "fine_OK":
-                errmsg.push("httpRequestWait fine_OK");
+                errmsg.push("fine_OK");
 
                 completeFine();
 
@@ -1538,7 +1539,7 @@ function httpRequestWait()
               case "draw_OK":
                 var card = waitResponse.card;
 
-                errmsg.push("httpRequestWait draw_OK card " + JSON.stringify(card));
+                errmsg.push("draw_OK card " + JSON.stringify(card));
 
                 completeDraw(card);
 
@@ -1549,9 +1550,15 @@ function httpRequestWait()
                 var holenum = Number(waitResponse.hole);
                 var hole = plots[plotnum].holes[holenum];
 
-                errmsg.push("httpRequestWait drill_OK plot " + waitResponse.plot + " hole " + waitResponse.hole + " depth " + waitResponse.drillDepth);
+                errmsg.push("drill_OK plot " + waitResponse.plot + " hole " + waitResponse.hole + " depth " + waitResponse.drillDepth);
 
-                continueDrill(hole);
+                if (curstate.drillAnimationEnable) {
+                    callback = httpRequestWait;
+                }
+                else {
+                    callback = null;
+                }
+                continueDrill(hole, callback);
 
                 break;
 
@@ -1560,7 +1567,7 @@ function httpRequestWait()
                 var holenum = Number(waitResponse.hole);
                 var hole = plots[plotnum].holes[holenum];
 
-                errmsg.push("httpRequestWait cap_OK plot " + waitResponse.plot + " hole " + waitResponse.hole);
+                errmsg.push("cap_OK plot " + waitResponse.plot + " hole " + waitResponse.hole);
 
                 completeCap(hole);
 
@@ -1569,7 +1576,7 @@ function httpRequestWait()
               case "pipe_OK":
                 var pipepad = pipepads[Number(waitResponse.pipepadnum)];
 
-                errmsg.push("httpRequestWait pipe_OK pipeid " + pipepad.id);
+                errmsg.push("pipe_OK pipeid " + pipepad.id);
 
                 completePipe(pipepad);
 
@@ -1581,7 +1588,7 @@ function httpRequestWait()
                 var pipe = pipepad.pipes[pipepad.pipes.length - 1];
                 arrayRemove(pipes, pipe);
 
-                errmsg.push("httpRequestWait piperemove_OK pipeid " + pipepad.id);
+                errmsg.push("piperemove_OK pipeid " + pipepad.id);
 
                 completePipeRemove(pipepad);
 
@@ -1592,7 +1599,7 @@ function httpRequestWait()
                 detenterotationinput[1].setAttribute("value", waitResponse.disc1);
                 detenterotationinput[2].setAttribute("value", waitResponse.disc2);
 
-                errmsg.push("httpRequestWait rotation_OK disc 0 " + detenterotationinput[0].value + " disc 1 " + detenterotationinput[1].value + " disc 2 " + detenterotationinput[2].value);
+                errmsg.push("rotation_OK disc 0 " + detenterotationinput[0].value + " disc 1 " + detenterotationinput[1].value + " disc 2 " + detenterotationinput[2].value);
                 updatePlayersDisplay();
 
                 break;
@@ -1627,17 +1634,29 @@ updatePlayersDisplay();
                     player.bot = false;
                 }
 
-                errmsg.push("httpRequestWait namechange_OK playernum " + waitResponse.player + " name " + waitResponse.name);
+                errmsg.push("namechange_OK playernum " + waitResponse.player + " name " + waitResponse.name);
                 updatePlayersDisplay();
 
                 break;
 
               default:
                 errmsg.push("httpRequestWait " + waitResponse.status);
+                updatePlayersDisplay();
+
                 break;
             }
 
-            httpRequestWait();
+            if (!(waitResponse.status == "drill_OK" && curstate.drillAnimationEnable)) {
+                // drill animation will call wait
+                httpRequestWait();
+            }
+        }
+        else {
+            if (this.readyState == 4 && this.status == 0) {
+                myConnectIcon.image.src = "noconnect.png";
+                errmsg.push("Lost connection to server");
+                updatePlayersDisplay();
+            }
         }
     }
 
@@ -1646,23 +1665,34 @@ updatePlayersDisplay();
 }
 
 var rendezvousComplete = true;
+var prevCallback = null;
 
 function httpRequestRendezvous(callback)
 {
+    if (!rendezvousComplete) {
+        errmsg.push("previousCallback != null (" + prevCallback + ")");
+        errmsg.push("current callback is " + callback);
+        errmsg.push("caller is " + httpRequestRendezvous.caller);
+    }
+
     var xhttp = new XMLHttpRequest();
 
     rendezvousComplete = false;
+    prevCallback = callback;
 
     xhttp.onreadystatechange = function() {
+        myConnectIcon.image.src = "connect.png";
+
         if (this.readyState == 4 && this.status == 200) {
             response = true;
             var rendezvousResponse = JSON.parse(this.responseText);
 
             switch (rendezvousResponse.status) {
               case "rendezvous_OK":
-//                errmsg.push("httpRequestRendezvous rendezvous_OK clientId=" + rendezvousResponse.clientId);
+//                errmsg.push("rendezvous_OK clientId=" + rendezvousResponse.clientId);
 
                 rendezvousComplete = true;
+                prevCallback = null;
 
                 if (callback != null && callback != undefined) {
                     callback();
@@ -1680,6 +1710,11 @@ function httpRequestRendezvous(callback)
 
     xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=rendezvous", true);
     xhttp.send();
+
+    myConnectIcon.image.src = "noconnect.png";
+
+//errmsg.push("waiting for rendezvous...");
+//updatePlayersDisplay();
 }
 
 function httpRequestChat(msg, callback)
@@ -1687,6 +1722,8 @@ function httpRequestChat(msg, callback)
     var xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
+        myConnectIcon.image.src = "connect.png";
+
         if (this.readyState == 4 && this.status == 200) {
             response = true;
             var chatResponse = JSON.parse(this.responseText);
@@ -1698,7 +1735,21 @@ function httpRequestChat(msg, callback)
 
                 var msg = chatResponse.msg;
 
-                httpRequestRendezvoud(callback);
+                var name;
+                if (turn.player.name == undefined) {
+                    name = "client " + gclientId;
+                }
+                else {
+                    name = turn.player.name;
+                }
+
+                chatdiv.innerText += name + ": " + msg + "\n";
+                chatinput.value = "chat here";
+
+                var height = Number(chatdiv.style.height.substr(0, chatdiv.style.height.indexOf("p")));
+                chatdiv.scrollTop += height;
+
+                httpRequestRendezvous(callback);
 
                 break;
 
@@ -1711,6 +1762,8 @@ function httpRequestChat(msg, callback)
 
     xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=chat&msg=" + msg, true);
     xhttp.send();
+
+    myConnectIcon.image.src = "noconnect.png";
 }
 
 function httpRequestConnect()
@@ -1719,13 +1772,15 @@ function httpRequestConnect()
 
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
+            myConnectIcon.image.src = "connect.png";
+
             response = true;
             var connectResponse = JSON.parse(this.responseText);
 
             switch (connectResponse.status) {
               case "connect_OK":
-//                errmsg.push("httpRequestConnect connect_OK clientId=" + connectResponse.clientId);
-//                updatePlayersDisplay();
+                errmsg.push("httpRequestConnect connect_OK clientId=" + connectResponse.clientId);
+                updatePlayersDisplay();
 
                 gclientId = connectResponse.clientId;
 
@@ -1739,21 +1794,30 @@ function httpRequestConnect()
                     detenterotationinput[i].setAttribute("value", connectResponse.discrotations[i]);
                 }
 
-                myConnectIcon.image.src = "connect.png";
-
                 httpRequestWait();
 
                 break;
 
               default:
                 errmsg.push("httpRequestConnect " + connectResponse.status);
+                updatePlayersDisplay();
+
                 break;
             }
+        }
+        else if (this.readyState == 4 && this.status == 0) {
+            errmsg.push("Could not connect to server http://" + host + ":8080");
+            updatePlayersDisplay();
+        }
+        else {
+//            errmsg.push("readyState " + this.readyState + " status " + this.status);
         }
     }
 
     xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=-1&action=connect", true);
     xhttp.send();
+
+    myConnectIcon.image.src = "noconnect.png";
 }
 
 function httpRequestNamechange(player, callback)
@@ -1761,13 +1825,15 @@ function httpRequestNamechange(player, callback)
     var xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
+        myConnectIcon.image.src = "connect.png";
+
         if (this.readyState == 4 && this.status == 200) {
             response = true;
             var namechangeResponse = JSON.parse(this.responseText);
 
             switch (namechangeResponse.status) {
               case "namechange_OK":
-                errmsg.push("httpRequestRotation namechange_OK clientId=" + namechangeResponse.clientId + " player=" + namechangeResponse.name);
+                errmsg.push("httpRequestNamechange namechange_OK clientId=" + namechangeResponse.clientId + " player=" + namechangeResponse.name);
 
                 player.name = namechangeResponse.name;
                 player.display.nameinput.setAttribute("value", namechangeResponse.name);
@@ -1777,7 +1843,7 @@ function httpRequestNamechange(player, callback)
                 break;
 
               default:
-                errmsg.push("httpRequestConnect " + namechangeResponse.status);
+                errmsg.push("httpRequestNamechange " + namechangeResponse.status);
                 break;
             }
         }
@@ -1785,6 +1851,8 @@ function httpRequestNamechange(player, callback)
 
     xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + players.indexOf(player) + "&action=namechange&name=" + player.name, true);
     xhttp.send();
+
+    myConnectIcon.image.src = "noconnect.png";
 }
 
 function httpRequestRotation(callback)
@@ -1792,6 +1860,8 @@ function httpRequestRotation(callback)
     var xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
+        myConnectIcon.image.src = "connect.png";
+
         if (this.readyState == 4 && this.status == 200) {
             response = true;
             var rotationResponse = JSON.parse(this.responseText);
@@ -1809,7 +1879,7 @@ function httpRequestRotation(callback)
                 break;
 
               default:
-                errmsg.push("httpRequestConnect " + rotationResponse.status);
+                errmsg.push("httpRequestRotation " + rotationResponse.status);
                 break;
             }
         }
@@ -1817,6 +1887,8 @@ function httpRequestRotation(callback)
 
     xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=-1&action=rotation&disc0=" + detenterotationinput[0].value + "&disc1=" + detenterotationinput[1].value + "&disc2=" + detenterotationinput[2].value, true);
     xhttp.send();
+
+    myConnectIcon.image.src = "noconnect.png";
 }
 
 function httpRequestJoin(name, callback)
@@ -1824,6 +1896,8 @@ function httpRequestJoin(name, callback)
     var xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
+        myConnectIcon.image.src = "connect.png";
+
         if (this.readyState == 4 && this.status == 200) {
             response = true;
             var joinResponse = JSON.parse(this.responseText);
@@ -1844,6 +1918,8 @@ function httpRequestJoin(name, callback)
 
     xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=-1&action=join&name=" + name, true);
     xhttp.send();
+
+    myConnectIcon.image.src = "noconnect.png";
 }
 
 function httpRequestDrill(hole, callback)
@@ -1851,14 +1927,20 @@ function httpRequestDrill(hole, callback)
     var xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
+        myConnectIcon.image.src = "connect.png";
+
         if (this.readyState == 4 && this.status == 200) {
             response = true;
             var drillResponse = JSON.parse(this.responseText);
 
             if (drillResponse.status == "drill_OK") {
-                continueDrill(hole);
+                continueDrill(hole, callback);
 
-                httpRequestRendezvous(callback);
+//                if (callback == null) {
+                // drill animation will do rendezvous when done
+                if (!curstate.drillAnimationEnable) {
+                    httpRequestRendezvous(callback);
+                }
             }
             else {
             }
@@ -1867,6 +1949,8 @@ function httpRequestDrill(hole, callback)
 
     xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=drill&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
     xhttp.send();
+
+    myConnectIcon.image.src = "noconnect.png";
 }
 
 function httpRequestPipe(pipepad, callback)
@@ -1874,6 +1958,8 @@ function httpRequestPipe(pipepad, callback)
     var xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
+        myConnectIcon.image.src = "connect.png";
+
         if (this.readyState == 4 && this.status == 200) {
             response = true;
             var pipeResponse = JSON.parse(this.responseText);
@@ -1890,6 +1976,8 @@ function httpRequestPipe(pipepad, callback)
 
     xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=pipe&pipepadnum=" + pipepads.indexOf(pipepad), true);
     xhttp.send();
+
+    myConnectIcon.image.src = "noconnect.png";
 }
 
 function httpRequestPipeRemove(pipepad, callback)
@@ -1897,6 +1985,8 @@ function httpRequestPipeRemove(pipepad, callback)
     var xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
+        myConnectIcon.image.src = "connect.png";
+
         if (this.readyState == 4 && this.status == 200) {
             response = true;
             var pipeRemoveResponse = JSON.parse(this.responseText);
@@ -1913,6 +2003,8 @@ function httpRequestPipeRemove(pipepad, callback)
 
     xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=piperemove&pipepadnum=" + pipepads.indexOf(pipepad), true);
     xhttp.send();
+
+    myConnectIcon.image.src = "noconnect.png";
 }
 
 function httpRequestCap(hole, callback)
@@ -1920,6 +2012,8 @@ function httpRequestCap(hole, callback)
     var xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
+        myConnectIcon.image.src = "connect.png";
+
         if (this.readyState == 4 && this.status == 200) {
             response = true;
             var capResponse = JSON.parse(this.responseText);
@@ -1936,6 +2030,8 @@ function httpRequestCap(hole, callback)
 
     xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=cap&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
     xhttp.send();
+
+    myConnectIcon.image.src = "noconnect.png";
 }
 
 function httpRequestDraw(callback)
@@ -1943,6 +2039,8 @@ function httpRequestDraw(callback)
     var xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
+        myConnectIcon.image.src = "connect.png";
+
         if (this.readyState == 4 && this.status == 200) {
             response = true;
             var drawResponse = JSON.parse(this.responseText);
@@ -1960,6 +2058,8 @@ function httpRequestDraw(callback)
 
     xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=draw", true);
     xhttp.send();
+
+    myConnectIcon.image.src = "noconnect.png";
 }
 
 function httpRequestBuy(plot, callback)
@@ -1973,6 +2073,8 @@ function httpRequestBuy(plot, callback)
     var xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
+        myConnectIcon.image.src = "connect.png";
+
         if (this.readyState == 4 && this.status == 200) {
             response = true;
             var buyResponse = JSON.parse(this.responseText);
@@ -1990,6 +2092,8 @@ function httpRequestBuy(plot, callback)
 
     xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=buy&plot=" + (plot.plotnum - 1), true);
     xhttp.send();
+
+    myConnectIcon.image.src = "noconnect.png";
 }
 
 function httpRequestNext()
@@ -1997,6 +2101,8 @@ function httpRequestNext()
     var xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
+        myConnectIcon.image.src = "connect.png";
+
         if (this.readyState == 4 && this.status == 200) {
             response = true;
             var nextResponse = JSON.parse(this.responseText);
@@ -2004,7 +2110,7 @@ function httpRequestNext()
             if (nextResponse.status == "next_OK") {
                 completeNext();
 
-                if (turn.player.clientId == gclientId) {
+                if (!turn.player.bot && turn.player.clientId == gclientId) {
                     httpRequestRendezvous(null);
                 }
             }
@@ -2015,6 +2121,8 @@ function httpRequestNext()
 
     xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=next", true);
     xhttp.send();
+
+    myConnectIcon.image.src = "noconnect.png";
 }
 
 function httpRequestFine(callback)
@@ -2022,6 +2130,8 @@ function httpRequestFine(callback)
     var xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
+        myConnectIcon.image.src = "connect.png";
+
         if (this.readyState == 4 && this.status == 200) {
             response = true;
             var fineResponse = JSON.parse(this.responseText);
@@ -2038,6 +2148,8 @@ function httpRequestFine(callback)
 
     xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=fine", true);
     xhttp.send();
+
+    myConnectIcon.image.src = "noconnect.png";
 }
 
 //var downShedButton;
@@ -2812,7 +2924,7 @@ function makeTurnDisplay()
 function playerDisplayButtonDownEvent()
 {
     if (gameMode == "start" && players[0].bot && !turn.propertybought) {
-        httpRequestRendezvous(botBuyPlotSetInterval);
+        httpRequestRendezvous(botBuyPlotSetTimeout);
     }
 }
 
@@ -3019,6 +3131,58 @@ function makeAddPlayerButton()
     b.innerText = "+";
 
     myAddPlayerButton = b;
+}
+
+var hframedoc;
+var hframewin;
+
+function helpButtonDownEvent()
+{
+    document.body.appendChild(myHelpFrame);
+}
+
+function makeHelpButton()
+{
+return;
+
+//    myConnectIcon = new component(60, 60, "noconnect.png", 320, 140, "image", 0, 0);
+    var b = document.createElement("BUTTON");
+    b.addEventListener("mousedown", helpButtonDownEvent);
+    b.style.borderRadius = "30px";
+    b.style.width = "40px";
+    b.style.height = "40px";
+    b.style.padding = "0px";
+    b.style.position = "absolute";
+    b.style.top = 150 + "px";
+    b.style.left = 330 + "px";
+    b.style.backgroundColor = "grey";
+    b.style.opacity = "0.5";
+    b.style.font = "bold 20px arial,serif";
+    b.style.cursor = "url('cursor.png'), pointer";
+    document.body.appendChild(b);
+
+    b.innerText = "?";
+
+    myHelpButton = b;
+
+    var f = document.createElement("IFRAME");
+    f.style.width = "1000px";
+    f.style.height = "658px";
+    f.style.position = "absolute";
+    f.style.left = "0px";
+    f.style.top = "12px";
+    f.style.color = "white";
+    f.style.backgroundColor = "#00000";
+    f.style.border = "0px";
+
+    myHelpFrame = f;
+
+    document.body.appendChild(myHelpFrame);
+    hframedoc = f.contentDocument;
+    hframewin = f.contentWindow;
+
+//    hframewin.location.href = "http://192.168.5.115:8000/KingOil.pdf";
+//    hframewin.location.replace("http://192.168.5.115:8000/KingOil.pdf");
 }
 
 function connectButtonDownEvent()
@@ -3232,6 +3396,7 @@ function startGame()
     makeDebugButton();
     makeFineButton();
     makeConnectButton();
+    makeHelpButton();
     for (var i = 0; i < plots.length; i++) {
         var p = plots[i];
 
@@ -3324,25 +3489,11 @@ function startGame()
     chatinput.style.textAlign = "left";
     chatinput.style.color = "#ffa0a0";
     chatinput.setAttribute("value", "chat here");
+    chatinput.onclick = function () { this.select(); };
     chatinput.onchange = function () {
         var newmsg = this.value;
-        var name;
-
-        if (turn.player.name == undefined) {
-            name = "client " + gclientId;
-        }
-        else {
-            name = turn.player.name;
-        }
-
-        chatdiv.innerText += name + ": " + this.value + "\n";
-        chatinput.value = "";
-
-        var height = Number(chatdiv.style.height.substr(0, chatdiv.style.height.indexOf("p")));
-        chatdiv.scrollTop += height;
-
         httpRequestChat(newmsg, null);
-    }
+    };
 
     document.body.appendChild(chatinput);
 
@@ -3353,6 +3504,19 @@ function startGame()
     myTurnResultDiv.innerText = "START GAME";
     myTurnResultDiv.innerText += "\nURL " + window.location.href;
     myGameArea.start();
+}
+
+function showLoc() {
+  const logLines = [
+    "Property (Typeof): Value",
+    `location (${typeof location}): ${location}`,
+  ];
+  for (const prop in location) {
+    logLines.push(
+      `${prop} (${typeof location[prop]}): ${location[prop] || "n/a"}`,
+    );
+  }
+  alert(logLines.join("\n"));
 }
 
 var siId;
@@ -3478,7 +3642,7 @@ var shakeOffset;
 var animationHole;
 var cursorsave;
 
-function startDrillAnimation(hole)
+function startDrillAnimation(hole, callback)
 {
     if (drillAnimation.active) {
         return;
@@ -3494,7 +3658,8 @@ function startDrillAnimation(hole)
     // drillAnimation.width never changes
     drillAnimation.height = height;
     drillAnimation.active = true;
-    drillAnimation.image.src = "derrick3_nobit.png";
+//    drillAnimation.image.src = "derrick3_nobit.png";
+    drillAnimation.image.src = "fire1.png";
     drillAnimation.update();
 
     cursorsave = curcursor;
@@ -3550,12 +3715,23 @@ function startDrillAnimation(hole)
             else {
                 topatopa += 20;
                 height -= 20;
-                drillAnimation.image.src = "derrick0_nobit.png";
+//                drillAnimation.image.src = "derrick0_nobit.png";
+                drillAnimation.image.src = "fire4.png";
                 drillAnimation.y = topatopa;
                 drillAnimation.height = height;
             }
 
             frame = -1;
+
+            if (callback != null) {
+                if (callback == httpRequestWait) {
+                    callback();
+                }
+                else {
+                    // we don't need rendezvous if callback is null
+                    httpRequestRendezvous(callback);
+                }
+            }
 
             updatePlayersDisplay();
         }
@@ -3563,7 +3739,8 @@ function startDrillAnimation(hole)
             frame--;
             topatopa += 20;
             height -= 20;
-            drillAnimation.image.src = "derrick" + frame + "_nobit.png";
+//            drillAnimation.image.src = "derrick" + frame + "_nobit.png";
+            drillAnimation.image.src = "fire" + (4 - frame) + ".png";
             drillAnimation.y = topatopa;
             drillAnimation.height = height;
         }
@@ -3587,7 +3764,7 @@ function keyDownEvent(e)
 
     if (e.code == "KeyD") {
         dummyhole.drill = drillnum;
-        startDrillAnimation(dummyhole);
+        startDrillAnimation(dummyhole, null);
         drillnum--;
         if (drillnum == -1) {
             drillnum = 3;
@@ -3655,13 +3832,7 @@ function component(width, height, image, x, y, type, xoffset, yoffset)
     this.yoffset = yoffset;
     this.update = function() {
         var ctx = myGameArea.context;
-        if (this.type == "image") {
-            ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
-        }
-        else {
-            ctx.fillStyle = image;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
-        }
+        ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
     }
 }
 
