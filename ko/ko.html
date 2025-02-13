@@ -327,7 +327,7 @@ function transferMoney(from, to, amount)
     if (bankrupt) {
         errmsg.push("player " + from.name + " has gone BANKRUPT");
     }
-    errmsg.push(from.name + " pays $" + amount + " to " + to.name);
+//    errmsg.push(from.name + " pays $" + amount + " to " + to.name);
 }
 
 function payCardRoyalty()
@@ -342,6 +342,7 @@ function payCardRoyalty()
             royalty = turn.player.nwells * turn.card.royalty;
         }
         transferMoney(bankPlayer, turn.player, royalty);
+        errmsg.push("well royalty $" + royalty);
     }
 }
 
@@ -354,11 +355,11 @@ function payPipeRoyalty()
         for (var j = 0; j < p.pipepadsfrom.length; j++) {
             var pipepad = p.pipepadsfrom[j];
             var ownerFrom = pipepad.owner;
+            var toPlayer = players[ownerFrom];
 
             royalty = p.nwells * (1000 + ((pipepad.pipes.length - 1) * 2000));
-            transferMoney(turn.player, players[ownerFrom], royalty);
-
-            errmsg[errmsg.length - 1] += " for " + p.id;
+            transferMoney(turn.player, toPlayer, royalty);
+            errmsg.push("pipeline royalty $" + royalty + " to " + toPlayer + " for " + p.id);
         }
     }
 
@@ -826,8 +827,8 @@ function botDrill(callback)
         for (j = 0; j < p.holes.length; j++) {
             var h = p.holes[j];
             if (h.drill == -1) {
-                errmsg.push("botDrill hole " + h.num + " plot " + (h.plot - 1));
-                updatePlayersDisplay();
+//                errmsg.push("botDrill hole " + h.num + " plot " + (h.plot - 1));
+//                updatePlayersDisplay();
 
                 httpRequestDrill(h, callback);
 
@@ -845,8 +846,8 @@ function botCap(callback)
         for (j = 0; j < p.holes.length; j++) {
             var h = p.holes[j];
             if (h.drill > 0) {
-                errmsg.push("botCap hole " + h.num + " plot " + (h.plot - 1));
-                updatePlayersDisplay();
+//                errmsg.push("botCap hole " + h.num + " plot " + (h.plot - 1));
+//                updatePlayersDisplay();
 
                 httpRequestCap(h, callback);
 
@@ -978,64 +979,67 @@ function botDraw()
     else {
         httpRequestDraw(botActionSetTimeout);
 
-        errmsg.push("botDraw called");
-        updatePlayersDisplay();
+//        errmsg.push("botDraw called");
+//        updatePlayersDisplay();
     }
 }
 
 function completeNext()
 {
-        turn.player.display.style.backgroundColor = "grey";
+    turn.player.display.style.backgroundColor = "grey";
 
-        turn.playernum++;
-        if (turn.playernum == players.length) {
-            turn.playernum = 0;
+    turn.playernum++;
+    if (turn.playernum == players.length) {
+        turn.playernum = 0;
 
-            if (gameMode == "start") {
-                gameMode = "";
-                for (var i = 0; i < 3; i++) {
-                    detenterotationinput[i].disabled = true;
-                    detenterotationinput[i].style.opacity = "0.0";
-                }
-                myAddPlayerButton.style.opacity = "0.0";
-                myAddPlayerButton.disabled = true;
-
-                startShuffleAnimation();
+        if (gameMode == "start") {
+            gameMode = "";
+            for (var i = 0; i < 3; i++) {
+                detenterotationinput[i].disabled = true;
+                detenterotationinput[i].style.opacity = "0.0";
             }
+            myAddPlayerButton.style.opacity = "0.0";
+            myAddPlayerButton.disabled = true;
+
+            startShuffleAnimation();
         }
+    }
 
-        if (gameMode != "start") {
-            drawMode();
-            turn.card = cardNone;
-            myCardIcon.image.src = "";
+    if (gameMode != "start") {
+        drawMode();
+        turn.card = cardNone;
+        myCardIcon.image.src = "";
 
-            myCardStatusDiv.innerText = "CURRENT CARD";
-            myCardStatusDiv.style.backgroundColor = "grey";
+        myCardStatusDiv.innerText = "CURRENT CARD";
+        myCardStatusDiv.style.backgroundColor = "grey";
 
-            if (deck.length == 0) {
-                startShuffleAnimation();
-                initDeck();
-            }
+        if (deck.length == 0) {
+            startShuffleAnimation();
+            initDeck();
         }
+    }
 
-        turn.player = players[turn.playernum];
-        turn.propertybought = false;
-        turn.drillsused = 0;
-        turn.capsrequired = 0;
-        turn.npiperemove = 0;
-        turn.fineable = 0;
-        turn.player.display.style.backgroundColor = "lightblue";
+    turn.player = players[turn.playernum];
+    turn.propertybought = false;
+    turn.drillsused = 0;
+    turn.capsrequired = 0;
+    turn.npiperemove = 0;
+    turn.fineable = 0;
+    turn.player.display.style.backgroundColor = "lightblue";
 
-        payPipeRoyalty();
+    payPipeRoyalty();
 
-        myNextIcon.image.src = "timeclockcard.png";
-        myShedIcon.image.src = turn.player.color + "shed.png";
-        myCapIcon.image.src = turn.player.color + "cap.png";
-        myPipeIcon.image.src = turn.player.color + "pipe.png";
+    myNextIcon.image.src = "timeclockcard.png";
+    myShedIcon.image.src = turn.player.color + "shed.png";
+    myCapIcon.image.src = turn.player.color + "cap.png";
+    myPipeIcon.image.src = turn.player.color + "pipe.png";
 
-        if (curstate.autodrawEnable) {
-            drawcardButtonDownEvent();
-        }
+    if (curstate.autodrawEnable) {
+        drawcardButtonDownEvent();
+    }
+
+    errmsg.push("");
+    errmsg.push(turn.player.name + "'s turn");
 
     updatePlayersDisplay();
 
@@ -1118,97 +1122,101 @@ function completeDraw(card)
 
     turn.card = card;
 
-        if (turn.card.type == "fire") {
-            // wells = 0: cap 0, 1-5: cap 1, 6-10: cap 2, 11 or more: cap 3
-            turn.capsrequired = Math.floor((turn.player.nwells + 4) / 5);
-            if (turn.capsrequired > 3) {
-                turn.capsrequired = 3;
+    if (turn.card.type == "fire") {
+        // wells = 0: cap 0, 1-5: cap 1, 6-10: cap 2, 11 or more: cap 3
+        turn.capsrequired = Math.floor((turn.player.nwells + 4) / 5);
+        if (turn.capsrequired > 3) {
+            turn.capsrequired = 3;
+        }
+
+        actionMode();
+        if (curstate.autotoolEnable && turn.player.clientId == gclientId && !turn.player.bot && turn.capsrequired > 0) {
+            captoolButtonDownEvent();
+        }
+
+        var w = " well";
+        if (turn.capsrequired > 1) {
+            w += "s";
+        }
+        myCardStatusDiv.innerText = "CURRENT CARD\nFIRE\n";
+        myCardStatusDiv.innerText += "must cap " + turn.capsrequired + w;
+
+        errmsg.push("must cap " + turn.capsrequired + w);
+    }
+    else {
+        var numstr;
+        if (turn.card.ndrills > 1) {
+            if (turn.card.ndrills == 2) {
+                numstr = "1 or ";
             }
-
-            actionMode();
-            if (curstate.autotoolEnable && turn.player.clientId == gclientId && !turn.player.bot && turn.capsrequired > 0) {
-                captoolButtonDownEvent();
+            else {
+                numstr = "1 to ";
             }
-
-            myCardStatusDiv.innerText = "CURRENT CARD\nFIRE\n";
-            myCardStatusDiv.innerText += "must cap " + turn.capsrequired + " wells";
-
-            errmsg.push("must cap " + turn.capsrequired + " wells");
         }
         else {
-            var numstr;
-            if (turn.card.ndrills > 1) {
-                if (turn.card.ndrills == 2) {
-                    numstr = "1 or ";
-                }
-                else {
-                    numstr = "1 to ";
-                }
-            }
-            else {
-                numstr = "";
-            }
-            if (turn.card.type == "depletion") {
-                myCardStatusDiv.innerText = "CURRENT CARD\ndepletion allowance $500";
-            }
-            else {
-                myCardStatusDiv.innerText = "CURRENT CARD\nroyalty $" + turn.card.royalty;
-            }
-            myCardStatusDiv.innerText += "\ndrills permitted: " + numstr + turn.card.ndrills;
-            myCardStatusDiv.innerText += "\nproperty for sale " + turn.card.plotbuy;
+            numstr = "";
+        }
+        if (turn.card.type == "depletion") {
+            myCardStatusDiv.innerText = "CURRENT CARD\ndepletion allowance $500";
+        }
+        else {
+            myCardStatusDiv.innerText = "CURRENT CARD\nroyalty $" + turn.card.royalty;
+        }
+        myCardStatusDiv.innerText += "\ndrills permitted: " + numstr + turn.card.ndrills;
+        myCardStatusDiv.innerText += "\nproperty for sale " + turn.card.plotbuy;
 
-            // player must drill, check player has any empty holes
-            var emptyfound = false;
+        // player must drill, check player has any empty holes
+        var emptyfound = false;
 
-            for (var i = 0; i < turn.player.plots.length; i++) {
-                var p = turn.player.plots[i];
+        for (var i = 0; i < turn.player.plots.length; i++) {
+            var p = turn.player.plots[i];
 
-                for (var j = 0; j < p.holes.length; j++) {
-                    if (p.holes[j].drill == -1) {
-                        emptyfound = true;
+            for (var j = 0; j < p.holes.length; j++) {
+                if (p.holes[j].drill == -1) {
+                    emptyfound = true;
 
-                        break;
-                    }
-                }
-
-                if (emptyfound) {
                     break;
                 }
             }
 
-            actionMode();
-
-            if (!emptyfound) {
-                turn.fineable = 1;
-
-                errmsg.push("no available drill sites, must pay fine");
-            }
-            else {
-                if (curstate.autotoolEnable && turn.player.clientId == gclientId && !turn.player.bot) {
-                    drilltoolButtonDownEvent();
-                }
+            if (emptyfound) {
+                break;
             }
         }
 
-        myCardIcon.image.src = turn.card.imagesrc;
+        actionMode();
 
-        payCardRoyalty();
+        if (!emptyfound) {
+            turn.fineable = 1;
 
-        if (!curstate.contshuffleEnable) {
-            arrayRemove(deck, turn.card);
-//            // remove chosen card from deck[] (can't use arrayRemove())
-//            for (var i = cardnum; i < (deck.length - 1); i++) {
-//                deck[i] = deck[i + 1];
-//            }
-//            deck.length--;
+            errmsg.push("no available drill sites, must pay fine");
         }
-
-//        if (!(curstate.autotoolEnable && turn.capsrequired > 0)) {
-        if (!curstate.autotoolEnable) {
-            actionMode();
+        else {
+            if (curstate.autotoolEnable && turn.player.clientId == gclientId && !turn.player.bot) {
+                drilltoolButtonDownEvent();
+            }
         }
+    }
 
-        debugmsg.innerText = "DOWN DRAW card " + cardnum + " (" + deck.length + ")";
+    myCardIcon.image.src = turn.card.imagesrc;
+
+    payCardRoyalty();
+
+    if (!curstate.contshuffleEnable) {
+        arrayRemove(deck, turn.card);
+//        // remove chosen card from deck[] (can't use arrayRemove())
+//        for (var i = cardnum; i < (deck.length - 1); i++) {
+//            deck[i] = deck[i + 1];
+//        }
+//        deck.length--;
+    }
+
+//    if (!(curstate.autotoolEnable && turn.capsrequired > 0)) {
+    if (!curstate.autotoolEnable) {
+        actionMode();
+    }
+
+    debugmsg.innerText = "DOWN DRAW card " + cardnum + " (" + deck.length + ")";
 
     updatePlayersDisplay();
 }
@@ -1266,7 +1274,8 @@ function completeDrill(h)
         depthmsg = "dry";
     }
 
-    errmsg.push(depthmsg + " well - $" + drillDepthCost[h.drill + 1]);
+    var plot = plots[h.plot - 1];
+    errmsg.push(plot.id + " h" + (h.num + 1) + " " + depthmsg + " well $" + drillDepthCost[h.drill + 1]);
 }
 
 function drillHole(hole)
@@ -1431,20 +1440,22 @@ function continueDrill(h, callback)
 
 function completeCap(h)
 {
-        h.drill = 0;
-        turn.player.nwells--;
-        turn.capsrequired--;
+    h.drill = 0;
+    turn.player.nwells--;
+    turn.capsrequired--;
 
-        var plot = plots[h.plot - 1];
-        plot.nwells--;
+    var plot = plots[h.plot - 1];
+    plot.nwells--;
 
-        arrayRemove(wells, h.well);
+    arrayRemove(wells, h.well);
 
-        caps[caps.length++] = new component(25, 25, turn.player.color + "cap.png", h.left - 21, h.top - 25, "image");
+    caps[caps.length++] = new component(25, 25, turn.player.color + "cap.png", h.left - 21, h.top - 25, "image");
 
-        enablePipepadRemoveButtons();
+    enablePipepadRemoveButtons();
 
     debugmsg.innerText = "DOWN WELL " + h.button.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring;
+
+    errmsg.push(plot.id + " h" + (h.num + 1) + " capped");
 
     updatePlayersDisplay();
 }
@@ -1507,7 +1518,7 @@ function httpRequestWait()
               case "join_OK":
                 namenum++;
 
-                errmsg.push("join_OK: " + waitResponse.name);
+//                errmsg.push("join_OK: " + waitResponse.name);
 
                 continueJoin(waitResponse.name, waitResponse.clientId);
 
@@ -1516,21 +1527,21 @@ function httpRequestWait()
               case "buy_OK":
                 var plotnum = Number(waitResponse.plot);
 
-                errmsg.push("buy_OK plotnum " + waitResponse.plot);
+//                errmsg.push("buy_OK plotnum " + waitResponse.plot);
 
                 completeBuy(plots[plotnum]);
 
                 break;
 
               case "next_OK":
-                errmsg.push("next_OK");
+//                errmsg.push("next_OK");
 
                 completeNext();
 
                 break;
 
               case "fine_OK":
-                errmsg.push("fine_OK");
+//                errmsg.push("fine_OK");
 
                 completeFine();
 
@@ -1539,7 +1550,7 @@ function httpRequestWait()
               case "draw_OK":
                 var card = waitResponse.card;
 
-                errmsg.push("draw_OK card " + JSON.stringify(card));
+//                errmsg.push("draw_OK card " + JSON.stringify(card));
 
                 completeDraw(card);
 
@@ -1550,7 +1561,7 @@ function httpRequestWait()
                 var holenum = Number(waitResponse.hole);
                 var hole = plots[plotnum].holes[holenum];
 
-                errmsg.push("drill_OK plot " + waitResponse.plot + " hole " + waitResponse.hole + " depth " + waitResponse.drillDepth);
+//                errmsg.push("drill_OK plot " + waitResponse.plot + " hole " + waitResponse.hole + " depth " + waitResponse.drillDepth);
 
                 if (curstate.drillAnimationEnable) {
                     callback = httpRequestWait;
@@ -1567,7 +1578,7 @@ function httpRequestWait()
                 var holenum = Number(waitResponse.hole);
                 var hole = plots[plotnum].holes[holenum];
 
-                errmsg.push("cap_OK plot " + waitResponse.plot + " hole " + waitResponse.hole);
+//                errmsg.push("cap_OK plot " + waitResponse.plot + " hole " + waitResponse.hole);
 
                 completeCap(hole);
 
@@ -1576,7 +1587,7 @@ function httpRequestWait()
               case "pipe_OK":
                 var pipepad = pipepads[Number(waitResponse.pipepadnum)];
 
-                errmsg.push("pipe_OK pipeid " + pipepad.id);
+//                errmsg.push("pipe_OK pipeid " + pipepad.id);
 
                 completePipe(pipepad);
 
@@ -1588,7 +1599,7 @@ function httpRequestWait()
                 var pipe = pipepad.pipes[pipepad.pipes.length - 1];
                 arrayRemove(pipes, pipe);
 
-                errmsg.push("piperemove_OK pipeid " + pipepad.id);
+//                errmsg.push("piperemove_OK pipeid " + pipepad.id);
 
                 completePipeRemove(pipepad);
 
@@ -1599,15 +1610,17 @@ function httpRequestWait()
                 detenterotationinput[1].setAttribute("value", waitResponse.disc1);
                 detenterotationinput[2].setAttribute("value", waitResponse.disc2);
 
-                errmsg.push("rotation_OK disc 0 " + detenterotationinput[0].value + " disc 1 " + detenterotationinput[1].value + " disc 2 " + detenterotationinput[2].value);
-                updatePlayersDisplay();
+//                errmsg.push("rotation_OK disc 0 " + detenterotationinput[0].value + " disc 1 " + detenterotationinput[1].value + " disc 2 " + detenterotationinput[2].value);
+//                updatePlayersDisplay();
 
                 break;
 
               case "chat_OK":
                 var name;
-errmsg.push("chat_OK msg [" + waitResponse.msg + "]");
-updatePlayersDisplay();
+
+//                errmsg.push("chat_OK msg [" + waitResponse.msg + "]");
+//                updatePlayersDisplay();
+
                 if (Number(waitResponse.player) == -1) {
                     name = "client " + waitResponse.clientId;
                 }
@@ -1627,15 +1640,17 @@ updatePlayersDisplay();
 
                 player.name = waitResponse.name;
                 player.display.nameinput.setAttribute("value", waitResponse.name);
-                if (player.name == "HAL") {
+
+                var un = player.name.toUpperCase();
+                if (un.startsWith("HAL") || un.endsWith("BOT")) {
                     player.bot = true;
                 }
                 else {
                     player.bot = false;
                 }
 
-                errmsg.push("namechange_OK playernum " + waitResponse.player + " name " + waitResponse.name);
-                updatePlayersDisplay();
+//                errmsg.push("namechange_OK playernum " + waitResponse.player + " name " + waitResponse.name);
+//                updatePlayersDisplay();
 
                 break;
 
@@ -2924,6 +2939,9 @@ function makeTurnDisplay()
 function playerDisplayButtonDownEvent()
 {
     if (gameMode == "start" && players[0].bot && !turn.propertybought) {
+        errmsg.push("");
+        errmsg.push(players[0].name + "'s turn");
+
         httpRequestRendezvous(botBuyPlotSetTimeout);
     }
 }
@@ -2964,7 +2982,8 @@ function addPlayer(name, display)
     player.pipelines = 0;
     player.msg = [];
     player.display = {};
-    if (player.name == "HAL") {
+    var un = player.name.toUpperCase()
+    if (un.startsWith("HAL") || un.endsWith("BOT")) {
         player.bot = true;
     }
     else {
@@ -3029,7 +3048,8 @@ function continueJoin(initName, clientId)
     x.style.font = "bold 20px arial,serif";
     x.onchange = function () {
         this.player.name = this.value;
-        if (this.player.name == "HAL") {
+        var un = this.player.name.toUpperCase();
+        if (un.startsWith("HAL") || un.endsWith("BOT")) {
             this.player.bot = true;
             if (gameMode == "start" && turn.playernum == 0) {
             }
@@ -3299,7 +3319,7 @@ function toggleCSDownEvent()
 
 function startGame()
 {
-    ss = document.getElementById("sadsack");
+//    ss = document.getElementById("sadsack");
 
     window.onbeforeunload = function(event) {
         return confirm("Confirm refresh");
@@ -3933,7 +3953,9 @@ function setCursor(c)
   <pre id="statuslog"></pre>
   <pre id="turnlog"> player: </pre>
 </div>
+<!--
 <audio id="sadsack" src="sadsack.amr">
+-->
 </audio>
 <div>
 <pre id="DATText"> Drill<br>    Animation </pre>

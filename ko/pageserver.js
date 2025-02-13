@@ -28,6 +28,8 @@ const requestListener = function (req, res)
         res.writeHead(404);
         res.end("Invalid file type " + req.url);
 
+        console.log("Invalid file type " + req.url);
+
         return;
     }
 
