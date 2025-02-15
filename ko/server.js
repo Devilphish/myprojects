@@ -83,12 +83,14 @@ var server = http.createServer(function (req, res)
 //    console.log(req.url);
 
 // playing around
-//    for (let key in req) {
-//      console.log(key, req[key]);
-//    }
-//    for (i = 0; i < req.socket.parser.incoming.rawHeaders.length; i++) {
-//      console.log(req.socket.parser.incoming.rawHeaders[i]);
-//    }
+if (0) {
+    for (let key in req) {
+      console.log(key, req[key]);
+    }
+    for (i = 0; i < req.socket.parser.incoming.rawHeaders.length; i++) {
+      console.log(req.socket.parser.incoming.rawHeaders[i]);
+    }
+}
 
     switch (q.action) {
       case "draw":
@@ -100,7 +102,7 @@ var server = http.createServer(function (req, res)
 
         processWaitlist(q);
 
-        console.log("status: " + q.status + " card: " + JSON.stringify(q.card));
+        console.log(q.status + " card: " + JSON.stringify(q.card));
 
         break;
 
@@ -115,7 +117,6 @@ var server = http.createServer(function (req, res)
         if (hole.drill == -1) {
             q.drillDepth = drillHole(hole);
             q.status = "drill_OK";
-//            q.turn = turn;
         }
         else {
             q.drillDepth = -1;
@@ -124,7 +125,7 @@ var server = http.createServer(function (req, res)
 
         processWaitlist(q);
 
-        console.log("status: " + q.status + " plot: " + q.plot + " hole: " + q.hole + " drillDepth: " + q.drillDepth);
+        console.log(q.status + " plot: " + q.plot + " hole: " + q.hole + " drillDepth: " + q.drillDepth);
 
         break;
 
@@ -147,7 +148,7 @@ var server = http.createServer(function (req, res)
 
         processWaitlist(q);
 
-        console.log("status: " + q.status + " plot: " + q.plot + " hole: " + q.hole);
+        console.log(q.status + " plot: " + q.plot + " hole: " + q.hole);
 
         break;
 
@@ -160,7 +161,7 @@ var server = http.createServer(function (req, res)
 
         processWaitlist(q);
 
-        console.log("status: " + q.status);
+        console.log(q.status);
 
         break;
 
@@ -173,7 +174,7 @@ var server = http.createServer(function (req, res)
 
         processWaitlist(q);
 
-        console.log("status: " + q.status);
+        console.log(q.status);
 
         break;
 
@@ -186,7 +187,6 @@ var server = http.createServer(function (req, res)
         if (plot.owner == -1) {
             buyPlot(plot);
             q.status = "buy_OK";
-//            q.turn = turn;
         }
         else {
             q.status = "buy_EALREADYOWNED";
@@ -194,7 +194,7 @@ var server = http.createServer(function (req, res)
 
         processWaitlist(q);
 
-        console.log("status: " + q.status + " plot: " + (plotnum + 1));
+        console.log(q.status + " plot: " + (plotnum + 1));
 
         break;
 
@@ -208,7 +208,7 @@ var server = http.createServer(function (req, res)
 
         processWaitlist(q);
 
-        console.log("status: " + q.status);
+        console.log(q.status);
 
         break;
 
@@ -220,7 +220,7 @@ var server = http.createServer(function (req, res)
 
         processWaitlist(q);
 
-        console.log("status: " + q.status + " next player: " + turn.playernum + " " + turn.player.name);
+        console.log(q.status + " next player: " + turn.playernum + " " + turn.player.name);
         printPlayers();
 
         if (turn.player.bot && turn.player.clientId == -1) {
@@ -237,7 +237,7 @@ var server = http.createServer(function (req, res)
 
         processWaitlist(q);
 
-        console.log("status: " + q.status + " clientId: " + q.clientId);
+        console.log(q.status + " clientId: " + q.clientId);
 
         break;
 
@@ -250,8 +250,27 @@ var server = http.createServer(function (req, res)
 
         q.players = players;
         q.discrotations = detenterotation;
+if (0) {
+        q.plots = [];
 
-        console.log("status: " + q.status + " clientId: " + q.clientId);
+        for (var i = 0; i < plots.length; i++) {
+            var p = plots[i];
+            var plot = {};
+            plot.owner = p.owner;
+            plot.nwells = p.nwells;
+            plot.pipepadsto = p.pipepadsto;
+            plot.pipepadsfrom = p.pipepadsfrom;
+            plot.holes = [];
+            for (var j = 0; j < p.holes.length; j++) {
+                plot.holes[j] = p.holes[j].drill;
+            }
+            q.plots[i] = plot;
+        }
+// do deck[]
+// do pipepads[]
+}
+
+        console.log(q.status + " clientId: " + q.clientId);
 
         break;
 
@@ -265,7 +284,7 @@ var server = http.createServer(function (req, res)
 
         processWaitlist(q);
 
-        console.log("status: " + q.status + " disc0-2: " + q.disc0 + " " + q.disc1 + " " + q.disc2);
+        console.log(q.status + " disc0-2: " + q.disc0 + " " + q.disc1 + " " + q.disc2);
 
         break;
 
@@ -278,7 +297,7 @@ var server = http.createServer(function (req, res)
 
         processWaitlist(q);
 
-        console.log("status: " + q.status + " player: " + q.playernum + " " + q.name);
+        console.log(q.status + " player: " + q.playernum + " " + q.name);
 
         break;
 
@@ -295,7 +314,7 @@ var server = http.createServer(function (req, res)
 
         processWaitlist(q);
 
-        console.log("status: " + q.status + " player: " + q.player + " name: " + q.name);
+        console.log(q.status + " player: " + q.player + " name: " + q.name);
 
         break;
 
@@ -335,7 +354,7 @@ var server = http.createServer(function (req, res)
             q.status = "rendezvous_OK";
         }
 
-//        console.log("status: " + q.status + " wait mask: " + clientWaitsMask);
+//        console.log(q.status + " wait mask: " + clientWaitsMask);
 
         break;
 
@@ -352,8 +371,8 @@ var server = http.createServer(function (req, res)
 });
 
 //const host = '192.168.5.171';
-//server.listen(8080, host);
-server.listen(8080);
+//server.listen(31428, host);
+server.listen(31428);
 
 startGame();
 

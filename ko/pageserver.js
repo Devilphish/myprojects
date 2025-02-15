@@ -5,7 +5,7 @@ const fs = require('fs').promises;
 const host = '192.168.5.115';
 //const host = '23.124.26.26';
 //const host = window.location.hostname;
-const port = 8000;
+const port = 31420;
 
 const requestListener = function (req, res)
 {
