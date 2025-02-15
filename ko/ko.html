@@ -3757,8 +3757,13 @@ function startDrillAnimation(hole, callback)
                 setCursor(cursorsave);
                 cursorsave = null;
 
-                if (turn.drillsused != turn.card.ndrills && turn.clientId == gclientId && !turn.player.bot) {
-                    enableDrillButtons();
+                if (turn.player.clientId == gclientId && !turn.player.bot) {
+                    if (turn.drillsused != turn.card.ndrills) {
+                        enableDrillButtons();
+                    }
+                    else {
+                        putAwayDrill();
+                    }
                 }
             }
         }
