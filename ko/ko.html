@@ -47,6 +47,7 @@ var chatinput;
 
 var detenterotationinput = [];
 var drillAnimation;
+var capAnimation;
 var shuffleAnimation = [];
 var myStatusButton;
 var myAddPlayerButton;
@@ -491,18 +492,7 @@ function captoolButtonDownEvent()
                 myCapIcon.image.src = turn.player.color + "cap_outline.png";
                 myCapIcon.button.style.opacity = "0.2";
 
-                for (var i = 0; i < turn.player.plots.length; i++) {
-                    var p = turn.player.plots[i];
-
-                    for (var j = 0; j < p.holes.length; j++) {
-                        var h = p.holes[j];
-                        if (h.drill > 0) {
-                            // only change holes with wells
-                            h.button.style.opacity = "0.3";
-                            document.body.appendChild(h.button);
-                        }
-                    }
-                }
+                enableCapButtons();
             }
         }
     }
@@ -685,9 +675,9 @@ function enableDrillButtons()
         var p = turn.player.plots[i];
 
         for (var j = 0; j < p.holes.length; j++) {
-            if (p.holes[j].drill == -1) {
+            var h = p.holes[j];
+            if (h.drill == -1) {
                 // only change undrilled holes
-                var h = p.holes[j];
                 h.button.style.opacity = "0.3";
                 document.body.appendChild(h.button);
                 holebuttons.push(h.button);
@@ -696,7 +686,7 @@ function enableDrillButtons()
     }
 }
 
-function removeDrillButtons()
+function removeDrillCapButtons()
 {
     while (holebuttons.length) {
         var b = holebuttons.pop();
@@ -718,7 +708,7 @@ function putAwayDrill()
 //    myDerrickIcon.update();
     updateGameArea();
 
-    removeDrillButtons();
+    removeDrillCapButtons();
 }
 
 function drilltoolButtonDownEvent()
@@ -750,6 +740,23 @@ function drilltoolButtonDownEvent()
 
 function drilltoolButtonUpEvent()
 {
+}
+
+function enableCapButtons()
+{
+    for (var i = 0; i < turn.player.plots.length; i++) {
+        var p = turn.player.plots[i];
+
+        for (var j = 0; j < p.holes.length; j++) {
+            var h = p.holes[j];
+            if (h.drill > 0) {
+                // only change holes with wells
+                h.button.style.opacity = "0.3";
+                document.body.appendChild(h.button);
+                holebuttons.push(h.button);
+            }
+        }
+    }
 }
 
 function nextButtonDownEvent()
@@ -1135,7 +1142,7 @@ function completeDraw(card)
         }
 
         var w = " well";
-        if (turn.capsrequired > 1) {
+        if (turn.capsrequired != 1) {
             w += "s";
         }
         myCardStatusDiv.innerText = "CURRENT CARD\nFIRE\n";
@@ -1215,7 +1222,6 @@ function completeDraw(card)
     if (!curstate.autotoolEnable) {
         actionMode();
     }
-
     debugmsg.innerText = "DOWN DRAW card " + cardnum + " (" + deck.length + ")";
 
     updatePlayersDisplay();
@@ -1230,52 +1236,6 @@ function drawcardButtonUpEvent()
     if (cardnum != -1) {
         debugmsg.innerText = "UP DRAW card " + cardnum + " (" + deck.length + ")";
     }
-}
-
-function completeDrill(h)
-{
-    var depthmsg;
-    var cost = drillDepthCost[h.drill + 1];
-
-    if (h != dummyhole) {
-        transferMoney(turn.player, bankPlayer, cost);
-    }
-
-    if (h.drill > 0) {
-        if (h != dummyhole) {
-            turn.player.nwells++;
-            plots[h.plot - 1].nwells++;
-            h.well = new component(18, 60,
-                turn.player.color + "well.png",
-                h.left - 16, h.top - 60, "image");
-            wells[wells.length++] = h.well;
-        }
-
-        if (h.drill == 3) {
-            depthmsg = "shallow";
-        }
-        else if (h.drill == 2) {
-            depthmsg = "medium";
-        }
-        else if (h.drill == 1) {
-            depthmsg = "deep";
-        }
-    }
-    else {
-        if (h != dummyhole) {
-            if (curstate.soundEnable) {
-                ss.play();
-            }
-            caps[caps.length++] = new component(25, 25,
-                turn.player.color + "cap.png",
-                h.left - 21, h.top - 25, "image");
-        }
-
-        depthmsg = "dry";
-    }
-
-    var plot = plots[h.plot - 1];
-    errmsg.push(plot.id + " h" + (h.num + 1) + " " + depthmsg + " well $" + drillDepthCost[h.drill + 1]);
 }
 
 function drillHole(hole)
@@ -1407,7 +1367,7 @@ function wellButtonDownEvent()
         httpRequestDrill(h, null);
     }
     else if (capable) {
-        httpRequestCap(h);
+        httpRequestCap(h, null);
     }
 
     updatePlayersDisplay();
@@ -1421,8 +1381,10 @@ function continueDrill(h, callback)
         startDrillAnimation(h, callback);
     }
     else {
-        cursorsave = curcursor;
-        setCursor(drillCursors[h.drill]);
+        if (turn.player.clientId == gclientId) {
+            cursorsave = curcursor;
+            setCursor(drillCursors[h.drill]);
+        }
 
         // count it before drilling
         turn.drillsused++;
@@ -1436,6 +1398,69 @@ function continueDrill(h, callback)
     debugmsg.innerText = "DOWN WELL " + h.button.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring;
 
     updatePlayersDisplay();
+}
+
+function continueCap(h, callback)
+{
+    if (curstate.drillAnimationEnable) {
+        startCapAnimation(h, callback);
+    }
+    else {
+        completeCap(h);
+    }
+
+    h.button.style.opacity = "0.0";
+    // don't removeChild button now, wait until up event
+
+    debugmsg.innerText = "DOWN WELL " + h.button.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring;
+
+    updatePlayersDisplay();
+}
+
+function completeDrill(h)
+{
+    var depthmsg;
+    var cost = drillDepthCost[h.drill + 1];
+
+    if (h != dummyhole) {
+        transferMoney(turn.player, bankPlayer, cost);
+    }
+
+    if (h.drill > 0) {
+        if (h != dummyhole) {
+            turn.player.nwells++;
+            plots[h.plot - 1].nwells++;
+            h.well = new component(18, 60,
+                turn.player.color + "well.png",
+                h.left - 16, h.top - 60, "image");
+            wells[wells.length++] = h.well;
+        }
+
+        if (h.drill == 3) {
+            depthmsg = "shallow";
+        }
+        else if (h.drill == 2) {
+            depthmsg = "medium";
+        }
+        else if (h.drill == 1) {
+            depthmsg = "deep";
+        }
+    }
+    else {
+        if (h != dummyhole) {
+            if (curstate.soundEnable) {
+                ss.play();
+            }
+            caps[caps.length++] = new component(25, 25,
+                turn.player.color + "cap.png",
+                h.left - 21, h.top - 25, "image");
+        }
+
+        depthmsg = "dry";
+    }
+
+    var plot = plots[h.plot - 1];
+    errmsg.push(plot.id + " h" + (h.num + 1) + " " + depthmsg + " well $" + drillDepthCost[h.drill + 1]);
 }
 
 function completeCap(h)
@@ -1452,8 +1477,6 @@ function completeCap(h)
     caps[caps.length++] = new component(25, 25, turn.player.color + "cap.png", h.left - 21, h.top - 25, "image");
 
     enablePipepadRemoveButtons();
-
-    debugmsg.innerText = "DOWN WELL " + h.button.id + " plot: " + h.plot + " spoke: " + h.spoke + " ring: " + h.ring;
 
     errmsg.push(plot.id + " h" + (h.num + 1) + " capped");
 
@@ -1473,7 +1496,7 @@ function wellButtonUpEvent()
     }
 
     if (curcursor.mode == "drill" || drillAnimation.active) {
-        if (curstate.autotoolEnable && !turn.player.bot) {
+        if (curstate.autotoolEnable && turn.player.clientId == gclientId && !turn.player.bot) {
             if (turn.drillsused == turn.card.ndrills) {
                 putAwayDrill();
                 if (gameMode != "draw") {
@@ -1485,13 +1508,13 @@ function wellButtonUpEvent()
     else if (curcursor.mode == "cap") {
         if (!(curstate.autotoolEnable && turn.player.clientId == gclientId && !turn.player.bot && turn.capsrequired > 0)) {
             putAwayCap();
-        }
-        if (gameMode != "draw") {
-            actionMode();
+            if (gameMode != "draw") {
+                actionMode();
+            }
         }
     }
 
-    if (!drillAnimation.active && cursorsave != null) {
+    if (!drillAnimation.active && !capAnimation.active && cursorsave != null) {
         setCursor(cursorsave);
         cursorsave = null;
     }
@@ -1563,6 +1586,7 @@ function httpRequestWait()
 
 //                errmsg.push("drill_OK plot " + waitResponse.plot + " hole " + waitResponse.hole + " depth " + waitResponse.drillDepth);
 
+                var callback;
                 if (curstate.drillAnimationEnable) {
                     callback = httpRequestWait;
                 }
@@ -1580,7 +1604,14 @@ function httpRequestWait()
 
 //                errmsg.push("cap_OK plot " + waitResponse.plot + " hole " + waitResponse.hole);
 
-                completeCap(hole);
+                var callback;
+                if (curstate.drillAnimationEnable) {
+                    callback = httpRequestWait;
+                }
+                else {
+                    callback = null;
+                }
+                continueCap(hole);
 
                 break;
 
@@ -1675,7 +1706,7 @@ function httpRequestWait()
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=wait", true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=wait", true);
     xhttp.send();
 }
 
@@ -1688,6 +1719,8 @@ function httpRequestRendezvous(callback)
         errmsg.push("previousCallback != null (" + prevCallback + ")");
         errmsg.push("current callback is " + callback);
         errmsg.push("caller is " + httpRequestRendezvous.caller);
+
+        alert("OH NOOOOO\nInternal ERROR\nI'm broken :(");
     }
 
     var xhttp = new XMLHttpRequest();
@@ -1723,7 +1756,7 @@ function httpRequestRendezvous(callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=rendezvous", true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=rendezvous", true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -1775,7 +1808,7 @@ function httpRequestChat(msg, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=chat&msg=" + msg, true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=chat&msg=" + msg, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -1821,7 +1854,7 @@ function httpRequestConnect()
             }
         }
         else if (this.readyState == 4 && this.status == 0) {
-            errmsg.push("Could not connect to server http://" + host + ":8080");
+            errmsg.push("Could not connect to server http://" + host + ":31428");
             updatePlayersDisplay();
         }
         else {
@@ -1829,7 +1862,7 @@ function httpRequestConnect()
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=-1&action=connect", true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=-1&action=connect", true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -1864,7 +1897,7 @@ function httpRequestNamechange(player, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + players.indexOf(player) + "&action=namechange&name=" + player.name, true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + players.indexOf(player) + "&action=namechange&name=" + player.name, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -1900,7 +1933,7 @@ function httpRequestRotation(callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=-1&action=rotation&disc0=" + detenterotationinput[0].value + "&disc1=" + detenterotationinput[1].value + "&disc2=" + detenterotationinput[2].value, true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=-1&action=rotation&disc0=" + detenterotationinput[0].value + "&disc1=" + detenterotationinput[1].value + "&disc2=" + detenterotationinput[2].value, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -1931,7 +1964,7 @@ function httpRequestJoin(name, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=-1&action=join&name=" + name, true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=-1&action=join&name=" + name, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -1962,7 +1995,38 @@ function httpRequestDrill(hole, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=drill&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=drill&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
+    xhttp.send();
+
+    myConnectIcon.image.src = "noconnect.png";
+}
+
+function httpRequestCap(hole, callback)
+{
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        myConnectIcon.image.src = "connect.png";
+
+        if (this.readyState == 4 && this.status == 200) {
+            response = true;
+            var capResponse = JSON.parse(this.responseText);
+
+            if (capResponse.status == "cap_OK") {
+//                completeCap(hole);
+                continueCap(hole, callback);
+
+                // drill/cap animation will do rendezvous when done
+                if (!curstate.drillAnimationEnable) {
+                    httpRequestRendezvous(callback);
+                }
+            }
+            else {
+            }
+        }
+    }
+
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=cap&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -1989,7 +2053,7 @@ function httpRequestPipe(pipepad, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=pipe&pipepadnum=" + pipepads.indexOf(pipepad), true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=pipe&pipepadnum=" + pipepads.indexOf(pipepad), true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2016,34 +2080,7 @@ function httpRequestPipeRemove(pipepad, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=piperemove&pipepadnum=" + pipepads.indexOf(pipepad), true);
-    xhttp.send();
-
-    myConnectIcon.image.src = "noconnect.png";
-}
-
-function httpRequestCap(hole, callback)
-{
-    var xhttp = new XMLHttpRequest();
-
-    xhttp.onreadystatechange = function() {
-        myConnectIcon.image.src = "connect.png";
-
-        if (this.readyState == 4 && this.status == 200) {
-            response = true;
-            var capResponse = JSON.parse(this.responseText);
-
-            if (capResponse.status == "cap_OK") {
-                completeCap(hole);
-
-                httpRequestRendezvous(callback);
-            }
-            else {
-            }
-        }
-    }
-
-    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=cap&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=piperemove&pipepadnum=" + pipepads.indexOf(pipepad), true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2071,7 +2108,7 @@ function httpRequestDraw(callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=draw", true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=draw", true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2105,7 +2142,7 @@ function httpRequestBuy(plot, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=buy&plot=" + (plot.plotnum - 1), true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=buy&plot=" + (plot.plotnum - 1), true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2134,7 +2171,7 @@ function httpRequestNext()
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=next", true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=next", true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2161,7 +2198,7 @@ function httpRequestFine(callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":8080/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=fine", true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=fine", true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2668,6 +2705,7 @@ function initLayPipeButton(b)
 function makeBuyButton()
 {
     myShedIcon = new component(40, 40, turn.player.color + "shed.png", 285, 807, "image", 0, 0);
+
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", buyButtonDownEvent);
     b.style.border = "0px";
@@ -3468,6 +3506,9 @@ function startGame()
     oilstrike = new component(100, 50, "spill.png", 570, 895, "image");
     oilstrike.active = false;
 
+    capAnimation = new component(36, 167, "fire1.png", 0, 0, "image");
+    capAnimation.active = false;
+
     var side = -1;
     for (var i = 0; i < cards.length; i++) {
         shuffleAnimation[i] = new component(192, 50, "wildcat_shuffle.png", 520 + i / 2 + (side * 75), 470 - i, "image");
@@ -3679,13 +3720,12 @@ function startDrillAnimation(hole, callback)
     drillAnimation.height = height;
     drillAnimation.active = true;
     drillAnimation.image.src = "derrick3_nobit.png";
-//    drillAnimation.image.src = "fire1.png";
     drillAnimation.update();
 
     cursorsave = curcursor;
     setCursor(cursorKingOil);
 
-    removeDrillButtons();
+    removeDrillCapButtons();
 
     frame = 3;
     shake = 750 / shakeInterval;
@@ -3717,7 +3757,7 @@ function startDrillAnimation(hole, callback)
                 setCursor(cursorsave);
                 cursorsave = null;
 
-                if (turn.drillsused != turn.card.ndrills && !turn.player.bot) {
+                if (turn.drillsused != turn.card.ndrills && turn.clientId == gclientId && !turn.player.bot) {
                     enableDrillButtons();
                 }
             }
@@ -3736,7 +3776,6 @@ function startDrillAnimation(hole, callback)
                 topatopa += 20;
                 height -= 20;
                 drillAnimation.image.src = "derrick0_nobit.png";
-//                drillAnimation.image.src = "fire4.png";
                 drillAnimation.y = topatopa;
                 drillAnimation.height = height;
             }
@@ -3760,9 +3799,87 @@ function startDrillAnimation(hole, callback)
             topatopa += 20;
             height -= 20;
             drillAnimation.image.src = "derrick" + frame + "_nobit.png";
-//            drillAnimation.image.src = "fire" + (4 - frame) + ".png";
             drillAnimation.y = topatopa;
             drillAnimation.height = height;
+        }
+    }
+}
+
+function startCapAnimation(hole, callback)
+{
+    if (capAnimation.active) {
+        return;
+    }
+
+    animationHole = hole;
+
+    topatopa = hole.top - 20;
+    capAnimation.x = hole.left - 0;
+    capAnimation.y = topatopa;
+    capAnimation.width = 0;
+    capAnimation.height = 0;
+    capAnimation.active = true;
+    capAnimation.image.src = "fire2.png";
+    capAnimation.update();
+
+    cursorsave = curcursor;
+    setCursor(cursorKingOil);
+
+    removeDrillCapButtons();
+
+    frame = 3;
+    shake = 300 / shakeInterval;
+    iId = setInterval(blowup, shakeInterval);
+
+    function blowup() {
+        shake--;
+        if (shake != 0) {
+            capAnimation.width += 20;
+            capAnimation.height += 20;
+            capAnimation.x -= 10;
+            capAnimation.y -= 10;
+        }
+        else {
+            shake = 300 / shakeInterval;
+            capAnimation.x = hole.left - 0;
+            capAnimation.y = topatopa;
+            capAnimation.width = 0;
+            capAnimation.height = 0;
+
+            frame--;
+            if (frame != 0) {
+                return;
+            }
+
+            clearInterval(iId);
+
+            completeCap(animationHole);
+
+            capAnimation.active = false;
+
+            if (cursorsave != null) {
+                setCursor(cursorsave);
+                cursorsave = null;
+
+                if (turn.capsrequired > 0) {
+                    enableCapButtons();
+                }
+                else {
+                    putAwayCap();
+                }
+            }
+
+            if (callback != null) {
+                if (callback == httpRequestWait) {
+                    callback();
+                }
+                else {
+                    // we don't need rendezvous if callback is null
+                    httpRequestRendezvous(callback);
+                }
+            }
+
+            updatePlayersDisplay();
         }
     }
 }
@@ -3901,6 +4018,9 @@ function updateGameArea()
     }
     if (drillAnimation.active) {
         drillAnimation.update();
+    }
+    if (capAnimation.active) {
+        capAnimation.update();
     }
 
     if (myGameArea.x && myGameArea.y) {
