@@ -1375,6 +1375,15 @@ function wellButtonDownEvent()
 
 function continueDrill(h, callback)
 {
+    if (curstate.autotoolEnable && turn.player.clientId == gclientId && !turn.player.bot) {
+        if (turn.drillsused == (turn.card.ndrills - 1)) {
+            putAwayDrill();
+            if (gameMode != "draw") {
+                actionMode();
+            }
+        }
+    }
+
     h.drill = drillHole(h);
 
     if (curstate.drillAnimationEnable) {
@@ -1402,6 +1411,13 @@ function continueDrill(h, callback)
 
 function continueCap(h, callback)
 {
+    if (!(curstate.autotoolEnable && turn.player.clientId == gclientId && !turn.player.bot && turn.capsrequired > 1)) {
+        putAwayCap();
+        if (gameMode != "draw") {
+            actionMode();
+        }
+    }
+
     if (curstate.drillAnimationEnable) {
         startCapAnimation(h, callback);
     }
@@ -1495,6 +1511,7 @@ function wellButtonUpEvent()
         }
     }
 
+if (0) {
     if (curcursor.mode == "drill" || drillAnimation.active) {
         if (curstate.autotoolEnable && turn.player.clientId == gclientId && !turn.player.bot) {
             if (turn.drillsused == turn.card.ndrills) {
@@ -1513,6 +1530,7 @@ function wellButtonUpEvent()
             }
         }
     }
+}
 
     if (!drillAnimation.active && !capAnimation.active && cursorsave != null) {
         setCursor(cursorsave);
@@ -3762,7 +3780,9 @@ function startDrillAnimation(hole, callback)
                         enableDrillButtons();
                     }
                     else {
-                        putAwayDrill();
+                        if (curstate.autotoolEnable) {
+                            putAwayDrill();
+                        }
                     }
                 }
             }
@@ -3870,7 +3890,9 @@ function startCapAnimation(hole, callback)
                     enableCapButtons();
                 }
                 else {
-                    putAwayCap();
+                    if (curstate.autotoolEnable) {
+                        putAwayCap();
+                    }
                 }
             }
 
