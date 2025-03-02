@@ -52,6 +52,8 @@ var shuffleAnimation = [];
 var myStatusButton;
 var myAddPlayerButton;
 var myHelpFrame;
+var helpImage1;
+var helpImage2;
 var myHelpButton;
 var myConnectButton;
 var myGamePiece;
@@ -3209,19 +3211,56 @@ function makeAddPlayerButton()
     myAddPlayerButton = b;
 }
 
-var hframedoc;
-var hframewin;
-
 function helpButtonDownEvent()
 {
-    document.body.appendChild(myHelpFrame);
+    if (myHelpFrame.visible) {
+        myHelpFrame.contentDocument.body.removeChild(helpImage1);
+        myHelpFrame.contentDocument.body.removeChild(helpImage2);
+        document.body.removeChild(myHelpFrame);
+    }
+    else {
+        document.body.appendChild(myHelpFrame);
+        myHelpFrame.contentDocument.body.appendChild(helpImage1);
+        myHelpFrame.contentDocument.body.appendChild(helpImage2);
+    }
+
+    myHelpFrame.visible = !myHelpFrame.visible;
 }
 
 function makeHelpButton()
 {
-return;
+    var f = document.createElement("IFRAME");
+    f.style.width = "720px";
+    f.style.height = "666px";
+    f.style.position = "absolute";
+    f.style.left = "370px";
+    f.style.top = "100px";
+    f.style.border = "3px solid green";
 
-//    myConnectIcon = new component(60, 60, "noconnect.png", 320, 140, "image", 0, 0);
+    f.visible = false;
+
+    myHelpFrame = f;
+
+    var i = document.createElement("IMG");
+    i.style.width = "720px";
+    i.style.height = "666px";
+    i.style.position = "absolute";
+    i.style.left = "0px";
+    i.style.top = "0px";
+    i.src = "card_all.png";
+
+    helpImage1 = i;
+
+    i = document.createElement("IMG");
+    i.style.width = "720px";
+    i.style.height = "666px";
+    i.style.position = "absolute";
+    i.style.left = "0px";
+    i.style.top = "671px";
+    i.src = "card_all.png";
+
+    helpImage2 = i;
+
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", helpButtonDownEvent);
     b.style.borderRadius = "30px";
@@ -3235,27 +3274,12 @@ return;
     b.style.opacity = "0.5";
     b.style.font = "bold 20px arial,serif";
     b.style.cursor = "url('cursor.png'), pointer";
-    document.body.appendChild(b);
 
     b.innerText = "?";
 
+    document.body.appendChild(b);
+
     myHelpButton = b;
-
-    var f = document.createElement("IFRAME");
-    f.style.width = "1000px";
-    f.style.height = "658px";
-    f.style.position = "absolute";
-    f.style.left = "0px";
-    f.style.top = "12px";
-    f.style.color = "white";
-    f.style.backgroundColor = "#00000";
-    f.style.border = "0px";
-
-    myHelpFrame = f;
-
-    document.body.appendChild(myHelpFrame);
-    hframedoc = f.contentDocument;
-    hframewin = f.contentWindow;
 
 //    hframewin.location.href = "http://192.168.5.115:8000/KingOil.pdf";
 //    hframewin.location.replace("http://192.168.5.115:8000/KingOil.pdf");
@@ -3442,7 +3466,7 @@ function startGame()
     t.style.color = "white";
 
     myGamePiece = new component(60, 60, "KingOilIcon.png", 0, 0, "image", 20, 20);
-    myGamePiece.enabled = false;
+    myGamePiece.active = false;
     myBackground = new component(1000, 1000, "ko_board.png", 100, 0, "image", 0, 0);
     myBackground2 = new component(217, 783, "oil_spill.png", 0, 100, "image", 0, 0);
 
@@ -4054,7 +4078,7 @@ function updateGameArea()
         myGamePiece.x = myGameArea.x;
         myGamePiece.y = myGameArea.y;
     }
-    if (myGamePiece.enabled) {
+    if (myGamePiece.active) {
         myGamePiece.update();
     }
 }
@@ -4076,17 +4100,17 @@ function setCursor(c)
     curcursor = c;
 
     if (c == cursorKingOil) {
-        myGamePiece.enabled = false;
+        myGamePiece.active = false;
     }
     else {
-        myGamePiece.enabled = true;
+        myGamePiece.active = true;
     }
     myGamePiece.image.src = c.imagesrc;
     myGamePiece.width = c.width;
     myGamePiece.height = c.height;
     myGamePiece.xoffset = c.xoffset;
     myGamePiece.yoffset = c.yoffset;
-//    if (myGamePiece.enabled) {
+//    if (myGamePiece.active) {
 //        myGamePiece.x = myGameArea.x - myGamePiece.xoffset;
 //        myGamePiece.y = myGameArea.y - myGamePiece.yoffset;
 //        myGamePiece.update();
