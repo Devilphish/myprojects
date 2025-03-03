@@ -2,9 +2,10 @@ const http = require('http');
 const fs = require('fs').promises;
 
 //const host = 'localhost';
-const host = '192.168.5.115';
+//const host = '192.168.5.115';
 //const host = '23.124.26.26';
-//const host = window.location.hostname;
+//const host = global.location.hostname;
+//const host = global.hostname;
 const port = 31420;
 
 const requestListener = function (req, res)
@@ -23,6 +24,10 @@ const requestListener = function (req, res)
     else if (req.url == "/ko.html" || req.url == "/") {
         type = "text/html";
         file = "/ko.html";
+    }
+    else if (req.url == "/foo.html" || req.url == "/") {
+        type = "text/html";
+        file = "/foo.html";
     }
     else {
         res.writeHead(404);
@@ -52,6 +57,6 @@ const requestListener = function (req, res)
 
 const server = http.createServer(requestListener);
 server.listen(port, () => {
-    console.log(`Server is running on http://${host}:${port}`);
+    console.log(`Server is listening on port ${port}`);
 });
 
