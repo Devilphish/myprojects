@@ -4,11 +4,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <style>
 
-canvas {
-    border:1px solid #d3d3d3;
-    background-color: #f1f1f1;
-}
-
 body {
     cursor: url('cursor.png'), wait;
 }
@@ -17,13 +12,6 @@ body {
 </head>
 <body onload="startGame()">
 
-<!--
-<script type="text/javascript" src="http://localhost:8000/discs.js"></script>
-<script type="text/javascript" src="http://localhost:8000/plots.js"></script>
-<script type="text/javascript" src="http://localhost:8000/pipepads.js"></script>
-<script type="text/javascript" src="http://localhost:8000/cards.js"></script>
-<script type="text/javascript" src="http://localhost:8000/rotation.js"></script>
--->
 <script type="text/javascript" src="discs.js"></script>
 <script type="text/javascript" src="plots.js"></script>
 <script type="text/javascript" src="pipepads.js"></script>
@@ -32,12 +20,12 @@ body {
 
 <script>
 
-//var host = 'localhost';
 var host = window.location.hostname;
 
 var gclientId = -1;
 
 var sandbox = 0;
+
 var debugButton;
 var fineButton;
 var randomButton;
@@ -102,8 +90,6 @@ var cursorDerrick0 = {
     imagesrc: "derrick0.png",
     width: 200,
     height: 300,
-//    xoffset: 110,
-//    yoffset: 295
     xoffset: 95,
     yoffset: 280
 };
@@ -113,8 +99,6 @@ var cursorDerrick1 = {
     imagesrc: "derrick1.png",
     width: 200,
     height: 300,
-//    xoffset: 110,
-//    yoffset: 295
     xoffset: 95,
     yoffset: 280
 };
@@ -124,8 +108,6 @@ var cursorDerrick2 = {
     imagesrc: "derrick2.png",
     width: 200,
     height: 300,
-//    xoffset: 110,
-//    yoffset: 295
     xoffset: 95,
     yoffset: 280
 };
@@ -135,8 +117,6 @@ var cursorDerrick3 = {
     imagesrc: "derrick3.png",
     width: 200,
     height: 300,
-//    xoffset: 110,
-//    yoffset: 295
     xoffset: 95,
     yoffset: 280
 };
@@ -155,8 +135,6 @@ var cursorShed = {
     imagesrc: "blueshed.png",
     width: 40,
     height: 40,
-//    xoffset: 40,
-//    yoffset: 45
     xoffset: 15,
     yoffset: 35
 };
@@ -166,8 +144,6 @@ var cursorCap = {
     imagesrc: "bluecap.png",
     width: 40,
     height: 40,
-//    xoffset: 30,
-//    yoffset: 35
     xoffset: 18,
     yoffset: 35
 };
@@ -177,8 +153,6 @@ var cursorPipe = {
     imagesrc: "bluepipe.png",
     width: 39,
     height: 100,
-//    xoffset: 22,
-//    yoffset: 50
     xoffset: 20,
     yoffset: 50
 };
@@ -838,6 +812,7 @@ function botNextSetTimeout()
 function botNext()
 {
     if (drillAnimation.active) {
+        // wait a second
         botIId = setTimeout(botNext, 1000);
 
         return;
@@ -1100,6 +1075,10 @@ function drawcardButtonDownEvent()
     if (gclientId == -1) {
         drawable = false;
         errmsg.push("must connect to server");
+    }
+    else if (turn.player.bot) {
+        drawable = false;
+        errmsg.push("can't draw card during bot's turn");
     }
     else if (curcursor.type == "tool") {
         drawable = false;
@@ -3059,7 +3038,6 @@ function addPlayer(name, display)
     player.money = 80000;
     player.nwells = 0;
     player.pipelines = 0;
-    player.msg = [];
     player.display = {};
     var un = player.name.toUpperCase()
     if (un.startsWith("HAL") || un.endsWith("BOT")) {
@@ -3265,10 +3243,10 @@ function makeHelpButton()
     myHelpFrame = f;
 
     var i = document.createElement("IMG");
-    i.style.width = "429px";
+    i.style.width = "430px";
     i.style.height = "660px";
     i.style.position = "absolute";
-    i.style.left = "0px";
+    i.style.left = "145px";
     i.style.top = "0px";
     i.src = "KingOil.png";
 
@@ -3308,7 +3286,7 @@ function makeHelpButton()
     i.style.width = "510px";
     i.style.height = "660px";
     i.style.position = "absolute";
-    i.style.left = "0px";
+    i.style.left = "105px";
     i.style.top = "2680px";
     i.src = "KingOil4.png";
 
@@ -3593,7 +3571,7 @@ function startGame()
     drillAnimation = new component(36, 167, "derrick3_nobit.png", 0, 0, "image", 0, 0, false);
     oilstrike = new component(100, 50, "spill.png", 570, 895, "image", 0, 0, false);
 
-    capAnimation = new component(36, 167, "fire1.png", 0, 0, "image", 0, 0, false);
+    capAnimation = new component(36, 167, "fire2.png", 0, 0, "image", 0, 0, false);
 
     var side = -1;
     for (var i = 0; i < cards.length; i++) {
@@ -4032,6 +4010,9 @@ function keyUpEvent(e)
     debugmsg.innerText = "  KEY UP " + e.code;
 }
 
+var pageX;
+var pageY;
+
 var myGameArea = {
     start: function() {
         window.addEventListener('keydown', keyDownEvent);
@@ -4042,6 +4023,8 @@ var myGameArea = {
             myGamePiece.x = e.pageX - myGamePiece.xoffset;
             myGamePiece.y = e.pageY - myGamePiece.yoffset;
             myGamePiece.update();
+            pageX = e.pageX;
+            pageY = e.pageY;
             debugmsg.innerText = "X: " + e.pageX + " Y: " + e.pageY;
         });
     }
@@ -4068,7 +4051,7 @@ function component(width, height, image, x, y, type, xoffset, yoffset, active)
     this.active = active;
     if (this.active) {
         if (this == myGamePiece) {
-            document.body.insertBefore(this.image, displayNode);
+            displayNode = document.body.insertBefore(this.image, displayNode);
         }
         else {
             document.body.insertBefore(this.image, componentNode);
@@ -4083,7 +4066,7 @@ function component(width, height, image, x, y, type, xoffset, yoffset, active)
 
             if (!document.body.contains(this.image)) {
                 if (this == myGamePiece) {
-                    document.body.insertBefore(this.image, displayNode);
+                    displayNode = document.body.insertBefore(this.image, displayNode);
                 }
                 else {
                     document.body.insertBefore(this.image, componentNode);
@@ -4092,6 +4075,9 @@ function component(width, height, image, x, y, type, xoffset, yoffset, active)
         }
         else {
             if (document.body.contains(this.image)) {
+                if (this == myGamePiece) {
+                    displayNode = displayNode.nextSibling;
+                }
                 document.body.removeChild(this.image);
             }
         }
@@ -4113,12 +4099,13 @@ function actionMode()
 function setCursor(c)
 {
     curcursor = c;
-
     myGamePiece.image.src = c.imagesrc;
     myGamePiece.width = c.width;
     myGamePiece.height = c.height;
     myGamePiece.xoffset = c.xoffset;
     myGamePiece.yoffset = c.yoffset;
+    myGamePiece.x = pageX - myGamePiece.xoffset;
+    myGamePiece.y = pageY - myGamePiece.yoffset;
 
     if (c == cursorKingOil) {
         if (myGamePiece.active) {
@@ -4129,8 +4116,6 @@ function setCursor(c)
     else {
         if (!myGamePiece.active) {
             myGamePiece.active = true;
-            myGamePiece.x = myGameArea.x - myGamePiece.xoffset;
-            myGamePiece.y = myGameArea.y - myGamePiece.yoffset;
             myGamePiece.update();
         }
     }
