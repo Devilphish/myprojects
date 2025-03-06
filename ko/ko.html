@@ -285,16 +285,13 @@ function updatePlayersDisplay()
             myStatusButton.innerHTML = msg;
 
             if (statusiId == null) {
-                statusiId = setInterval(clearstatus, 2000);
-//                clearInterval(statusiId);
-//                statusiId = null;
+                statusiId = setTimeout(clearstatus, 2000);
             }
 
             function clearstatus() {
                 myStatusButton.style.opacity = "0.0";
                 myStatusButton.hidden = true;
 
-                clearInterval(statusiId);
                 statusiId = null;
             }
 
@@ -868,6 +865,10 @@ function botAction()
 {
     var callback;
 
+    if (gameMode == "over") {
+        return;
+    }
+
     if (turn.fineable) {
         if (turn.card.plotbuy) {
             callback = botBuyPlotSetTimeout;
@@ -1389,10 +1390,10 @@ function continueDrill(h, callback)
         startDrillAnimation(h, callback);
     }
     else {
-        if (turn.player.clientId == gclientId) {
-            cursorsave = curcursor;
-            setCursor(drillCursors[h.drill]);
-        }
+//        if (turn.player.clientId == gclientId) {
+//            cursorsave = curcursor;
+//            setCursor(drillCursors[h.drill]);
+//        }
 
         // count it before drilling
         turn.drillsused++;
@@ -1432,6 +1433,21 @@ function continueCap(h, callback)
     updatePlayersDisplay();
 }
 
+function activateComponent(cadd, crem1, crem2)
+{
+    if (crem1) {
+        crem1.active = false;
+        crem1.update();
+    }
+    if (crem2) {
+        crem2.active = false;
+        crem2.update();
+    }
+
+    cadd.active = true;
+    cadd.update();
+}
+
 function completeDrill(h)
 {
     var depthmsg;
@@ -1441,14 +1457,36 @@ function completeDrill(h)
         transferMoney(turn.player, bankPlayer, cost);
     }
 
+    // drillAnimation.height might be shrunk from prev animation if
+    // animations were previously enabled, restore height
+    var drillAnimationHeight = 167;
+
     if (h.drill > 0) {
         if (h != dummyhole) {
             turn.player.nwells++;
             plots[h.plot - 1].nwells++;
+
+            var activate = curstate.drillAnimationEnable ? true : false;
             h.well = new component(18, 60,
                 turn.player.color + "well.png",
-                h.left - 0, h.top - 52, "image", 0, 0, true);
+                h.left - 0, h.top - 52, "image", 0, 0, activate);
             wells[wells.length++] = h.well;
+
+            if (!curstate.drillAnimationEnable) {
+                var img = "derrick" + h.drill + "_nobit.png";
+                var width = drillAnimation.width;
+                var height = drillAnimationHeight - ((3 - h.drill) * 20);
+                var x = h.left - 5;
+                var y = h.top - drillAnimationHeight +
+                    ((3 - h.drill) * 20);
+
+                var derrick = new component(width, height, img,
+                    x, y, "image", 0, 0, true);
+                var oil = new component(100, 50, "spill.png",
+                    x - 20, y + height - 20, "image", 0, 0, true);
+
+                setTimeout(activateComponent, 1000, h.well, derrick, oil);
+            }
         }
 
         if (h.drill == 3) {
@@ -1466,9 +1504,25 @@ function completeDrill(h)
             if (curstate.soundEnable) {
                 ss.play();
             }
-            caps[caps.length++] = new component(25, 25,
-                turn.player.color + "cap.png",
-                h.left - 5, h.top - 20, "image", 0, 0, true);
+
+            var activate = curstate.drillAnimationEnable ? true : false;
+
+            var cap = new component(25, 25, turn.player.color + "cap.png",
+                h.left - 5, h.top - 20, "image", 0, 0, activate);
+            caps[caps.length++] = cap;
+
+            if (!curstate.drillAnimationEnable) {
+                var img = "derrick0_nobit.png";
+                var width = drillAnimation.width;
+                var height = drillAnimationHeight - ((3 - h.drill) * 20);
+                var x = h.left - 5;
+                var y = h.top - drillAnimationHeight +
+                    ((3 - h.drill) * 20);
+
+                var derrick = new component(width, height, img, x, y, "image", 0, 0, true);
+
+                setTimeout(activateComponent, 1000, cap, derrick);
+            }
         }
 
         depthmsg = "dry";
@@ -1589,11 +1643,21 @@ function httpRequestWait()
                 break;
 
               case "draw_OK":
+              case "bankbankrupt_OK":
                 var card = waitResponse.card;
 
 //                errmsg.push("draw_OK card " + JSON.stringify(card));
 
                 completeDraw(card);
+
+                if (waitResponse.status == "bankbankrupt_OK") {
+                    errmsg.push("bankbankrupt_OK");
+                    updatePlayersDisplay();
+
+                    gameMode = "over";
+
+                    alert("Game over, the BANK is broke");
+                };
 
                 break;
 
@@ -2000,16 +2064,21 @@ function httpRequestDrill(hole, callback)
             response = true;
             var drillResponse = JSON.parse(this.responseText);
 
-            if (drillResponse.status == "drill_OK") {
+            switch (drillResponse.status) {
+              case "drill_OK":
+
                 continueDrill(hole, callback);
 
-//                if (callback == null) {
                 // drill animation will do rendezvous when done
                 if (!curstate.drillAnimationEnable) {
                     httpRequestRendezvous(callback);
                 }
-            }
-            else {
+
+                break;
+
+              default:
+                errmsg.push("httpRequestRotation " + drillResponse.status);
+                break;
             }
         }
     }
@@ -2116,13 +2185,26 @@ function httpRequestDraw(callback)
             response = true;
             var drawResponse = JSON.parse(this.responseText);
 
-            if (drawResponse.status == "draw_OK") {
+            switch (drawResponse.status) {
+              case "draw_OK":
+              case "bankbankrupt_OK":
+
                 var card = drawResponse.card;
                 completeDraw(card);
 
                 httpRequestRendezvous(callback);
-            }
-            else {
+
+                if (drawResponse.status == "bankbankrupt_OK") {
+                    gameMode = "over";
+
+                    alert("Game over, the BANK is broke");
+                };
+
+                break;
+
+              default:
+                errmsg.push("httpRequestRotation " + drillResponse.status);
+                break;
             }
         }
     }
