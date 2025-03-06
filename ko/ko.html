@@ -1460,13 +1460,13 @@ function completeDrill(h)
     // drillAnimation.height might be shrunk from prev animation if
     // animations were previously enabled, restore height
     var drillAnimationHeight = 167;
+    var activate = curstate.drillAnimationEnable ? true : false;
 
     if (h.drill > 0) {
         if (h != dummyhole) {
             turn.player.nwells++;
             plots[h.plot - 1].nwells++;
 
-            var activate = curstate.drillAnimationEnable ? true : false;
             h.well = new component(18, 60,
                 turn.player.color + "well.png",
                 h.left - 0, h.top - 52, "image", 0, 0, activate);
@@ -1505,8 +1505,6 @@ function completeDrill(h)
                 ss.play();
             }
 
-            var activate = curstate.drillAnimationEnable ? true : false;
-
             var cap = new component(25, 25, turn.player.color + "cap.png",
                 h.left - 5, h.top - 20, "image", 0, 0, activate);
             caps[caps.length++] = cap;
@@ -1542,9 +1540,26 @@ function completeCap(h)
     plot.nwells--;
 
     arrayRemove(wells, h.well);
-    document.body.removeChild(h.well.image);
+    if (curstate.drillAnimationEnable) {
+        document.body.removeChild(h.well.image);
+    }
 
-    caps[caps.length++] = new component(25, 25, turn.player.color + "cap.png", h.left - 5, h.top - 20, "image", 0, 0, true);
+    var activate = curstate.drillAnimationEnable ? true : false;
+
+    var cap = new component(25, 25, turn.player.color + "cap.png", h.left - 5, h.top - 20, "image", 0, 0, activate);
+    caps[caps.length++] = cap;
+
+    if (!curstate.drillAnimationEnable) {
+        var img = "fire2.png";
+        var width = 120;
+        var height = 120;
+        var x = h.left + 15 - 60;
+        var y = h.top - 30 - 60;
+
+        var fire = new component(width, height, img, x, y, "image", 0, 0, true);
+
+        setTimeout(activateComponent, 1000, cap, fire, h.well);
+    }
 
     enablePipepadRemoveButtons();
 
@@ -1885,7 +1900,7 @@ function httpRequestChat(msg, callback)
                 break;
 
               default:
-                errmsg.push("httpRequestChat " + connectResponse.status);
+                errmsg.push("httpRequestChat " + chatResponse.status);
                 break;
             }
         }
@@ -2077,7 +2092,7 @@ function httpRequestDrill(hole, callback)
                 break;
 
               default:
-                errmsg.push("httpRequestRotation " + drillResponse.status);
+                errmsg.push("httpRequestDrill " + drillResponse.status);
                 break;
             }
         }
@@ -2100,16 +2115,20 @@ function httpRequestCap(hole, callback)
             response = true;
             var capResponse = JSON.parse(this.responseText);
 
-            if (capResponse.status == "cap_OK") {
-//                completeCap(hole);
+            switch (capResponse.status) {
+              case "cap_OK":
                 continueCap(hole, callback);
 
                 // drill/cap animation will do rendezvous when done
                 if (!curstate.drillAnimationEnable) {
                     httpRequestRendezvous(callback);
                 }
-            }
-            else {
+
+                break;
+
+              default:
+                errmsg.push("httpRequestCap " + capResponse.status);
+                break;
             }
         }
     }
@@ -2203,7 +2222,7 @@ function httpRequestDraw(callback)
                 break;
 
               default:
-                errmsg.push("httpRequestRotation " + drillResponse.status);
+                errmsg.push("httpRequestDraw " + drawResponse.status);
                 break;
             }
         }
@@ -3653,7 +3672,7 @@ function startGame()
     drillAnimation = new component(36, 167, "derrick3_nobit.png", 0, 0, "image", 0, 0, false);
     oilstrike = new component(100, 50, "spill.png", 570, 895, "image", 0, 0, false);
 
-    capAnimation = new component(36, 167, "fire2.png", 0, 0, "image", 0, 0, false);
+    capAnimation = new component(0, 0, "fire2.png", 0, 0, "image", 0, 0, false);
 
     var side = -1;
     for (var i = 0; i < cards.length; i++) {
