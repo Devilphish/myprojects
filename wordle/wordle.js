@@ -1,28 +1,47 @@
+
+var helpString = "\
+WORDLANALYZER matches a 5-letter word 'pattern' ('expression' in techie terms) to the Wordle database of valid 5-letter words, showing all matching words below the word pattern input field. It also shows matches to a larger but seldomly used list of obscure 5-letter words that Wordle considers valid. I question the validity of most of them<br />\
+<br />\
+The word pattern input field accepts 'green', 'yellow', and 'wildcard' letters. Green letters indicate exact position and yellow letters indicate 'not there' misplaced position (same as Wordle coloring). The 'wildcard' letter is either a period '.' or space ' ' character and indicates that any letter can match that position. The 'wildcard' letter field remains blank when 'Space' is entered, or contains a white '.' when 'Period' is entered<br />\
+<br />\
+Letters are input in the same way as with Wordle: the word pattern input field positions are filled from left to right as the letters are typed. After all 5 input field positions have been entered, hit the ENTER key to match with the Wordle database. 'Delete' or 'Backspace' removes the rightmost letter, and Shift-delete or Shift-backspace removes all the existing letters<br />\
+<br />\
+Green letters are entered by typing the letter (unadorned). Yellow letters are entered by typing Shift-letter. 'Wildcard' letters are entered by typing either '.' (period) or ' ' (space)<br />\
+<br />\
+DISCLAIMER<br />\
+<br />\
+WORDLANALYZER is intended as an analysis tool for the sake of interest in the possible words that fit a pattern. Its use in service of solving the daily Wordle puzzle can most certainly be considered cheating. Personally, I do the daily puzzle for nothing but personal satisfaction and enjoyment. Cheating on this endeavor is cheating only myself, akin to cheating in Solitaire. Don't fall for the temptation of using WORDLANALYZER when you are stuck on a particularly troublesome daily Wordle, just suck it up and take the L<br />\
+";
+
 var letters = [];
 var solutionDivs = [];
+var letterIndex = 0;
+var guess;
+var rowIndex = 110;
+var row = 0;
 
 for (var i = 0; i < 5; i++) {
-  var d = document.createElement("DIV");
-  d.style.width = "48px";
-  d.style.height = "40px";
-  d.style.position = "absolute";
-  d.style.left = 100 + (i * 57) + "px";
-  d.style.top = "50px";
-  d.style.color = "white";
-  d.style.backgroundColor = "#00000";
-  d.style.border = "2px solid #3a3a3c";
-  d.style.font = "32px arial bold";
-  d.style.textAlign = "center";
-  d.style.paddingTop = "8px";
-  d.innerHTML = "";
-  document.body.appendChild(d);
+    var d = document.createElement("DIV");
+    d.style.width = "48px";
+    d.style.height = "40px";
+    d.style.position = "absolute";
+    d.style.left = 100 + (i * 57) + "px";
+    d.style.top = "50px";
+    d.style.color = "white";
+    d.style.backgroundColor = "#00000";
+    d.style.border = "2px solid #3a3a3c";
+    d.style.font = "32px arial bold";
+    d.style.textAlign = "center";
+    d.style.paddingTop = "8px";
+    d.innerHTML = "";
+    document.body.appendChild(d);
 
-  letters[i] = d;
+    letters[i] = d;
 }
 
 var d = document.createElement("DIV");
 d.style.width = "200px";
-d.style.height = "44px";
+d.style.height = "88px";
 d.style.position = "absolute";
 d.style.left = "405px";
 d.style.top = "50px";
@@ -33,7 +52,8 @@ d.style.font = "17px arial bold";
 d.style.textAlign = "center";
 d.style.paddingTop = "4px";
 d.style.paddingLeft = "4px";
-d.innerHTML = "Use '.' or ' ' (space) for 'any letter'";
+d.innerHTML = "Use '.' or ' ' (space) for 'any letter'<br />";
+d.innerHTML += "Use SHIFT-letter for 'not here' letters";
 document.body.appendChild(d);
 
 var f = document.createElement("IFRAME");
@@ -54,7 +74,7 @@ f.style.width = "163px";
 f.style.height = "480px";
 f.style.position = "absolute";
 f.style.left = "420px";
-f.style.top = "133px";
+f.style.top = "177px";
 f.style.color = "white";
 f.style.backgroundColor = "#00000";
 f.style.border = "2px solid #3a3a3c";
@@ -62,12 +82,42 @@ document.body.appendChild(f);
 var oframedoc = f.contentDocument;
 var oframewin = f.contentWindow;
 
+var d = document.createElement("IMG");
+d.style.width = "40px";
+d.style.height = "40px";
+d.style.position = "absolute";
+d.style.left = "465px";
+d.style.top = "10px";
+d.addEventListener("mousedown", showSettings);
+d.src = "settings.png";
+document.body.appendChild(d);
+
+var d = document.createElement("IMG");
+d.style.width = "40px";
+d.style.height = "40px";
+d.style.position = "absolute";
+d.style.left = "515px";
+d.style.top = "10px";
+d.addEventListener("mousedown", showStats);
+d.src = "bargraph.png";
+document.body.appendChild(d);
+
+var d = document.createElement("IMG");
+d.style.width = "40px";
+d.style.height = "40px";
+d.style.position = "absolute";
+d.style.left = "565px";
+d.style.top = "10px";
+d.addEventListener("mousedown", showHelp);
+d.src = "help.png";
+document.body.appendChild(d);
+
 var d = document.createElement("DIV");
 d.style.width = "100px";
 d.style.height = "22px";
 d.style.position = "absolute";
 d.style.left = "448px";
-d.style.top = "110px";
+d.style.top = "154px";
 d.style.color = "white";
 d.style.backgroundColor = "#00000";
 d.style.font = "17px arial bold";
@@ -77,21 +127,59 @@ d.style.paddingLeft = "4px";
 d.innerHTML = "OBSCURE";
 document.body.appendChild(d);
 
-var t = document.createElement("TABLE");
-t.style.width = "300px";
-//t.style.height = "22px";
-t.style.position = "absolute";
-t.style.left = "650px";
-t.style.top = "20px";
-t.style.color = "white";
-t.style.backgroundColor = "#00000";
-t.style.font = "17px arial bold";
-t.style.textAlign = "center";
-//t.style.paddingTop = "4px";
-//t.style.paddingLeft = "4px";
-document.body.appendChild(t);
+var canvas = document.createElement("canvas");
+canvas.style.width = "1000px";
+canvas.style.height = "666px";
+canvas.style.backgroundColor = "#000000";
+document.body.insertBefore(canvas, document.body.childNodes[0]);
 
-var row = t.createTHead().insertRow(-1);
+window.addEventListener('keydown', keyDownEvent);
+window.addEventListener('keyup', keyUpEvent);
+
+var helpTxt = document.createElement("DIV");
+helpTxt.style.width = "300px";
+helpTxt.style.height = "626px";
+helpTxt.style.position = "absolute";
+helpTxt.style.left = "650px";
+helpTxt.style.top = "20px";
+helpTxt.style.color = "white";
+helpTxt.style.backgroundColor = "#00000";
+helpTxt.style.font = "17px arial bold";
+helpTxt.style.textAlign = "left";
+helpTxt.style.overflow = "scroll";
+//helpTxt.style.scrollbarColor = "#538d4e";
+helpTxt.style.scrollbarColor = "#008000";
+helpTxt.innerHTML = helpString;
+
+helpTxt.visible = false;
+
+var settings = document.createElement("DIV");
+settings.style.width = "300px";
+settings.style.height = "626px";
+settings.style.position = "absolute";
+settings.style.left = "650px";
+settings.style.top = "20px";
+settings.style.color = "white";
+settings.style.backgroundColor = "#00000";
+settings.style.font = "17px arial bold";
+settings.style.textAlign = "center";
+settings.innerHTML = "Under construction";
+
+settings.visible = false;
+
+var statsTable = document.createElement("TABLE");
+statsTable.style.width = "300px";
+statsTable.style.position = "absolute";
+statsTable.style.left = "650px";
+statsTable.style.top = "20px";
+statsTable.style.color = "white";
+statsTable.style.backgroundColor = "#00000";
+statsTable.style.font = "17px arial bold";
+statsTable.style.textAlign = "center";
+
+statsTable.visible = false;
+
+var row = statsTable.createTHead().insertRow(-1);
 row.insertCell(0).innerHTML = "";
 row.insertCell(1).innerHTML = "any";
 row.insertCell(2).innerHTML = "1st";
@@ -129,9 +217,9 @@ for (var word of Ma) {
     }
 }
 
-for (l = 0; l < 26; l++) {
+for (var l = 0; l < 26; l++) {
     var a = alpha[l];
-    var row = t.insertRow(-1);
+    var row = statsTable.insertRow(-1);
     row.insertCell(0).innerHTML = a;
     row.insertCell(1).innerHTML = n_letter[a];
     row.insertCell(2).innerHTML = n_start[a];
@@ -141,19 +229,68 @@ for (l = 0; l < 26; l++) {
     row.insertCell(6).innerHTML = n_end[a];
 }
 
-var canvas = document.createElement("canvas");
-canvas.style.width = "1000px";
-canvas.style.height = "666px";
-canvas.style.backgroundColor = "#000000";
-document.body.insertBefore(canvas, document.body.childNodes[0]);
+function showSettings()
+{
+    if (helpTxt.visible) {
+        document.body.removeChild(helpTxt);
+        helpTxt.visible = false;
+    }
+    if (statsTable.visible) {
+        document.body.removeChild(statsTable);
+        statsTable.visible = false;
+    }
 
-window.addEventListener('keydown', keyDownEvent);
-window.addEventListener('keyup', keyUpEvent);
+    if (settings.visible) {
+        document.body.removeChild(settings);
+    }
+    else {
+        document.body.appendChild(settings);
+    }
 
-var letterIndex = 0;
-var guess;
-var rowIndex = 110;
-var row = 0;
+    settings.visible = !settings.visible;
+}
+
+function showStats()
+{
+    if (helpTxt.visible) {
+        document.body.removeChild(helpTxt);
+        helpTxt.visible = false;
+    }
+    if (settings.visible) {
+        document.body.removeChild(settings);
+        settings.visible = false;
+    }
+
+    if (statsTable.visible) {
+        document.body.removeChild(statsTable);
+    }
+    else {
+        document.body.appendChild(statsTable);
+    }
+
+    statsTable.visible = !statsTable.visible;
+}
+
+function showHelp()
+{
+    if (statsTable.visible) {
+        document.body.removeChild(statsTable);
+        statsTable.visible = false;
+    }
+    if (settings.visible) {
+        document.body.removeChild(settings);
+        settings.visible = false;
+    }
+
+    if (helpTxt.visible) {
+        document.body.removeChild(helpTxt);
+    }
+    else {
+        document.body.appendChild(helpTxt);
+    }
+
+    helpTxt.visible = !helpTxt.visible;
+}
 
 function drawWord(word, type)
 {
@@ -353,8 +490,6 @@ function checkWord(word)
     var misplacedLetters = [];
 
     for (var l = 0; l < 5; l++) {
-        wordAttrs[l].checked = false;
-
         var div = letters[l];
         if (div.placeType == "exact") {
             wordAttrs[l].checked = true;
@@ -368,6 +503,7 @@ function checkWord(word)
             misplacedLetters.push({ letter: guess[l], found: false });
         }
     }
+
     for (var l = 0; l < 5; l++) {
         if (!wordAttrs[l].checked) {
             var notLetters = wordAttrs[l].notLetters;
@@ -379,6 +515,7 @@ function checkWord(word)
             }
         }
     }
+
     for (var l = 0; l < 5; l++) {
         if (!wordAttrs[l].checked) {
             for (var m = 0; m < misplacedLetters.length; m++) {
@@ -390,6 +527,7 @@ function checkWord(word)
             }
         }
     }
+
     while (misplacedLetters.length > 0) {
         var m = misplacedLetters.pop();
         if (m.found == false) {
