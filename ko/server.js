@@ -16,7 +16,8 @@ var errmsg = [];
 var drillDepthCost = [ 0, 6000, 6000, 4000, 2000 ];
 var detenterotation = [ 4, 2, 0 ];
 var playercolors = [ "blue", "yellow", "red", "white" ];
-var bankStartBalance = 1000000000;  // One BILLLLLIIIIIOOOOOONNNNN dollars
+//var bankStartBalance = 1000000000;  // One BILLLLLIIIIIOOOOOONNNNN dollars
+var bankStartBalance = 692000;  // 46 $10000, 34 $5000, 39 $1000, 46 $500
 var cardInit = {
     type: "init",
     royalty: 0,
@@ -55,7 +56,13 @@ var server = http.createServer(function (req, res)
         printHeader(q);
 
         drawCard();
-        q.status = "draw_OK";
+
+        if (game.bankPlayer.bankrupt) {
+            q.status = "bankbankrupt_OK";
+        }
+        else {
+            q.status = "draw_OK";
+        }
         q.card = game.turn.card;
 
         processWaitlist(q);
@@ -391,6 +398,8 @@ function printPlayers()
         line += "nwells: " + p.nwells + "\t\t";
     }
     console.log(line);
+
+    console.log(game.bankPlayer.name + " $" + game.bankPlayer.money + (game.bankPlayer.bankrupt ? " BANKRUPT" : ""));
 }
 
 function printHeader(q)
@@ -445,8 +454,9 @@ function addPlayer(name, clientId, bot)
     player.name = name;
     player.color = playercolors[game.players.length];
     player.plots = [];
-    player.money = 80000;
+    player.money = 0;
     player.nwells = 0;
+    player.bankrupt = false;
 
     if (game.players.length == 0) {
         game.turn.player = player;
@@ -455,23 +465,23 @@ function addPlayer(name, clientId, bot)
 
     game.players.push(player);
 
+    transferMoney(game.bankPlayer, player, 80000);
+
     return player;
 }
 
 function transferMoney(from, to, amount)
 {
-    var bankrupt = false;
-
     if (from.money < amount) {
         amount = from.money;
-        bankrupt = true;
+        from.bankrupt = true;
     }
 
     from.money -= amount;
     to.money += amount;
 
-    if (bankrupt) {
-        errmsg.push("player " + from.name + " has gone BANKRUPT");
+    if (from.bankrupt) {
+        errmsg.push(from.name + " has gone BANKRUPT");
     }
     errmsg.push(from.name + " pays $" + amount + " to " + to.name);
 }
@@ -721,6 +731,7 @@ function resetGame(gameState)
     gameState.players.length = 0;
     gameState.bankPlayer.name = "the BANK",
     gameState.bankPlayer.money = bankStartBalance;
+    gameState.bankPlayer.bankrupt = false;
 
     for (var i = 0; i < plots.length; i++) {
         var psrc = plots[i];
