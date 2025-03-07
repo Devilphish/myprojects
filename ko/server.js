@@ -226,6 +226,7 @@ var server = http.createServer(function (req, res)
         game.clientWaits[q.clientId] = false;
 
         q.players = game.players;
+        q.bankPlayer = game.bankPlayer;
         q.discrotations = game.detenterotation;
 if (0) {
         q.plots = [];
@@ -413,7 +414,7 @@ function printHeader(q)
     if (q.player != -1) {
         playername = game.players[q.player].name;
     }
-    console.log("\n" + q.action + "\nclientId: " + q.clientId + " player: " + q.player + " " + playername);
+    console.log("\n" + q.action + "\nclientId: " + q.clientId + " gameId " + q.gameId + " player: " + q.player + " " + playername);
 }
 
 function processWaitlist(query)

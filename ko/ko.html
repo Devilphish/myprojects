@@ -23,6 +23,7 @@ body {
 var host = window.location.hostname;
 
 var gclientId = -1;
+var gameId = -1;
 
 var sandbox = 0;
 
@@ -60,6 +61,7 @@ var myDrawIcon;
 var myCardIcon;
 var myCardStatusDiv;
 var myTurnResultDiv;
+var bankDisplay;
 var wells = [];
 var caps = [];
 var pipes = [];
@@ -168,15 +170,15 @@ var playercolors = [ "blue", "yellow", "red", "white" ];
 var bankPlayer = {
     name: "the BANK",
     color: "black",
-    money: 1000000000,  // One BILLLLLIIIIIOOOOOONNNNN dollars
+    money: 10000000,
     plots: [],
     nwells: 0,
     pipelines: 0,
     msg: [],
     display: {
         style: {
-            left: 535 + "px",
-            top: 395 + "px"
+            left: 545 + "px",
+            top: 557 + "px"
         },
     },
 };
@@ -245,6 +247,8 @@ function updatePlayersDisplay()
         }
     }
 
+    bankDisplay.innerHTML = "$" + bankPlayer.money;
+
     turnmsg.innerHTML = "PLAYERS\n";
 
     for (var i = 0; i < players.length; i++) {
@@ -258,6 +262,7 @@ function updatePlayersDisplay()
         else {
             turnmsg.innerHTML += "\n";
         }
+        turnmsg.innerHTML += "bankPlayer $" + bankPlayer.money + "\n";
     }
     turnmsg.innerHTML += "\n";
     if (turn.card.type == "none") {
@@ -303,11 +308,9 @@ function updatePlayersDisplay()
 
 function transferMoney(from, to, amount)
 {
-    var bankrupt = false;
-
     if (from.money < amount) {
         amount = from.money;
-        bankrupt = true;
+        from.bankrupt = true;
     }
 
     startMoneyAnimation(from, to, amount);
@@ -315,7 +318,7 @@ function transferMoney(from, to, amount)
     from.money -= amount;
     to.money += amount;
 
-    if (bankrupt) {
+    if (from.bankrupt) {
         errmsg.push("player " + from.name + " has gone BANKRUPT");
     }
 //    errmsg.push(from.name + " pays $" + amount + " to " + to.name);
@@ -1804,7 +1807,7 @@ function httpRequestWait()
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=wait", true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=wait", true);
     xhttp.send();
 }
 
@@ -1854,7 +1857,7 @@ function httpRequestRendezvous(callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=rendezvous", true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=rendezvous", true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -1906,7 +1909,7 @@ function httpRequestChat(msg, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=chat&msg=" + msg, true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=chat&msg=" + msg, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -1936,9 +1939,11 @@ function httpRequestConnect()
 
                     continueJoin(curPlayers[i].name, curPlayers[i].clientId);
                 }
+                bankPlayer.money = connectResponse.bankPlayer.money;
                 for (var i = 0; i < 3; i++) {
                     detenterotationinput[i].setAttribute("value", connectResponse.discrotations[i]);
                 }
+                updatePlayersDisplay();
 
                 httpRequestWait();
 
@@ -1960,7 +1965,7 @@ function httpRequestConnect()
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=-1&action=connect", true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=-1&action=connect", true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -1995,7 +2000,7 @@ function httpRequestNamechange(player, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + players.indexOf(player) + "&action=namechange&name=" + player.name, true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + players.indexOf(player) + "&action=namechange&name=" + player.name, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2031,7 +2036,7 @@ function httpRequestRotation(callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=-1&action=rotation&disc0=" + detenterotationinput[0].value + "&disc1=" + detenterotationinput[1].value + "&disc2=" + detenterotationinput[2].value, true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=-1&action=rotation&disc0=" + detenterotationinput[0].value + "&disc1=" + detenterotationinput[1].value + "&disc2=" + detenterotationinput[2].value, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2062,7 +2067,7 @@ function httpRequestJoin(name, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=-1&action=join&name=" + name, true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=-1&action=join&name=" + name, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2098,7 +2103,7 @@ function httpRequestDrill(hole, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=drill&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=drill&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2133,7 +2138,7 @@ function httpRequestCap(hole, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=cap&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=cap&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2160,7 +2165,7 @@ function httpRequestPipe(pipepad, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=pipe&pipepadnum=" + pipepads.indexOf(pipepad), true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=pipe&pipepadnum=" + pipepads.indexOf(pipepad), true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2187,7 +2192,7 @@ function httpRequestPipeRemove(pipepad, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=piperemove&pipepadnum=" + pipepads.indexOf(pipepad), true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=piperemove&pipepadnum=" + pipepads.indexOf(pipepad), true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2228,7 +2233,7 @@ function httpRequestDraw(callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=draw", true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=draw", true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2262,7 +2267,7 @@ function httpRequestBuy(plot, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=buy&plot=" + (plot.plotnum - 1), true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=buy&plot=" + (plot.plotnum - 1), true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2291,7 +2296,7 @@ function httpRequestNext()
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=next", true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=next", true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2318,7 +2323,7 @@ function httpRequestFine(callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&player=" + turn.playernum + "&action=fine", true);
+    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=fine", true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2627,11 +2632,6 @@ function fineButtonDownEvent()
         errmsg.push("no fine needed");
     }
     else if (turn.fineable == 1 || sandbox == 1) {
-//        transferMoney(turn.player, bankPlayer, 10000);
-//        turn.fineable = 2;
-//
-//        errmsg.push(turn.player.name + " fined $10000");
-
         httpRequestFine();
 
         fineButton.innerHTML = "FINED!";
@@ -3041,7 +3041,29 @@ function makeRotationDisplay()
 
 function makeCardDisplay()
 {
-    myCardIcon = new component(130, 160, "wildcat.png", 555, 415, "image", 0, 0, true);
+    myCardIcon = new component(130, 160, "wildcat.png", 575, 415, "image", 0, 0, true);
+}
+
+function makeBankDisplay()
+{
+    var m = document.createElement("DIV");
+    m.style.border = "3px solid #6060ff";
+    m.style.borderRadius = "7px";
+    m.style.width = 120 + "px";
+    m.style.height = 25 + "px";
+    m.style.position = "absolute";
+    m.style.left = 575 + "px";
+    m.style.top = 577 + "px";
+    m.style.backgroundColor = "grey";
+    m.style.opacity = "1.0";
+    m.style.font = "bold 22px arial,serif";
+    m.style.textAlign = "center";
+    m.style.color = "dark grey";
+    m.innerHTML = "$0";
+
+    bankDisplay = m;
+
+    document.body.insertBefore(m, displayNode);
 }
 
 function makeDebugDisplay()
@@ -3136,10 +3158,11 @@ function addPlayer(name, display)
     player.name = name;
     player.color = playercolors[players.length];
     player.plots = [];
-    player.money = 80000;
+    player.money = 0;
     player.nwells = 0;
     player.pipelines = 0;
     player.display = {};
+    player.bankrupt = false;
     var un = player.name.toUpperCase()
     if (un.startsWith("HAL") || un.endsWith("BOT")) {
         player.bot = true;
@@ -3281,6 +3304,8 @@ function continueJoin(initName, clientId)
         myAddPlayerButton.style.opacity = "0.0";
         myAddPlayerButton.disabled = true;
     }
+
+    transferMoney(bankPlayer, p, 80000);
 
     updatePlayersDisplay();
 }
@@ -3613,6 +3638,7 @@ function startGame()
     makeCardStatusDisplay();
     makeTurnResultDisplay();
     makeCardDisplay();
+    makeBankDisplay();
 
     setCursor(cursorKingOil);
 
@@ -3795,7 +3821,6 @@ function startMoneyAnimation(from, to, amount)
     m.style.font = "bold 30px arial,serif";
     m.style.textAlign = "center";
     m.style.color = "red";
-    m.innerText = "$300000";
 
     moneyarray.push(m);
     document.body.appendChild(m);
