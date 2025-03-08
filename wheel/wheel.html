@@ -803,6 +803,7 @@ function goButton()
 
 function projectSpin(init_rpm, result)
 {
+return;
     var proj_rpm = init_rpm;
     var proj_rot = rotateimage.rot;
     var proj_rps;
@@ -889,6 +890,20 @@ function keyDownEvent(e)
 
         spinWheel();
     }
+if (1) {
+    if (e.code == "KeyA") {
+        if (rId == null) {
+//            rpm = rpminput.value;
+            rpm = 10.0;
+            rpmdecel = 0.0;
+            rpmdecelperinterval = 0.0;
+            spinWheel();
+        }
+        else {
+            clearInterval(rId);
+        }
+    }
+}
     if (e.code == "KeyI") {
         if (rId == null) {
             instaSpin();
@@ -928,7 +943,7 @@ function keyUpEvent(e)
 
 function rotateWheel()
 {
-    if (rpm > 0) {
+    if (rpm >= 0.0) {
         rpm = rpm - rpmdecelperinterval;
         rps = rpm / 60.0;
         rpi = rps / framerate;
