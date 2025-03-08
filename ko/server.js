@@ -41,6 +41,11 @@ var server = http.createServer(function (req, res)
     res.writeHead(200, {'Content-Type': 'text/html', 'Access-Control-Allow-Origin': '*' });
     var q = url.parse(req.url, true).query;
 
+    var game;
+    if (q.gameId != -1) {
+        game = games[q.gameId];
+    }
+
 //    console.log(req.url);
 
     if (q.clientId >= nClients) {
@@ -53,9 +58,9 @@ var server = http.createServer(function (req, res)
 
     switch (q.action) {
       case "draw":
-        printHeader(q);
+        printHeader(game, q);
 
-        drawCard();
+        drawCard(game);
 
         if (game.bankPlayer.bankrupt) {
             q.status = "bankbankrupt_OK";
@@ -65,14 +70,14 @@ var server = http.createServer(function (req, res)
         }
         q.card = game.turn.card;
 
-        processWaitlist(q);
+        processWaitlist(game, q);
 
         console.log(q.status + " card: " + JSON.stringify(q.card));
 
         break;
 
       case "drill":
-        printHeader(q);
+        printHeader(game, q);
 
         var plotnum = Number(q.plot);
         var holenum = Number(q.hole);
@@ -80,7 +85,7 @@ var server = http.createServer(function (req, res)
         var hole = plot.holes[holenum];
 
         if (hole.drill == -1) {
-            q.drillDepth = drillHole(hole);
+            q.drillDepth = drillHole(game, hole);
             q.status = "drill_OK";
         }
         else {
@@ -88,14 +93,14 @@ var server = http.createServer(function (req, res)
             q.status = "drill_EALREADYDRILLED";
         }
 
-        processWaitlist(q);
+        processWaitlist(game, q);
 
         console.log(q.status + " plot: " + q.plot + " hole: " + q.hole + " drillDepth: " + q.drillDepth);
 
         break;
 
       case "cap":
-        printHeader(q);
+        printHeader(game, q);
 
         var plotnum = Number(q.plot);
         var holenum = Number(q.hole);
@@ -103,109 +108,109 @@ var server = http.createServer(function (req, res)
         var hole = plot.holes[holenum];
 
         if (hole.drill > 0) {
-            capWell(hole);
+            capWell(game, hole);
             q.status = "cap_OK";
         }
         else {
             q.status = "cap_ENOWELL";
         }
 
-        processWaitlist(q);
+        processWaitlist(game, q);
 
         console.log(q.status + " plot: " + q.plot + " hole: " + q.hole);
 
         break;
 
       case "pipe":
-        printHeader(q);
+        printHeader(game, q);
 
         var pipepad = game.pipepads[Number(q.pipepadnum)];
-        installPipe(pipepad);
+        installPipe(game, pipepad);
         q.status = "pipe_OK";
 
-        processWaitlist(q);
+        processWaitlist(game, q);
 
         console.log(q.status);
 
         break;
 
       case "piperemove":
-        printHeader(q);
+        printHeader(game, q);
 
         var pipepad = game.pipepads[Number(q.pipepadnum)];
-        demolishPipe(pipepad);
+        demolishPipe(game, pipepad);
         q.status = "piperemove_OK";
 
-        processWaitlist(q);
+        processWaitlist(game, q);
 
         console.log(q.status);
 
         break;
 
       case "buy":
-        printHeader(q);
+        printHeader(game, q);
 
         var plotnum = Number(q.plot);
         var plot = game.plots[plotnum];
 
         if (plot.owner == -1) {
-            buyPlot(plot);
+            buyPlot(game, plot);
             q.status = "buy_OK";
         }
         else {
             q.status = "buy_EALREADYOWNED";
         }
 
-        processWaitlist(q);
+        processWaitlist(game, q);
 
         console.log(q.status + " plot: " + (plotnum + 1));
 
         break;
 
       case "fine":
-        printHeader(q);
+        printHeader(game, q);
 
         transferMoney(game.turn.player, game.bankPlayer, 10000);
         game.turn.fineable = 2;
 
         q.status = "fine_OK";
 
-        processWaitlist(q);
+        processWaitlist(game, q);
 
         console.log(q.status);
 
         break;
 
       case "next":
-        printHeader(q);
+        printHeader(game, q);
 
-        next();
+        next(game);
         q.status = "next_OK";
 
-        processWaitlist(q);
+        processWaitlist(game, q);
 
         console.log(q.status + " next player: " + game.turn.playernum + " " + game.turn.player.name);
-        printPlayers();
+        printPlayers(game);
 
         if (game.turn.player.bot && game.turn.player.clientId == -1) {
             // run bot player in 20 ms
-            game.botIId = setInterval(runBot, 20);
+            game.botIId = setInterval(runBot, 20, game);
         }
 
         break;
 
       case "chat":
-        printHeader(q);
+        printHeader(game, q);
 
         q.status = "chat_OK";
 
-        processWaitlist(q);
+        processWaitlist(game, q);
 
         if (q.msg.startsWith("ReSeT")) {
             console.log("Resetting game...");
 
             nClients = 0;
-            resetGame(game);
+            games["420"] = new gameObject("420");
         }
         else if (q.msg.startsWith("GaMe")) {
             printObject(game);
@@ -219,15 +224,18 @@ var server = http.createServer(function (req, res)
         break;
 
       case "connect":
-        printHeader(q);
+        printHeader(game, q);
 
         q.status = "connect_OK";
         q.clientId = nClients++;
-        game.clientWaits[q.clientId] = false;
 
+        q.gameId = "420";
+        game = games[q.gameId];
         q.players = game.players;
         q.bankPlayer = game.bankPlayer;
         q.discrotations = game.detenterotation;
+    
+        game.clientWaits[q.clientId] = false;
 if (0) {
         q.plots = [];
 
@@ -250,32 +258,32 @@ if (0) {
 // do detenterotations[]
 }
 
-        console.log(q.status + " clientId: " + q.clientId);
+        console.log(q.status + " clientId: " + q.clientId + " gameId: " + q.gameId);
 
         break;
 
       case "rotation":
-        printHeader(q);
+        printHeader(game, q);
 
         q.status = "rotation_OK";
         game.detenterotation[0] = q.disc0;
         game.detenterotation[1] = q.disc1;
         game.detenterotation[2] = q.disc2;
 
-        processWaitlist(q);
+        processWaitlist(game, q);
 
         console.log(q.status + " disc0-2: " + q.disc0 + " " + q.disc1 + " " + q.disc2);
 
         break;
 
       case "join":
-        printHeader(q);
+        printHeader(game, q);
 
-        addPlayer(q.name, q.clientId, false);
+        addPlayer(game, q.name, q.clientId, false);
         q.status = "join_OK";
         q.playernum = game.players.length - 1;
 
-        processWaitlist(q);
+        processWaitlist(game, q);
 
         console.log(q.status + " player: " + q.playernum + " " + q.name);
 
@@ -286,13 +294,13 @@ if (0) {
         break;
 
       case "namechange":
-        printHeader(q);
+        printHeader(game, q);
 
         var playernum = Number(q.player);
         game.players[playernum].name = q.name;
         q.status = "namechange_OK";
 
-        processWaitlist(q);
+        processWaitlist(game, q);
 
         console.log(q.status + " player: " + q.player + " name: " + q.name);
 
@@ -339,7 +347,7 @@ if (0) {
         break;
 
       default:
-        printHeader(q);
+        printHeader(game, q);
 
         break;
     }
@@ -350,14 +358,14 @@ if (0) {
     }
 });
 
-function runBot()
+function runBot(game)
 {
     console.log("runBot");
 
     clearInterval(game.botIId);
 }
 
-function printPlayers()
+function printPlayers(game)
 {
     var line = "";
 
@@ -403,7 +411,7 @@ function printPlayers()
     console.log(game.bankPlayer.name + " $" + game.bankPlayer.money + (game.bankPlayer.bankrupt ? " BANKRUPT" : ""));
 }
 
-function printHeader(q)
+function printHeader(game, q)
 {
     var playername = "";
 
@@ -414,10 +422,10 @@ function printHeader(q)
     if (q.player != -1) {
         playername = game.players[q.player].name;
     }
-    console.log("\n" + q.action + "\nclientId: " + q.clientId + " gameId " + q.gameId + " player: " + q.player + " " + playername);
+    console.log("\n" + q.action + "\nclientId: " + q.clientId + " gameId: " + q.gameId + " player: " + q.player + " " + playername);
 }
 
-function processWaitlist(query)
+function processWaitlist(game, query)
 {
     var saveWait = null;
 
@@ -446,7 +454,7 @@ function processWaitlist(query)
     }
 }
 
-function addPlayer(name, clientId, bot)
+function addPlayer(game, name, clientId, bot)
 {
     // 'new Object()' example, should use Object literal (they be same)
     var player = new Object();
@@ -487,7 +495,7 @@ function transferMoney(from, to, amount)
     errmsg.push(from.name + " pays $" + amount + " to " + to.name);
 }
 
-function payCardRoyalty()
+function payCardRoyalty(game)
 {
     var royalty;
 
@@ -502,7 +510,7 @@ function payCardRoyalty()
     }
 }
 
-function payPipeRoyalty()
+function payPipeRoyalty(game)
 {
     for (var i = 0; i < game.turn.player.plots.length; i++) {
         var royalty;
@@ -536,7 +544,7 @@ function arrayRemove(array, element)
     array.length--;
 }
 
-function drawCard()
+function drawCard(game)
 {
     var cardnum = Math.floor((Math.random() * game.deck.length) + 1) - 1;
     game.turn.card = game.deck[cardnum];
@@ -568,11 +576,11 @@ function drawCard()
             game.turn.fineable = 1;
         }
 
-        payCardRoyalty();
+        payCardRoyalty(game);
     }
 }
 
-function buyPlot(plot)
+function buyPlot(game, plot)
 {
     game.turn.propertybought = true;
     plot.owner = game.turn.playernum;
@@ -580,7 +588,7 @@ function buyPlot(plot)
     transferMoney(game.turn.player, game.bankPlayer, plot.price);
 }
 
-function drillHole(hole)
+function drillHole(game, hole)
 {
     var curwell = 3;
     for (var disc = 2; disc >= 0; disc--) {
@@ -610,7 +618,7 @@ function drillHole(hole)
     return hole.drill;
 }
 
-function capWell(hole)
+function capWell(game, hole)
 {
     hole.drill = 0;
     game.turn.player.nwells--;
@@ -620,7 +628,7 @@ function capWell(hole)
     plot.nwells--;
 }
 
-function installPipe(pipepad)
+function installPipe(game, pipepad)
 {
     var pipefrom;
     var pipeto;
@@ -655,7 +663,7 @@ function installPipe(pipepad)
     console.log("placed pipeline from " + game.plots[pipe.from - 1].id + " to " + game.plots[pipe.to - 1].id);
 }
 
-function demolishPipe(pipepad)
+function demolishPipe(game, pipepad)
 {
     var pipe = pipepad.pipes.pop();
     if (pipepad.pipes.length == 0) {
@@ -669,7 +677,7 @@ function demolishPipe(pipepad)
     console.log("removed pipeline from " + game.plots[pipe.from - 1].id + " to " + game.plots[pipe.to - 1].id);
 }
 
-function next()
+function next(game)
 {
 // validate start && prop bought
 // validate card drawn
@@ -677,12 +685,12 @@ function next()
 // validate possible fire damage caps
 // validate possible pipe removal due to well capping
 // validate possible fine paid
+
     game.turn.playernum++;
     if (game.turn.playernum == game.players.length) {
         game.turn.playernum = 0;
     }
     if (game.deck.length == 0) {
-//        startShuffleAnimation();
         console.log("shuffling deck ...");
         initDeck(game.deck);
     }
@@ -694,7 +702,7 @@ function next()
     game.turn.npiperemove = 0;
     game.turn.fineable = 0;
 
-    payPipeRoyalty();
+    payPipeRoyalty(game);
 }
 
 function printObject(obj)
@@ -704,36 +712,43 @@ function printObject(obj)
     }
 }
 
-var game = {
-    players: [],
-    bankPlayer: {},
-    plots: [],
-    pipepads: [],
-    turn: {},
-    deck: [],
-    detenterotation: [],
-    clientWaits: [],
-    clientWaitsMask: 0,
-    waitlist: [],
-    rendezvousResponse: null,
-    botIId: -1,
-
-};
+//var game = {
+//    id: "",
+//    players: [],
+//    bankPlayer: {},
+//    plots: [],
+//    pipepads: [],
+//    turn: {},
+//    deck: [],
+//    detenterotation: [],
+//    clientWaits: [],
+//    clientWaitsMask: 0,
+//    waitlist: [],
+//    rendezvousResponse: null,
+//    botIId: -1,
+//};
 
 //const host = '192.168.5.171';
 //server.listen(31428, host);
 
 server.listen(31428);
 
-resetGame(game);
+var games = {};
+games["420"] = new gameObject("420");
+games["foo"] = new gameObject("foo");
 
-function resetGame(gameState)
+//printObject(games);
+
+function gameObject(id)
 {
-    gameState.players.length = 0;
-    gameState.bankPlayer.name = "the BANK",
-    gameState.bankPlayer.money = bankStartBalance;
-    gameState.bankPlayer.bankrupt = false;
+    this.id = id;
+    this.players = [];
+    this.bankPlayer = {};
+    this.bankPlayer.name = "the BANK",
+    this.bankPlayer.money = bankStartBalance;
+    this.bankPlayer.bankrupt = false;
 
+    this.plots = [];
     for (var i = 0; i < plots.length; i++) {
         var psrc = plots[i];
         var p = {};
@@ -746,7 +761,7 @@ function resetGame(gameState)
         p.pipepadsfrom = [];
         p.holes = [];
 
-        gameState.plots[i] = p;
+        this.plots[i] = p;
 
         for (var j = 0; j < psrc.holes.length; j++) {
             var hsrc = psrc.holes[j];
@@ -761,6 +776,7 @@ function resetGame(gameState)
         }
     }
 
+    this.pipepads = [];
     for (var i = 0; i < pipepads.length; i++) {
         var ppsrc = pipepads[i];
         var pp = {};
@@ -770,33 +786,83 @@ function resetGame(gameState)
         pp.plotnumB = ppsrc.plotnumB
         pp.pipes = [];
 
-        gameState.pipepads[i] = pp;
+        this.pipepads[i] = pp;
+    }
+
+    this.turn = {};
+    var t = this.turn;
+    t.playernum = -1;
+    t.player = {};
+    t.card = cardInit;
+    t.drillsused = 0;
+    t.propertybought = false;
+    t.capsrequired = 0;
+    t.npiperemove = 0;
+    t.fineable = 0;
+
+    this.detenterotation = [];
+    var dr = this.detenterotation;
+    dr[0] = detenterotation[0];
+    dr[1] = detenterotation[1];
+    dr[2] = detenterotation[2];
+
+    this.clientWaits = [];
+    this.clientWaitsMask = 0;
+    this.waitlist = [];
+    this.rendezvousResponse = null;
+    this.botIId = -1;
+    this.deck = [];
+
+    console.log("shuffling deck ... [game " + this.id + "]");
+    initDeck(this.deck);
+}
+
+function resetBoard(gameState)
+{
+    console.log("Resetting board for game ID " + gameState.id);
+
+    gameState.bankPlayer.money = bankStartBalance;
+    gameState.bankPlayer.bankrupt = false;
+
+    for (var i = 0; i < gameState.players.length; i++) {
+        var player = gameState.players[i];
+        player.money = 0;
+        player.nwells = 0;
+        player.plots.length = 0;
+        player.bankrupt = false;
+    }
+
+    for (var i = 0; i < gameState.plots.length; i++) {
+        var p = gameState.plots[i];
+        p.owner = -1;
+        p.nwells = 0;
+        p.pipepadsto.length = 0;
+        p.pipepadsfrom.length = 0;
+
+        for (var j = 0; j < p.holes.length; j++) {
+            var h = p.holes[j];
+            h.drill = -1;
+        }
+    }
+
+    for (var i = 0; i < gameState.pipepads.length; i++) {
+        var pp = gameState.pipepads[i];
+        pp.owner = -1;
+        pp.pipes.length = 0;
+
     }
 
     var turn = gameState.turn;
-    turn.playernum = -1;
-    turn.player = {};
+    turn.playernum = 0;
+    turn.player = gameState,players[0];
     turn.card = cardInit;
     turn.drillsused = 0;
     turn.propertybought = false;
     turn.capsrequired = 0;
     turn.npiperemove = 0;
     turn.fineable = 0;
-    turn.removedpipepad = pipepadNone;
-    turn.removedpipe = {};
-
-    var dr = gameState.detenterotation;
-    dr[0] = detenterotation[0];
-    dr[1] = detenterotation[1];
-    dr[2] = detenterotation[2];
-
-    gameState.clientWaits.length = 0;
-    gameState.clientWaitsMask = 0;
-
-    gameState.waitlist.length = 0;
-    gameState.rendezvousResponse = null;
-    gameState.botIId = -1;
 
     console.log("shuffling deck ...");
     initDeck(gameState.deck);
 }
+
