@@ -21,6 +21,8 @@ body {
 <script>
 
 var host = window.location.hostname;
+var port = 31428;
+var portstr = ":" + port;
 
 var gclientId = -1;
 var gameId = -1;
@@ -290,13 +292,14 @@ function updatePlayersDisplay()
             myStatusButton.innerHTML = msg;
 
             if (statusiId == null) {
-                statusiId = setTimeout(clearstatus, 2000);
+                statusiId = setInterval(clearstatus, 2000);
             }
 
             function clearstatus() {
                 myStatusButton.style.opacity = "0.0";
                 myStatusButton.hidden = true;
 
+                clearInterval(statusiId);
                 statusiId = null;
             }
 
@@ -1279,12 +1282,12 @@ function drillAllHoles()
                 var depth = drillHole(h);
                 if (depth > 0) {
                     var well = new component(18, 60, depthcolors[depth],
-                        h.left - 16, h.top - 60, "image", 0, 0, true);
+                        h.left - 0, h.top - 52, "image", 0, 0, true);
                     tmpwells.push(well);
                 }
                 else {
                     var cap= new component(25, 25, "bluecap.png",
-                        h.left - 21, h.top - 25, "image", 0, 0, true);
+                        h.left - 5, h.top - 20, "image", 0, 0, true);
                     tmpcaps.push(cap);
                 }
             }
@@ -1807,7 +1810,7 @@ function httpRequestWait()
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=wait", true);
+    xhttp.open("GET", "http://" + host + portstr + "/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=wait", true);
     xhttp.send();
 }
 
@@ -1857,7 +1860,7 @@ function httpRequestRendezvous(callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=rendezvous", true);
+    xhttp.open("GET", "http://" + host + portstr + "/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=rendezvous", true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -1909,7 +1912,7 @@ function httpRequestChat(msg, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=chat&msg=" + msg, true);
+    xhttp.open("GET", "http://" + host + portstr + "/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=chat&msg=" + msg, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -1928,10 +1931,11 @@ function httpRequestConnect()
 
             switch (connectResponse.status) {
               case "connect_OK":
-                errmsg.push("httpRequestConnect connect_OK clientId=" + connectResponse.clientId);
+                errmsg.push("httpRequestConnect connect_OK clientId=" + connectResponse.clientId + " gameId=" + connectResponse.gameId);
                 updatePlayersDisplay();
 
                 gclientId = connectResponse.clientId;
+                gameId = connectResponse.gameId;
 
                 var curPlayers = connectResponse.players;
                 for (var i = 0; i < curPlayers.length; i++) {
@@ -1957,7 +1961,7 @@ function httpRequestConnect()
             }
         }
         else if (this.readyState == 4 && this.status == 0) {
-            errmsg.push("Could not connect to server http://" + host + ":31428");
+            errmsg.push("Could not connect to server http://" + host + portstr);
             updatePlayersDisplay();
         }
         else {
@@ -1965,7 +1969,7 @@ function httpRequestConnect()
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=-1&action=connect", true);
+    xhttp.open("GET", "http://" + host + portstr + "/?clientId=" + gclientId + "&gameId=" + gameId + "&player=-1&action=connect", true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2000,7 +2004,7 @@ function httpRequestNamechange(player, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + players.indexOf(player) + "&action=namechange&name=" + player.name, true);
+    xhttp.open("GET", "http://" + host + portstr + "/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + players.indexOf(player) + "&action=namechange&name=" + player.name, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2036,7 +2040,7 @@ function httpRequestRotation(callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=-1&action=rotation&disc0=" + detenterotationinput[0].value + "&disc1=" + detenterotationinput[1].value + "&disc2=" + detenterotationinput[2].value, true);
+    xhttp.open("GET", "http://" + host + portstr + "/?clientId=" + gclientId + "&gameId=" + gameId + "&player=-1&action=rotation&disc0=" + detenterotationinput[0].value + "&disc1=" + detenterotationinput[1].value + "&disc2=" + detenterotationinput[2].value, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2067,7 +2071,7 @@ function httpRequestJoin(name, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=-1&action=join&name=" + name, true);
+    xhttp.open("GET", "http://" + host + portstr + "/?clientId=" + gclientId + "&gameId=" + gameId + "&player=-1&action=join&name=" + name, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2103,7 +2107,7 @@ function httpRequestDrill(hole, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=drill&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
+    xhttp.open("GET", "http://" + host + portstr + "/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=drill&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2138,7 +2142,7 @@ function httpRequestCap(hole, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=cap&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
+    xhttp.open("GET", "http://" + host + portstr + "/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=cap&plot=" + (hole.plot - 1) + "&hole=" + hole.num, true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2165,7 +2169,7 @@ function httpRequestPipe(pipepad, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=pipe&pipepadnum=" + pipepads.indexOf(pipepad), true);
+    xhttp.open("GET", "http://" + host + portstr + "/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=pipe&pipepadnum=" + pipepads.indexOf(pipepad), true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2192,7 +2196,7 @@ function httpRequestPipeRemove(pipepad, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=piperemove&pipepadnum=" + pipepads.indexOf(pipepad), true);
+    xhttp.open("GET", "http://" + host + portstr + "/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=piperemove&pipepadnum=" + pipepads.indexOf(pipepad), true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2233,7 +2237,7 @@ function httpRequestDraw(callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=draw", true);
+    xhttp.open("GET", "http://" + host + portstr + "/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=draw", true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2267,7 +2271,7 @@ function httpRequestBuy(plot, callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=buy&plot=" + (plot.plotnum - 1), true);
+    xhttp.open("GET", "http://" + host + portstr + "/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=buy&plot=" + (plot.plotnum - 1), true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2296,7 +2300,7 @@ function httpRequestNext()
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=next", true);
+    xhttp.open("GET", "http://" + host + portstr + "/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=next", true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2323,7 +2327,7 @@ function httpRequestFine(callback)
         }
     }
 
-    xhttp.open("GET", "http://" + host + ":31428/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=fine", true);
+    xhttp.open("GET", "http://" + host + portstr + "/?clientId=" + gclientId + "&gameId=" + gameId + "&player=" + turn.playernum + "&action=fine", true);
     xhttp.send();
 
     myConnectIcon.image.src = "noconnect.png";
@@ -2722,10 +2726,10 @@ function debugButtonDownEvent()
         debugButton.style.opacity = "0.0";
 
         while (tmpwells.length) {
-            tmpwells.pop();
+            document.body.removeChild(tmpwells.pop().image);;
         }
         while (tmpcaps.length) {
-            tmpcaps.pop();
+            document.body.removeChild(tmpcaps.pop().image);;
         }
     }
     else if (sandbox == 2) {
@@ -4123,10 +4127,10 @@ function keyDownEvent(e)
     }
     else if (e.code == "KeyX") {
         while (tmpwells.length) {
-            tmpwells.pop();
+            document.body.removeChild(tmpwells.pop().image);;
         }
         while (tmpcaps.length) {
-            tmpcaps.pop();
+            document.body.removeChild(tmpcaps.pop().image);;
         }
     }
 }
