@@ -11,6 +11,7 @@ var p = require('./pipepads.js');
 var pipepads = p.pipepads;
 
 var nClients = 0;
+var gameClientIndex = [];
 var errmsg = [];
 
 var drillDepthCost = [ 0, 6000, 6000, 4000, 2000 ];
@@ -34,14 +35,16 @@ var pipepadNone = {
     id: "none"
 }
 
+var pauseRendezvous = false;
+
 var server = http.createServer(function (req, res)
 {
     var wait = false;
+    var game;
 
     res.writeHead(200, {'Content-Type': 'text/html', 'Access-Control-Allow-Origin': '*' });
     var q = url.parse(req.url, true).query;
 
-    var game;
     if (q.gameId != -1) {
         game = games[q.gameId];
     }
@@ -209,14 +212,39 @@ var server = http.createServer(function (req, res)
         if (q.msg.startsWith("ReSeT")) {
             console.log("Resetting game...");
 
+            for (let g in games) {
+                if (game != games[g]) {
+                    processWaitlist(games[g], q);
+                }
+            }
+
             nClients = 0;
-            games["420"] = new gameObject("420");
+            gameClientIndex.length = 0;
+            for (let g in games) {
+                games[g] = new gameObject(g);
+            }
+
         }
         else if (q.msg.startsWith("GaMe")) {
             printObject(game);
             for (var i = 0; i < game.plots.length; i++) {
                 printObject(game.plots[i]);
             }
+        }
+        else if (q.msg.startsWith("NR")) {
+            console.log("pausing rendezvous");
+            pauseRendezvous = true;
+        }
+        else if (q.msg.startsWith("RR")) {
+            console.log("resuming rendezvous");
+            pauseRendezvous = false;
+
+//            console.log("completing rendezvous");
+
+            game.rendezvousResponse.query.status = "rendezvous_OK";
+            game.rendezvousResponse.write(JSON.stringify(game.rendezvousResponse.query));
+            game.rendezvousResponse.end("");
+            game.rendezvousResponse = null;
         }
 
         console.log(q.status + " clientId: " + q.clientId);
@@ -228,14 +256,21 @@ var server = http.createServer(function (req, res)
 
         q.status = "connect_OK";
         q.clientId = nClients++;
+        gameClientIndex.push("-1");
 
-        q.gameId = "420";
+//        if (q.clientId == 0) {
+            q.gameId = games["420"].id;
+//        }
+//        else {
+//            q.gameId = games["foo"].id;
+//        }
         game = games[q.gameId];
+        gameClientIndex[q.clientId] = game.nClients;
         q.players = game.players;
         q.bankPlayer = game.bankPlayer;
         q.discrotations = game.detenterotation;
     
-        game.clientWaits[q.clientId] = false;
+        game.clientWaits[game.nClients++] = false;
 if (0) {
         q.plots = [];
 
@@ -309,13 +344,15 @@ if (0) {
       case "wait":
         wait = true;
 
-        game.clientWaits[q.clientId] = true;
-        game.clientWaitsMask |= (1 << q.clientId);
+        var gameClientId = gameClientIndex[q.clientId];
+        game.clientWaits[gameClientId] = true;
+        game.clientWaitsMask |= (1 << gameClientId);
+
         res.clientId = q.clientId;
         game.waitlist.push(res);
 
         // if all clients waiting
-        if (game.clientWaitsMask == (Math.pow(2, nClients) - 1) &&
+        if (!pauseRendezvous && game.clientWaitsMask == (Math.pow(2, game.nClients) - 1) &&
             game.rendezvousResponse != null) {
 //            console.log("completing rendezvous");
 
@@ -330,7 +367,7 @@ if (0) {
         break;
 
       case "rendezvous":
-        if (game.clientWaitsMask != (Math.pow(2, nClients) - 1)) {
+        if (pauseRendezvous || game.clientWaitsMask != (Math.pow(2, game.nClients) - 1)) {
             wait = true;
 
             q.status = "rendezvous_NOTREADY";
@@ -430,6 +467,9 @@ function processWaitlist(game, query)
     var saveWait = null;
 
 //    console.log("waitlist.length " + game.waitlist.length);
+    if (game.clientWaitsMask != (Math.pow(2, game.nClients) - 1)) {
+        console.log("ERROR: processWaitlist() waitmask: " + game.clientWaitsMask + " not full (" + (Math.pow(2, game.nClients) - 1) + ")");
+    }
 
     while (game.waitlist.length > 0) {
         var wait = game.waitlist.pop();
@@ -439,8 +479,9 @@ function processWaitlist(game, query)
             saveWait = wait;
         }
         else {
-            game.clientWaits[wait.clientId] = false;
-            game.clientWaitsMask &= ~(1 << wait.clientId);
+            var gameClientId = gameClientIndex[wait.clientId];
+            game.clientWaits[gameClientId] = false;
+            game.clientWaitsMask &= ~(1 << gameClientId);
 
             wait.write(JSON.stringify(query));
             wait.end("");
@@ -721,6 +762,7 @@ function printObject(obj)
 //    turn: {},
 //    deck: [],
 //    detenterotation: [],
+//    nClients: 0,
 //    clientWaits: [],
 //    clientWaitsMask: 0,
 //    waitlist: [],
@@ -800,18 +842,20 @@ function gameObject(id)
     t.npiperemove = 0;
     t.fineable = 0;
 
+    this.deck = [];
+
     this.detenterotation = [];
     var dr = this.detenterotation;
     dr[0] = detenterotation[0];
     dr[1] = detenterotation[1];
     dr[2] = detenterotation[2];
 
+    this.nClients = 0;
     this.clientWaits = [];
     this.clientWaitsMask = 0;
     this.waitlist = [];
     this.rendezvousResponse = null;
     this.botIId = -1;
-    this.deck = [];
 
     console.log("shuffling deck ... [game " + this.id + "]");
     initDeck(this.deck);
