@@ -210,7 +210,7 @@ var server = http.createServer(function (req, res)
         processWaitlist(game, q);
 
         if (q.msg.startsWith("ReSeT")) {
-            console.log("Resetting game...");
+            console.log("Resetting server...");
 
             for (let g in games) {
                 if (game != games[g]) {
@@ -224,6 +224,9 @@ var server = http.createServer(function (req, res)
                 games[g] = new gameObject(g);
             }
 
+        }
+        else if (q.msg.startsWith("resetgame")) {
+            resetBoard(games["420"]);
         }
         else if (q.msg.startsWith("GaMe")) {
             printObject(game);
@@ -268,6 +271,7 @@ var server = http.createServer(function (req, res)
         gameClientIndex[q.clientId] = game.nClients;
         q.players = game.players;
         q.bankPlayer = game.bankPlayer;
+        q.bankStartBalance = bankStartBalance;
         q.discrotations = game.detenterotation;
     
         game.clientWaits[game.nClients++] = false;
@@ -863,7 +867,7 @@ function gameObject(id)
 
 function resetBoard(gameState)
 {
-    console.log("Resetting board for game ID " + gameState.id);
+    console.log("Resetting board for game " + gameState.id);
 
     gameState.bankPlayer.money = bankStartBalance;
     gameState.bankPlayer.bankrupt = false;
@@ -874,6 +878,8 @@ function resetBoard(gameState)
         player.nwells = 0;
         player.plots.length = 0;
         player.bankrupt = false;
+
+        transferMoney(gameState.bankPlayer, player, 80000);
     }
 
     for (var i = 0; i < gameState.plots.length; i++) {
@@ -898,7 +904,7 @@ function resetBoard(gameState)
 
     var turn = gameState.turn;
     turn.playernum = 0;
-    turn.player = gameState,players[0];
+    turn.player = gameState.players[0];
     turn.card = cardInit;
     turn.drillsused = 0;
     turn.propertybought = false;

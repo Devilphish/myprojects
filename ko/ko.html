@@ -211,6 +211,94 @@ var turn = {
     removedpipe: {},
 }
 
+var bankStartBalance;
+
+function resetBoard()
+{
+    console.log("Resetting board for game " + gameId);
+
+    gameMode = "start";
+
+    for (var i = 0; i < 3; i++) {
+        detenterotationinput[i].disabled = false;
+        detenterotationinput[i].style.opacity = "0.7";
+    }
+
+    while (sheds.length) {
+        document.body.removeChild(sheds.pop().image);;
+    }
+    while (wells.length) {
+        document.body.removeChild(wells.pop().image);;
+    }
+    while (caps.length) {
+        document.body.removeChild(caps.pop().image);;
+    }
+    while (pipes.length) {
+        document.body.removeChild(pipes.pop().image);
+    }
+    while (shedbuttons.length) {
+        var b = shedbuttons.pop();
+
+        b.style.opacity = "0.0";
+        if (document.body.contains(b)) {
+            document.body.removeChild(b);
+        }
+    }
+    removeDrillCapButtons();
+    removePipepadButtons();
+
+    bankPlayer.money = bankStartBalance;
+    bankPlayer.bankrupt = false;
+
+    for (var i = 0; i < players.length; i++) {
+        var player = players[i];
+        player.money = 0;
+        player.nwells = 0;
+        player.plots.length = 0;
+        player.bankrupt = false;
+
+        transferMoney(bankPlayer, player, 80000);
+    }
+
+    for (var i = 0; i < plots.length; i++) {
+        var p = plots[i];
+        p.owner = -1;
+        p.nwells = 0;
+        p.pipepadsto.length = 0;
+        p.pipepadsfrom.length = 0;
+
+        for (var j = 0; j < p.holes.length; j++) {
+            var h = p.holes[j];
+            h.drill = -1;
+        }
+    }
+
+    for (var i = 0; i < pipepads.length; i++) {
+        var pp = pipepads[i];
+        pp.owner = -1;
+        pp.pipes.length = 0;
+
+    }
+
+    turn.playernum = 0;
+    turn.player = players[0];
+    turn.card = cardInit;
+    turn.drillsused = 0;
+    turn.propertybought = false;
+    turn.capsrequired = 0;
+    turn.npiperemove = 0;
+    turn.fineable = 0;
+
+    console.log("shuffling deck ...");
+    initDeck(deck);
+
+    myShedIcon.image.src = turn.player.color + "shed.png";
+    myCapIcon.image.src = turn.player.color + "cap.png";
+    myPipeIcon.image.src = turn.player.color + "pipe.png";
+
+    updatePlayersDisplay();
+}
+
 var statusiId = null;
 
 var response = false;
@@ -366,6 +454,10 @@ function httpRequestWait()
                 var height = Number(chatdiv.style.height.substr(0, chatdiv.style.height.indexOf("p")));
                 chatdiv.scrollTop += height;
 
+                if (waitResponse.msg.startsWith("resetgame")) {
+                    resetBoard();
+                }
+
                 break;
 
               case "namechange_OK":
@@ -394,8 +486,11 @@ function httpRequestWait()
                 break;
             }
 
-            if (!(waitResponse.status == "drill_OK" && curstate.drillAnimationEnable)) {
-                // drill animation will call wait
+            if (!curstate.drillAnimationEnabled ||
+                !(waitResponse.status == "drill_OK" ||
+                  waitResponse.status == "cap_OK")) {
+
+                // drill or cap animation will call wait
                 httpRequestWait();
             }
         }
@@ -499,6 +594,10 @@ function httpRequestChat(msg, callback)
                 var height = Number(chatdiv.style.height.substr(0, chatdiv.style.height.indexOf("p")));
                 chatdiv.scrollTop += height;
 
+                if (msg.startsWith("resetgame")) {
+                    resetBoard();
+                }
+
                 httpRequestRendezvous(callback);
 
                 break;
@@ -542,6 +641,8 @@ function httpRequestConnect()
                     continueJoin(curPlayers[i].name, curPlayers[i].clientId);
                 }
                 bankPlayer.money = connectResponse.bankPlayer.money;
+                bankStartBalance = connectResponse.bankStartBalance;
+
                 for (var i = 0; i < 3; i++) {
                     detenterotationinput[i].setAttribute("value", connectResponse.discrotations[i]);
                 }
@@ -1731,6 +1832,8 @@ function nextButtonDownEvent()
         nextable = true;
     }
 
+    myNextIcon.image.src = "timeclockcard.png";
+
     if (nextable) {
         httpRequestNext();
     }
@@ -2524,7 +2627,7 @@ function pipepadButtonDownEvent()
     }
     else if (curcursor.mode == "action") {
         pipeable = false;
-        if (pp.pipes.length == 0) {
+        if (pp.ipes.length == 0) {
             removepipeable = false;
             errmsg.push("curcursor.mode != pipe");
         }
@@ -3718,6 +3821,7 @@ function startGame()
     makeFineButton();
     makeConnectButton();
     makeHelpButton();
+
     for (var i = 0; i < plots.length; i++) {
         var p = plots[i];
 
