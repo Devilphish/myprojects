@@ -256,6 +256,7 @@ function resetBoard()
         player.nwells = 0;
         player.plots.length = 0;
         player.bankrupt = false;
+        player.display.style.backgroundColor = "grey";
 
         transferMoney(bankPlayer, player, 80000);
     }
@@ -288,8 +289,8 @@ function resetBoard()
     turn.capsrequired = 0;
     turn.npiperemove = 0;
     turn.fineable = 0;
+    turn.player.display.style.backgroundColor = "lightblue";
 
-    console.log("shuffling deck ...");
     initDeck(deck);
 
     myShedIcon.image.src = turn.player.color + "shed.png";
@@ -1302,6 +1303,8 @@ function updatePlayersDisplay()
                 statusiId = setInterval(clearstatus, 2000);
             }
 
+            statusmsg.innerHTML = msg;
+
             function clearstatus() {
                 myStatusButton.style.opacity = "0.0";
                 myStatusButton.hidden = true;
@@ -1309,8 +1312,6 @@ function updatePlayersDisplay()
                 clearInterval(statusiId);
                 statusiId = null;
             }
-
-            statusmsg.innerHTML = msg;
         }
         errmsg.length = 0;
     }
@@ -2137,12 +2138,12 @@ function drillAllHoles()
                 var depth = drillHole(h);
                 if (depth > 0) {
                     var well = new component(18, 60, depthcolors[depth],
-                        h.left - 0, h.top - 52, "image", 0, 0, true);
+                        h.left - 0, h.top - 52, 0, 0, true);
                     tmpwells.push(well);
                 }
                 else {
                     var cap= new component(25, 25, "bluecap.png",
-                        h.left - 5, h.top - 20, "image", 0, 0, true);
+                        h.left - 5, h.top - 20, 0, 0, true);
                     tmpcaps.push(cap);
                 }
             }
@@ -2241,6 +2242,21 @@ function wellButtonDownEvent()
     updatePlayersDisplay();
 }
 
+function activateComponent(cadd, crem1, crem2)
+{
+    if (crem1) {
+        crem1.active = false;
+        crem1.update();
+    }
+    if (crem2) {
+        crem2.active = false;
+        crem2.update();
+    }
+
+    cadd.active = true;
+    cadd.update();
+}
+
 function continueDrill(h, callback)
 {
     if (curstate.autotoolEnable && turn.player.clientId == gclientId && !turn.player.bot) {
@@ -2277,6 +2293,88 @@ function continueDrill(h, callback)
     updatePlayersDisplay();
 }
 
+function completeDrill(h)
+{
+    var depthmsg;
+    var cost = drillDepthCost[h.drill + 1];
+
+    if (h != dummyhole) {
+        transferMoney(turn.player, bankPlayer, cost);
+    }
+
+    // drillAnimation.height might be shrunk from prev animation if
+    // animations were previously enabled, restore height
+    var drillAnimationHeight = 167;
+    var activate = curstate.drillAnimationEnable ? true : false;
+
+    if (h.drill > 0) {
+        if (h != dummyhole) {
+            turn.player.nwells++;
+            plots[h.plot - 1].nwells++;
+
+            h.well = new component(18, 60,
+                turn.player.color + "well.png",
+                h.left - 0, h.top - 52, 0, 0, activate);
+            wells[wells.length++] = h.well;
+
+            if (!curstate.drillAnimationEnable) {
+                var img = "derrick" + h.drill + "_nobit.png";
+                var width = drillAnimation.width;
+                var height = drillAnimationHeight - ((3 - h.drill) * 20);
+                var x = h.left - 5;
+                var y = h.top - drillAnimationHeight +
+                    ((3 - h.drill) * 20);
+
+                var derrick = new component(width, height, img,
+                    x, y, 0, 0, true);
+                var oil = new component(100, 50, "spill.png",
+                    x - 20, y + height - 20, 0, 0, true);
+
+                setTimeout(activateComponent, 1000, h.well, derrick, oil);
+            }
+        }
+
+        if (h.drill == 3) {
+            depthmsg = "shallow";
+        }
+        else if (h.drill == 2) {
+            depthmsg = "medium";
+        }
+        else if (h.drill == 1) {
+            depthmsg = "deep";
+        }
+    }
+    else {
+        if (h != dummyhole) {
+            if (curstate.soundEnable) {
+                ss.play();
+            }
+
+            var cap = new component(25, 25, turn.player.color + "cap.png",
+                h.left - 5, h.top - 20, 0, 0, activate);
+            caps[caps.length++] = cap;
+
+            if (!curstate.drillAnimationEnable) {
+                var img = "derrick0_nobit.png";
+                var width = drillAnimation.width;
+                var height = drillAnimationHeight - ((3 - h.drill) * 20);
+                var x = h.left - 5;
+                var y = h.top - drillAnimationHeight +
+                    ((3 - h.drill) * 20);
+
+                var derrick = new component(width, height, img, x, y, 0, 0, true);
+
+                setTimeout(activateComponent, 1000, cap, derrick);
+            }
+        }
+
+        depthmsg = "dry";
+    }
+
+    var plot = plots[h.plot - 1];
+    errmsg.push(plot.id + " h" + (h.num + 1) + " " + depthmsg + " well $" + drillDepthCost[h.drill + 1]);
+}
+
 function continueCap(h, callback)
 {
     if (!(curstate.autotoolEnable && turn.player.clientId == gclientId && !turn.player.bot && turn.capsrequired > 1)) {
@@ -2301,103 +2399,6 @@ function continueCap(h, callback)
     updatePlayersDisplay();
 }
 
-function activateComponent(cadd, crem1, crem2)
-{
-    if (crem1) {
-        crem1.active = false;
-        crem1.update();
-    }
-    if (crem2) {
-        crem2.active = false;
-        crem2.update();
-    }
-
-    cadd.active = true;
-    cadd.update();
-}
-
-function completeDrill(h)
-{
-    var depthmsg;
-    var cost = drillDepthCost[h.drill + 1];
-
-    if (h != dummyhole) {
-        transferMoney(turn.player, bankPlayer, cost);
-    }
-
-    // drillAnimation.height might be shrunk from prev animation if
-    // animations were previously enabled, restore height
-    var drillAnimationHeight = 167;
-    var activate = curstate.drillAnimationEnable ? true : false;
-
-    if (h.drill > 0) {
-        if (h != dummyhole) {
-            turn.player.nwells++;
-            plots[h.plot - 1].nwells++;
-
-            h.well = new component(18, 60,
-                turn.player.color + "well.png",
-                h.left - 0, h.top - 52, "image", 0, 0, activate);
-            wells[wells.length++] = h.well;
-
-            if (!curstate.drillAnimationEnable) {
-                var img = "derrick" + h.drill + "_nobit.png";
-                var width = drillAnimation.width;
-                var height = drillAnimationHeight - ((3 - h.drill) * 20);
-                var x = h.left - 5;
-                var y = h.top - drillAnimationHeight +
-                    ((3 - h.drill) * 20);
-
-                var derrick = new component(width, height, img,
-                    x, y, "image", 0, 0, true);
-                var oil = new component(100, 50, "spill.png",
-                    x - 20, y + height - 20, "image", 0, 0, true);
-
-                setTimeout(activateComponent, 1000, h.well, derrick, oil);
-            }
-        }
-
-        if (h.drill == 3) {
-            depthmsg = "shallow";
-        }
-        else if (h.drill == 2) {
-            depthmsg = "medium";
-        }
-        else if (h.drill == 1) {
-            depthmsg = "deep";
-        }
-    }
-    else {
-        if (h != dummyhole) {
-            if (curstate.soundEnable) {
-                ss.play();
-            }
-
-            var cap = new component(25, 25, turn.player.color + "cap.png",
-                h.left - 5, h.top - 20, "image", 0, 0, activate);
-            caps[caps.length++] = cap;
-
-            if (!curstate.drillAnimationEnable) {
-                var img = "derrick0_nobit.png";
-                var width = drillAnimation.width;
-                var height = drillAnimationHeight - ((3 - h.drill) * 20);
-                var x = h.left - 5;
-                var y = h.top - drillAnimationHeight +
-                    ((3 - h.drill) * 20);
-
-                var derrick = new component(width, height, img, x, y, "image", 0, 0, true);
-
-                setTimeout(activateComponent, 1000, cap, derrick);
-            }
-        }
-
-        depthmsg = "dry";
-    }
-
-    var plot = plots[h.plot - 1];
-    errmsg.push(plot.id + " h" + (h.num + 1) + " " + depthmsg + " well $" + drillDepthCost[h.drill + 1]);
-}
-
 function completeCap(h)
 {
     h.drill = 0;
@@ -2414,7 +2415,7 @@ function completeCap(h)
 
     var activate = curstate.drillAnimationEnable ? true : false;
 
-    var cap = new component(25, 25, turn.player.color + "cap.png", h.left - 5, h.top - 20, "image", 0, 0, activate);
+    var cap = new component(25, 25, turn.player.color + "cap.png", h.left - 5, h.top - 20, 0, 0, activate);
     caps[caps.length++] = cap;
 
     if (!curstate.drillAnimationEnable) {
@@ -2424,7 +2425,7 @@ function completeCap(h)
         var x = h.left + 15 - 60;
         var y = h.top - 30 - 60;
 
-        var fire = new component(width, height, img, x, y, "image", 0, 0, true);
+        var fire = new component(width, height, img, x, y, 0, 0, true);
 
         setTimeout(activateComponent, 1000, cap, fire, h.well);
     }
@@ -2540,7 +2541,7 @@ function completeBuy(p)
 
     errmsg.push("buy plot " + p.id + " for $" + p.price);
 
-    sheds[sheds.length++] = new component(40, 40, turn.player.color + "shed.png", p.shedpadleft - 8, p.shedpadtop - 17, "image", 0, 0, true);
+    sheds[sheds.length++] = new component(40, 40, turn.player.color + "shed.png", p.shedpadleft - 8, p.shedpadtop - 17, 0, 0, true);
 
 //    downShedButton.style.opacity = "0.0";
     p.shedbutton.style.opacity = "0.0";
@@ -2627,7 +2628,7 @@ function pipepadButtonDownEvent()
     }
     else if (curcursor.mode == "action") {
         pipeable = false;
-        if (pp.ipes.length == 0) {
+        if (pp.pipes.length == 0) {
             removepipeable = false;
             errmsg.push("curcursor.mode != pipe");
         }
@@ -2743,7 +2744,7 @@ function completePipe(pp)
             height = 30;
         }
         var pipe;
-        pipe = new component(width, height, turn.player.color + "pipe_" + pp.pipeorientation + ".png", leftoffset, topoffset, "image", 0, 0, true);
+        pipe = new component(width, height, turn.player.color + "pipe_" + pp.pipeorientation + ".png", leftoffset, topoffset, 0, 0, true);
 
         transferMoney(turn.player, bankPlayer, 25000);
 
@@ -2997,7 +2998,7 @@ function initLayPipeButton(b)
 
 function makeBuyButton()
 {
-    myShedIcon = new component(40, 40, turn.player.color + "shed.png", 293, 820, "image", 0, 0, true);
+    myShedIcon = new component(40, 40, turn.player.color + "shed.png", 293, 820, 0, 0, true);
 
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", buyButtonDownEvent);
@@ -3017,7 +3018,7 @@ function makeBuyButton()
 
 function makeCapButton()
 {
-    myCapIcon = new component(40, 40, turn.player.color + "cap.png", 293, 767, "image", 0, 0, true);
+    myCapIcon = new component(40, 40, turn.player.color + "cap.png", 293, 767, 0, 0, true);
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", captoolButtonDownEvent);
     b.style.border = "0px";
@@ -3036,7 +3037,7 @@ function makeCapButton()
 
 function makePipeButton()
 {
-    myPipeIcon = new component(39, 100, turn.player.color + "pipe.png", 295, 654, "image", 0, 0, true);
+    myPipeIcon = new component(39, 100, turn.player.color + "pipe.png", 295, 654, 0, 0, true);
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", pipetoolButtonDownEvent);
     b.style.border = "0px";
@@ -3055,7 +3056,7 @@ function makePipeButton()
 
 function makeDrillButton()
 {
-    myDerrickIcon = new component(200, 300, "derrick0.png", 170, 564, "image", 0, 0, true);
+    myDerrickIcon = new component(200, 300, "derrick0.png", 170, 564, 0, 0, true);
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", drilltoolButtonDownEvent);
     b.style.border = "0px";
@@ -3074,7 +3075,7 @@ function makeDrillButton()
 
 function makeDrawButton()
 {
-    myDrawIcon = new component(55, 66, "wildcat.png", 153, 690, "image", 0, 0, true);
+    myDrawIcon = new component(55, 66, "wildcat.png", 153, 690, 0, 0, true);
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", drawcardButtonDownEvent);
     b.addEventListener("mouseup", drawcardButtonUpEvent);
@@ -3094,7 +3095,7 @@ function makeDrawButton()
 
 function makeNextButton()
 {
-    myNextIcon = new component(55, 66, "timeclock.png", 153, 772, "image", 0, 0, true);
+    myNextIcon = new component(55, 66, "timeclock.png", 153, 772, 0, 0, true);
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", nextButtonDownEvent);
     b.addEventListener("mouseup", nextButtonUpEvent);
@@ -3213,7 +3214,7 @@ function makeRotationDisplay()
 
 function makeCardDisplay()
 {
-    myCardIcon = new component(130, 160, "wildcat.png", 575, 415, "image", 0, 0, true);
+    myCardIcon = new component(130, 160, "wildcat.png", 575, 415, 0, 0, true);
 }
 
 function makeBankDisplay()
@@ -3623,7 +3624,7 @@ function connectButtonDownEvent()
 
 function makeConnectButton()
 {
-    myConnectIcon = new component(60, 60, "noconnect.png", 264, 158, "image", 0, 0, true);
+    myConnectIcon = new component(60, 60, "noconnect.png", 264, 158, 0, 0, true);
     var b = document.createElement("BUTTON");
     b.addEventListener("mousedown", connectButtonDownEvent);
     b.style.borderRadius = "30px";
@@ -3740,9 +3741,9 @@ function startGame()
     makeAddPlayerButton();
     displayNode = document.body.lastChild;
 
-    myGamePiece = new component(60, 60, "KingOilIcon.png", 0, 0, "image", 20, 20, false);
-    myBackground = new component(1000, 1000, "ko_board.png", 118, 10, "image", 0, 0, true);
-    myBackground2 = new component(217, 783, "oil_spill.png", 10, 120, "image", 0, 0, true);
+    myGamePiece = new component(60, 60, "KingOilIcon.png", 0, 0, 20, 20, false);
+    myBackground = new component(1000, 1000, "ko_board.png", 118, 10, 0, 0, true);
+    myBackground2 = new component(217, 783, "oil_spill.png", 10, 120, 0, 0, true);
 
     var t = document.getElementById("DATText");
     t.style.position = "absolute";
@@ -3868,18 +3869,18 @@ function startGame()
 
     makeRotationDisplay();
 
-    drillAnimation = new component(36, 167, "derrick3_nobit.png", 0, 0, "image", 0, 0, false);
-    oilstrike = new component(100, 50, "spill.png", 570, 895, "image", 0, 0, false);
+    drillAnimation = new component(36, 167, "derrick3_nobit.png", 0, 0, 0, 0, false);
+    oilstrike = new component(100, 50, "spill.png", 570, 895, 0, 0, false);
 
-    capAnimation = new component(0, 0, "fire2.png", 0, 0, "image", 0, 0, false);
+    capAnimation = new component(0, 0, "fire2.png", 0, 0, 0, 0, false);
 
     var side = -1;
     for (var i = 0; i < cards.length; i++) {
-        shuffleAnimation[i] = new component(192, 50, "wildcat_shuffle.png", 520 + i / 2 + (side * 75), 470 - i, "image", 0, 0, false);
+        shuffleAnimation[i] = new component(192, 50, "wildcat_shuffle.png", 520 + i / 2 + (side * 75), 470 - i, 0, 0, false);
         side = -side;
     }
 
-    oilspill = new component(120, 60, "spill.png", 570, 910, "image", 0, 0, true);
+    oilspill = new component(120, 60, "spill.png", 570, 910, 0, 0, true);
 
     chatdiv = document.createElement("DIV");
     chatdiv.style.border = "3px solid #6060ff";
@@ -4329,18 +4330,17 @@ var myGameArea = {
     }
 };
 
-function component(width, height, image, x, y, type, xoffset, yoffset, active)
+function component(width, height, image, x, y, xoffset, yoffset, active)
 {
-    this.type = type;
-    if (type == "image") {
-        this.image = new Image();
-        this.image.src = image;
-        this.image.style.width = width + "px";
-        this.image.style.height = height + "px";
-        this.image.style.left = x + "px";
-        this.image.style.top = y + "px";
-        this.image.style.position = "absolute";
-    }
+    this.image = new Image();
+    this.image.src = image;
+    this.image.style.width = width + "px";
+    this.image.style.height = height + "px";
+    this.image.style.left = x + "px";
+    this.image.style.top = y + "px";
+    this.image.style.position = "absolute";
+    this.image.style.border = "0px";
+
     this.width = width;
     this.height = height;
     this.x = x;
