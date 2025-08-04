@@ -2835,6 +2835,13 @@ function fineButtonUpEvent()
 
 function randomButtonDownEvent()
 {
+    if (!rendezvousComplete) {
+        errmsg.push("waiting for BLM sync ...");
+        updatePlayersDisplay();
+
+        return;
+    }
+
     var changed = false;
 
     this.addEventListener("mouseleave", randomButtonUpEvent);
