@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+canvas { 
+    border:1px solid #d3d3d3;
+    background-color: #222222;
+}   
+
+</style>
+</head>
+<body onload="startView()">
+
+<script>
+
+var canvas;
+var context;
+
+var points = [
+];
+
+var eye_coord = [ 0, 0, 0 ]
+// a vector is { y-axis-rot, x-axis-rot }
+var eye_vector = { hrot: 0, vrot: 0 };
+
+var rId;
+
+function neon_log(x, y, w, h, vskew, hskew, color, bgcolor)
+{
+    var borderwidth = Math.max(Math.abs(vskew), Math.abs(hskew)) + 1;
+
+    var log = document.createElement("PRE");
+    log.style.position = "absolute";
+    log.style.left = x + "px";
+    log.style.top = y + "px";
+    log.style.width = w + "px";
+    log.style.height = h + "px";
+    log.style.fontFamily = '"Seven Segment"';
+//    log.style.font = "bold 20px arial,serif";
+    log.style.font = "bold 20px \"Seven Segment\",regular";
+    log.style.color = color;
+    log.style.backgroundColor = bgcolor;
+    log.style.opacity = "1.0";
+    log.style.border = "0px";
+    log.style.borderRadius = "7px";
+    log.style.padding = "4px";
+
+    var wlu1 = document.createElement("PRE");
+    wlu1.style.position = "absolute";
+    wlu1.style.top = y + vskew + 7 + "px";
+    wlu1.style.left = x + hskew + "px";
+    wlu1.style.width = w + 3 + "px";
+    wlu1.style.height = h + 2 + "px";
+    wlu1.style.color = color;
+    wlu1.style.backgroundColor = bgcolor;
+    wlu1.style.opacity = "1.0";
+    wlu1.style.border = borderwidth + "px solid " + color;
+    wlu1.style.borderRadius = "7px";
+
+    var wlu2 = document.createElement("PRE");
+    wlu2.style.position = "absolute";
+    wlu2.style.top = y + (vskew * 2) + 7 + "px";
+    wlu2.style.left = x + (hskew * 2) + "px";
+    wlu2.style.width = w + 3 + "px";
+    wlu2.style.height = h + 2 + "px";
+    wlu2.style.color = color;
+    wlu2.style.backgroundColor = bgcolor;
+    wlu2.style.opacity = "0.8";
+    wlu2.style.border = borderwidth + "px solid " + color;
+    wlu2.style.borderRadius = "7px";
+
+    var wlu3 = document.createElement("PRE");
+    wlu3.style.position = "absolute";
+    wlu3.style.top = y + (vskew * 3) + 7 + "px";
+    wlu3.style.left = x + (hskew * 3) + "px";
+    wlu3.style.width = w + 3 + "px";
+    wlu3.style.height = h + 2 + "px";
+    wlu3.style.color = color;
+    wlu3.style.backgroundColor = bgcolor;
+    wlu3.style.opacity = "0.3";
+    wlu3.style.border = borderwidth + "px solid " + color;
+    wlu3.style.borderRadius = "7px";
+
+    document.body.appendChild(wlu3);
+    document.body.appendChild(wlu2);
+    document.body.appendChild(wlu1);
+    document.body.appendChild(log);
+
+    log.borders = [];
+    log.borders[0] = wlu1;
+    log.borders[1] = wlu2;
+    log.borders[2] = wlu3;
+
+    return log;
+}
+
+var coordmsg;
+
+function log_eye()
+{
+    coordmsg.innerHTML = "eye location\n";
+    coordmsg.innerHTML += eye_coord[0] + " " + eye_coord[1] + " " + eye_coord[2] + "\n\n";
+    coordmsg.innerHTML += "eye vector\n";
+    coordmsg.innerHTML += eye_vector.hrot + " " + eye_vector.vrot;
+}
+
+function keyDownEvent(e)
+{
+//    statusmsg.innerHTML = e.code;
+
+    if (e.code == "Digit0") {
+        eye_coord[0] = 0;
+        eye_coord[1] = 0;
+        eye_coord[2] = 0;
+        eye_vector.hrot = 0;
+        eye_vector.vrot = 0;
+    }
+    if (e.code == "KeyA") {
+        eye_coord[0] -= 5;
+    }
+    if (e.code == "KeyD") {
+        eye_coord[0] += 5;
+    }
+    if (e.code == "KeyW") {
+        eye_coord[1] += 5;
+    }
+    if (e.code == "KeyS") {
+        eye_coord[1] -= 5;
+    }
+    if (e.code == "KeyQ") {
+        eye_coord[2] += 5;
+    }
+    if (e.code == "KeyZ") {
+        eye_coord[2] -= 5;
+    }
+    if (e.code == "ArrowLeft") {
+        eye_vector.hrot += 2;
+    }
+    if (e.code == "ArrowRight") {
+        eye_vector.hrot -= 2;
+    }
+    if (e.code == "ArrowUp") {
+        eye_vector.vrot -= 2;
+    }
+    if (e.code == "ArrowDown") {
+        eye_vector.vrot += 2;
+    }
+    if (eye_vector.hrot > 180) {
+        eye_vector.hrot -= 360;
+    }
+    if (eye_vector.hrot < -180) {
+        eye_vector.hrot += 360;
+    }
+
+    context.clearRect(0, 0, 1000, 1000);
+
+    log_eye();
+    draw_boxes(box);
+    draw_points();
+}
+
+function keyUpEvent(e)
+{
+}
+
+function xlate_3d(e_xyz, p_xyz)
+{
+    var x = p_xyz[0] - e_xyz[0];
+    var y = p_xyz[1] - e_xyz[1];
+    var z = p_xyz[2] - e_xyz[2];
+
+    var h = Math.sqrt(x ** 2 + z ** 2);
+    var v = Math.sqrt(y ** 2 + h ** 2);
+
+    var theta_h;
+    if (h == 0) {
+        theta_h = 0;
+    }
+    else {
+        theta_h = Math.asin(x / h) * 90 / (Math.PI / 2);
+    }
+    var theta_v;
+    if (v == 0) {
+        theta_v = 0;
+    }
+    else {
+        theta_v = Math.asin(y / v) * 90 / (Math.PI / 2);
+    }
+    if (z < 0) {
+        theta_h = 180 - theta_h;
+    }
+if (0) {
+    if (y < 0) {
+        theta_v = 180 - theta_v;
+    }
+}
+
+    var p_v = {};
+    p_v.hrot = theta_h;
+    p_v.vrot = theta_v;
+
+    return p_v;
+}
+
+function xlate_vector(p_v)
+{
+    var c_xy = {};
+    c_xy.x = p_v.hrot * 500 / 30;
+    c_xy.y = p_v.vrot * 500 / 30;
+
+    return c_xy;
+}
+
+function draw_points()
+{
+    for (var i = 0; i < points.length; i++) {
+        context.beginPath();
+
+        var point = points[i];
+        context.fillStyle = point[3];
+        var point_vector = xlate_3d(eye_coord, point);
+        // adjust relative to eye_vector
+        point_vector.hrot += eye_vector.hrot;
+        if (point_vector.hrot > 180) point_vector.hrot -= 360;
+        point_vector.vrot += eye_vector.vrot;
+        if (point_vector.vrot > 180) point_vector.vrot -= 360;
+        if (Math.abs(point_vector.hrot) > 30 ||
+            Math.abs(point_vector.vrot) > 30) {
+            continue;
+        }
+        var canvas_xy = xlate_vector(point_vector);
+
+        context.arc(canvas_xy.x + 500, 500 - canvas_xy.y, 1, 0, 2 * Math.PI);
+
+        context.fill();
+    }
+
+}
+
+function threed_to_canvasxy(point)
+{
+    var point_vector = xlate_3d(eye_coord, point);
+    // adjust relative to eye_vector
+    point_vector.hrot += eye_vector.hrot;
+    if (point_vector.hrot > 180) point_vector.hrot -= 360;
+    point_vector.vrot += eye_vector.vrot;
+    if (point_vector.vrot > 180) point_vector.vrot -= 360;
+    if (Math.abs(point_vector.hrot) > 30 ||
+        Math.abs(point_vector.vrot) > 30) {
+//        continue;
+    }
+    var canvas_xy = xlate_vector(point_vector);
+
+    return canvas_xy
+}
+
+var box = [
+    { xyz: [ -10, 5, 10 ], whd: [ 10, 10, 10 ], color: "#e580ff" },
+    { xyz: [ -10, 50, 100 ], whd: [ 10, 100, 10 ], color: "#80b3ff" }
+];
+
+function draw_boxes(b)
+{
+    for (var i = 0; i < b.length; i++) {
+        draw_box(b[i]);
+    }
+}
+
+function draw_box(b)
+{
+    var p_tbl = [ b.xyz[0] - b.whd[0] / 2,
+                  b.xyz[1] + b.whd[1] / 2,
+                  b.xyz[2] + b.whd[2] / 2,
+                  b.color ];
+    var p_tbr = [ b.xyz[0] + b.whd[0] / 2,
+                  b.xyz[1] + b.whd[1] / 2,
+                  b.xyz[2] + b.whd[2] / 2,
+                  b.color ];
+    var p_tfr = [ b.xyz[0] + b.whd[0] / 2,
+                  b.xyz[1] + b.whd[1] / 2,
+                  b.xyz[2] - b.whd[2] / 2,
+                  b.color ];
+    var p_tfl = [ b.xyz[0] - b.whd[0] / 2,
+                  b.xyz[1] + b.whd[1] / 2,
+                  b.xyz[2] - b.whd[2] / 2,
+                  b.color ];
+    var p_bbl = [ b.xyz[0] - b.whd[0] / 2,
+                  b.xyz[1] - b.whd[1] / 2,
+                  b.xyz[2] + b.whd[2] / 2,
+                  b.color ];
+    var p_bbr = [ b.xyz[0] + b.whd[0] / 2,
+                  b.xyz[1] - b.whd[1] / 2,
+                  b.xyz[2] + b.whd[2] / 2,
+                  b.color ];
+    var p_bfr = [ b.xyz[0] + b.whd[0] / 2,
+                  b.xyz[1] - b.whd[1] / 2,
+                  b.xyz[2] - b.whd[2] / 2,
+                  b.color ];
+    var p_bfl = [ b.xyz[0] - b.whd[0] / 2,
+                  b.xyz[1] - b.whd[1] / 2,
+                  b.xyz[2] - b.whd[2] / 2,
+                  b.color ];
+
+    context.fillStyle = p_tbl[3];
+    context.strokeStyle = p_tbl[3];
+    context.beginPath();
+
+    var canvas_xy = threed_to_canvasxy(p_tbl);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.moveTo(canvas_xy.x, canvas_xy.y);
+    var canvas_xy = threed_to_canvasxy(p_tbr);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.lineTo(canvas_xy.x, canvas_xy.y);
+    var canvas_xy = threed_to_canvasxy(p_tfr);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.lineTo(canvas_xy.x, canvas_xy.y);
+    var canvas_xy = threed_to_canvasxy(p_tfl);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.lineTo(canvas_xy.x, canvas_xy.y);
+    var canvas_xy = threed_to_canvasxy(p_tbl);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.lineTo(canvas_xy.x, canvas_xy.y);
+
+    context.stroke();
+
+    context.beginPath();
+    var canvas_xy = threed_to_canvasxy(p_bbl);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.moveTo(canvas_xy.x, canvas_xy.y);
+    var canvas_xy = threed_to_canvasxy(p_bbr);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.lineTo(canvas_xy.x, canvas_xy.y);
+    var canvas_xy = threed_to_canvasxy(p_bfr);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.lineTo(canvas_xy.x, canvas_xy.y);
+    var canvas_xy = threed_to_canvasxy(p_bfl);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.lineTo(canvas_xy.x, canvas_xy.y);
+    var canvas_xy = threed_to_canvasxy(p_bbl);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.lineTo(canvas_xy.x, canvas_xy.y);
+
+//    context.fillStyle = p_tbl[3];
+    context.stroke();
+
+    context.beginPath();
+    var canvas_xy = threed_to_canvasxy(p_bbl);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.moveTo(canvas_xy.x, canvas_xy.y);
+    var canvas_xy = threed_to_canvasxy(p_tbl);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.lineTo(canvas_xy.x, canvas_xy.y);
+
+    context.stroke();
+
+    context.beginPath();
+    var canvas_xy = threed_to_canvasxy(p_bbr);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.moveTo(canvas_xy.x, canvas_xy.y);
+    var canvas_xy = threed_to_canvasxy(p_tbr);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.lineTo(canvas_xy.x, canvas_xy.y);
+
+    context.stroke();
+
+    context.beginPath();
+    var canvas_xy = threed_to_canvasxy(p_bfr);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.moveTo(canvas_xy.x, canvas_xy.y);
+    var canvas_xy = threed_to_canvasxy(p_tfr);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.lineTo(canvas_xy.x, canvas_xy.y);
+
+    context.stroke();
+
+    context.beginPath();
+    var canvas_xy = threed_to_canvasxy(p_bfl);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.moveTo(canvas_xy.x, canvas_xy.y);
+    var canvas_xy = threed_to_canvasxy(p_tfl);
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+    context.lineTo(canvas_xy.x, canvas_xy.y);
+
+    context.stroke();
+}
+
+function startView()
+{
+    window.addEventListener('keydown', keyDownEvent);
+    window.addEventListener('keyup', keyUpEvent);
+
+    var w = 1000;
+    var h = 1000;
+
+    canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    canvas.backgroundColor = "#222222";
+    document.body.appendChild(canvas);
+
+    coordmsg = neon_log(1020, 500, 230, 140, -1, -2, "#80ff00", "#107010");
+    log_eye();
+
+    context = canvas.getContext("2d");
+//    context.fillStyle = "#80ff00";
+
+if (1) {
+    points.push([ 0, 0, 10, "#80ff00" ]);
+}
+if (0) {
+    points.push([ -10, -10, -10 ]);
+    points.push([ -10, -10,  0 ]);
+    points.push([ -10,  0,   0 ]);
+    points.push([  10,  0,   0 ]);
+    points.push([  10,  10,  0 ]);
+    points.push([  10,  10,  10 ]);
+}
+if (0) {
+    for (var i = 0; i < 100; i++) {
+        points.push([ 0, 0, i, "#e580ff" ]);
+        points.push([ i, 0, i, "#80b3ff" ]);
+    }
+}
+if (0) {
+    for (var z = 0; z < 100; z++) {
+        points.push([ 10, 0, z ]);
+        points.push([ 10, 10, z ]);
+        points.push([ 10, -10, z ]);
+        points.push([ -10, 0, z ]);
+        points.push([ -10, 10, z ]);
+        points.push([ -10, -10, z ]);
+        points.push([ 0, 10, z ]);
+        points.push([ 0, -10, z ]);
+    }
+}
+if (1) {
+    for (var i = 0; i < 10000; i++) {
+        var x = Math.floor((Math.random() * 600) + 1) - 300;
+//        var y = Math.floor((Math.random() * 600) + 1) - 300;
+        var y = 0
+        var z = Math.floor((Math.random() * 600) + 1) - 300;
+        var point = [ x, y, z, "#80ff00" ];
+        points.push(point);
+    }
+}
+if (0) {
+    for (var z = 0; z < 600; z++) {
+        for (var x = -300; x <= 300; x++) {
+            points.push([ x, 0, z ]);
+        }
+    }
+}
+if (0) {
+    for (var z = 0; z < 100; z++) {
+        for (var y = -10; y <= 10; y++) {
+            for (var x = -10; x <= 10; x++) {
+                points.push([ x, y, z ]);
+            }
+        }
+    }
+}
+
+    context.clearRect(0, 0, 1000, 1000);
+
+    log_eye();
+    draw_boxes(box);
+    draw_points();
+}
+
+</script>
+
+</body>
+</html>
