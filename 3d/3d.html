@@ -20,7 +20,7 @@ var context;
 var points = [
 ];
 
-var eye_coord = [ 0, 0, 0 ]
+var eye_coord = [ 0, 5, -10 ]
 // a vector is { y-axis-rot, x-axis-rot }
 var eye_vector = { hrot: 0, vrot: 0 };
 
@@ -156,7 +156,7 @@ function keyDownEvent(e)
     context.clearRect(0, 0, 1000, 1000);
 
     log_eye();
-    draw_boxes(box);
+    draw_boxes(boxes);
     draw_points();
 }
 
@@ -238,7 +238,7 @@ function draw_points()
 
 }
 
-function threed_to_canvasxy(point)
+function threeD_to_canvasxy(point)
 {
     var point_vector = xlate_3d(eye_coord, point);
     // adjust relative to eye_vector
@@ -252,12 +252,21 @@ function threed_to_canvasxy(point)
     }
     var canvas_xy = xlate_vector(point_vector);
 
+    canvas_xy.x += 500;
+    canvas_xy.y = 500 - canvas_xy.y;
+
     return canvas_xy
 }
 
-var box = [
+var boxes = [
     { xyz: [ -10, 5, 10 ], whd: [ 10, 10, 10 ], color: "#e580ff" },
-    { xyz: [ -10, 50, 100 ], whd: [ 10, 100, 10 ], color: "#80b3ff" }
+    { xyz: [  10, 5, 10 ], whd: [ 10, 10, 10 ], color: "#e580ff" },
+    { xyz: [ -10, 50, 25 ], whd: [ 10, 100, 10 ], color: "#80b3ff" },
+    { xyz: [  10, 50, 25 ], whd: [ 10, 100, 10 ], color: "#80b3ff" },
+    { xyz: [ -10, 25, 35 ], whd: [ 10, 50, 10 ], color: "#80b3ff" },
+    { xyz: [  10, 25, 35 ], whd: [ 10, 50, 10 ], color: "#80b3ff" },
+    { xyz: [ -10, 15, 75 ], whd: [ 10, 30, 70 ], color: "#80b3ff" },
+    { xyz: [  10, 15, 75 ], whd: [ 10, 30, 70 ], color: "#80b3ff" },
 ];
 
 function draw_boxes(b)
@@ -306,98 +315,61 @@ function draw_box(b)
     context.strokeStyle = p_tbl[3];
     context.beginPath();
 
-    var canvas_xy = threed_to_canvasxy(p_tbl);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
+    var canvas_xy = threeD_to_canvasxy(p_tbl);
     context.moveTo(canvas_xy.x, canvas_xy.y);
-    var canvas_xy = threed_to_canvasxy(p_tbr);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
+    canvas_xy = threeD_to_canvasxy(p_tbr);
     context.lineTo(canvas_xy.x, canvas_xy.y);
-    var canvas_xy = threed_to_canvasxy(p_tfr);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
+    canvas_xy = threeD_to_canvasxy(p_tfr);
     context.lineTo(canvas_xy.x, canvas_xy.y);
-    var canvas_xy = threed_to_canvasxy(p_tfl);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
+    canvas_xy = threeD_to_canvasxy(p_tfl);
     context.lineTo(canvas_xy.x, canvas_xy.y);
-    var canvas_xy = threed_to_canvasxy(p_tbl);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
+    canvas_xy = threeD_to_canvasxy(p_tbl);
     context.lineTo(canvas_xy.x, canvas_xy.y);
 
     context.stroke();
 
     context.beginPath();
-    var canvas_xy = threed_to_canvasxy(p_bbl);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
+    canvas_xy = threeD_to_canvasxy(p_bbl);
     context.moveTo(canvas_xy.x, canvas_xy.y);
-    var canvas_xy = threed_to_canvasxy(p_bbr);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
+    canvas_xy = threeD_to_canvasxy(p_bbr);
     context.lineTo(canvas_xy.x, canvas_xy.y);
-    var canvas_xy = threed_to_canvasxy(p_bfr);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
+    canvas_xy = threeD_to_canvasxy(p_bfr);
     context.lineTo(canvas_xy.x, canvas_xy.y);
-    var canvas_xy = threed_to_canvasxy(p_bfl);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
+    canvas_xy = threeD_to_canvasxy(p_bfl);
     context.lineTo(canvas_xy.x, canvas_xy.y);
-    var canvas_xy = threed_to_canvasxy(p_bbl);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
-    context.lineTo(canvas_xy.x, canvas_xy.y);
-
-//    context.fillStyle = p_tbl[3];
-    context.stroke();
-
-    context.beginPath();
-    var canvas_xy = threed_to_canvasxy(p_bbl);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
-    context.moveTo(canvas_xy.x, canvas_xy.y);
-    var canvas_xy = threed_to_canvasxy(p_tbl);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
+    canvas_xy = threeD_to_canvasxy(p_bbl);
     context.lineTo(canvas_xy.x, canvas_xy.y);
 
     context.stroke();
 
     context.beginPath();
-    var canvas_xy = threed_to_canvasxy(p_bbr);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
+    canvas_xy = threeD_to_canvasxy(p_bbl);
     context.moveTo(canvas_xy.x, canvas_xy.y);
-    var canvas_xy = threed_to_canvasxy(p_tbr);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
+    canvas_xy = threeD_to_canvasxy(p_tbl);
     context.lineTo(canvas_xy.x, canvas_xy.y);
 
     context.stroke();
 
     context.beginPath();
-    var canvas_xy = threed_to_canvasxy(p_bfr);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
+    canvas_xy = threeD_to_canvasxy(p_bbr);
     context.moveTo(canvas_xy.x, canvas_xy.y);
-    var canvas_xy = threed_to_canvasxy(p_tfr);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
+    canvas_xy = threeD_to_canvasxy(p_tbr);
     context.lineTo(canvas_xy.x, canvas_xy.y);
 
     context.stroke();
 
     context.beginPath();
-    var canvas_xy = threed_to_canvasxy(p_bfl);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
+    canvas_xy = threeD_to_canvasxy(p_bfr);
     context.moveTo(canvas_xy.x, canvas_xy.y);
-    var canvas_xy = threed_to_canvasxy(p_tfl);
-    canvas_xy.x += 500;
-    canvas_xy.y = 500 - canvas_xy.y;
+    canvas_xy = threeD_to_canvasxy(p_tfr);
+    context.lineTo(canvas_xy.x, canvas_xy.y);
+
+    context.stroke();
+
+    context.beginPath();
+    canvas_xy = threeD_to_canvasxy(p_bfl);
+    context.moveTo(canvas_xy.x, canvas_xy.y);
+    canvas_xy = threeD_to_canvasxy(p_tfl);
     context.lineTo(canvas_xy.x, canvas_xy.y);
 
     context.stroke();
@@ -421,7 +393,6 @@ function startView()
     log_eye();
 
     context = canvas.getContext("2d");
-//    context.fillStyle = "#80ff00";
 
 if (1) {
     points.push([ 0, 0, 10, "#80ff00" ]);
@@ -482,7 +453,7 @@ if (0) {
     context.clearRect(0, 0, 1000, 1000);
 
     log_eye();
-    draw_boxes(box);
+    draw_boxes(boxes);
     draw_points();
 }
 
