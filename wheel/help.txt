@@ -1,0 +1,52 @@
+
+Silver Room Wheel-O-Fortune
+
+The wheel can be spun (spinned?) in a few different ways. The simplest method is with the SPIN button (or "S" keypress). The wheel spins only in a clockwise direction and cannot spin counter-clockwise. The DECEL input field on the left edge of the page specifies the wheel deceleration rate for all spin methods.
+
+Spin methods
+
+SPIN button
+
+Click or press the SPIN button located on the left edge of the page. The wheel will start spinning with an initial RPM as specified in the "RPM" input field, and the spin RPM will decrease as specified in the "DECEL" input field (in units of RPM/second). The RPM & DECEL fields can be specified with a decimal point for fractional amounts (i.e., 42.5 RPM).
+
+The ISPIN button "spins" the wheel instantly (no wheel spin animation), causing it to instantly jump to the card on which it would have otherwise stopped with the normal SPIN button (using same RPM and DECEL input values).
+
+The STOP button stops the wheel instantly. The wheel can also be stopped by "grabbing" the wheel (see "Wheel grab" below).
+
+Speed-swipe
+
+The ">>>>" graphic on the wheel is used to spin the wheel based on the pointer (mouse) movement speed as it exits the right edge of the ">>>>" graphic. The faster you swipe through the speed-swipe the faster the wheel spins. There is no mouse click or button press involved - simply moving through the speed-swipe from left to right activates the spin;
+
+Wheel grab
+
+The wheel can be "grabbed" by click-and-holding (or press-and-holding) the wheel anywhere on the inside of the wheel's card graphic outer ring. The wheel will move according to the mouse or touchpad movement while the button or touchpad is held down. The wheel can then be spun by releasing the mouse button or touchpad press while the mouse or pointer is moving, with the spin rate being dictated by the speed of movement at the time of the button or touchpad release.
+
+Card ring click
+
+Click on a card on the wheel's outer ring to place that card at the spin result location, as if a wheel spin had stopped on that card.
+
+Cheat spin
+
+The GO button on the left edge of the page spins the wheel in a normal fashion so that the spin stops on the card specified in the card input field to the right of the GO button. The wheel will complete the number of rotations specified in the "rot" input field (plus a fractional amount to reach the spcified card). The DECEL input field specifies the wheel deceleration. The RPM input field has no effect, since the initial RPM is determined by the target card and number of rotations. The card is specified in a "<number/letter><first-letter-of-suit>" manner, where <number/letter> is 2-9 for cards 2-9, T for 10, J/Q/K/A for face cards and Ace, and the suit specified as S for spades, H for hearts, D for diamonds, and C for clubs. For example, AD is Ace of diamonds, TS is 10 of spades, 7C is 7 of clubs.
+
+Demo spin
+
+The "A" key will cause the wheel to spin in a "demo" fashion, rotating at 1 RPM indefinitely with no wheel deceleration. Pressing the "A" key while in demo mode returns the wheel to its normal functions.
+
+Incremental Spin
+
+If the wheel is stopeed, the "+" and "-" keys will rotate the wheel by 1 degree in the specified direction for each key press.
+
+Wheel selection
+
+The lower left of the page contains a number of different wheel images that can be selected by clicking on the thumbnail image.
+
+Information and debug logs
+
+The right side of the page contains logs with information about:
+    - the wheel position and speed
+    - "clicker" position
+    - spin information
+    - mouse/pointer location on the page (both wheel-relative and page-relative).
+The red spin information log will show the method of the wheel spin, but most importantly will show the projected card result of the spin. Since the card result of the spin is sensitive information that should not normally be seen before the spin finishes, this red spin information log can be hidden by clicking the log window. It can be unhidden by clicking the mouse/pointer location log at the bottom right of the page..
+
