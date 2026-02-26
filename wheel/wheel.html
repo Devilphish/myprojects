@@ -26,6 +26,98 @@ canvas {
 
 <script>
 
+var helpString = "\
+Silver Room Wheel-O-Fortune<br />\
+<br />\
+The wheel can be spun (spinned?) in a few different ways. The simplest method is with the SPIN button (or 'S' keypress). The wheel spins only in a clockwise direction and cannot spin counter-clockwise. The DECEL input field on the left edge of the page specifies the wheel deceleration rate for all spin methods.<br />\
+<br />\
+Spin methods<br />\
+<br />\
+SPIN button<br />\
+<br />\
+Click or press the SPIN button located on the left edge of the page. The wheel will start spinning with an initial RPM as specified in the 'RPM' input field, and the spin RPM will decrease as specified in the 'DECEL' input field (in units of RPM/second). The RPM & DECEL fields can be specified with a decimal point for fractional amounts (i.e., 42.5 RPM).<br />\
+<br />\
+The ISPIN button 'spins' the wheel instantly (no wheel spin animation), causing it to instantly jump to the card on which it would have otherwise stopped with the normal SPIN button (using same RPM and DECEL input values).<br />\<br />\
+<br />\
+The STOP button stops the wheel instantly. The wheel can also be stopped by 'grabbing' the wheel (see 'Wheel grab' below).<br />\
+<br />\
+Speed-swipe<br />\
+<br />\
+The '>>>>' graphic on the wheel is used to spin the wheel based on the pointer (mouse) movement speed as it exits the right edge of the '>>>>' graphic. The faster you swipe through the speed-swipe the faster the wheel spins. There is no mouse click or button press involved - simply moving through the speed-swipe from left to right activates the spin;<br />\
+<br />\
+Wheel grab<br />\
+<br />\
+The wheel can be 'grabbed' by click-and-holding (or press-and-holding) the wheel anywhere on the inside of the wheel's card graphic outer ring. The wheel will move according to the mouse or touchpad movement while the button or touchpad is held down. The wheel can then be spun by releasing the mouse button or touchpad press while the mouse or pointer is moving, with the spin rate being dictated by the speed of movement at the time of the button or touchpad release.<br />\
+<br />\
+Card ring click<br />\
+<br />\
+Click on a card on the wheel's outer ring to place that card at the spin result location, as if a wheel spin had stopped on that card.<br />\
+<br />\
+Cheat spin<br />\
+<br />\
+The GO button on the left edge of the page spins the wheel in a normal fashion so that the spin stops on the card specified in the card input field to the right of the GO button. The wheel will complete the number of rotations specified in the 'rot' input field (plus a fractional amount to reach the spcified card). The DECEL input field specifies the wheel deceleration. The RPM input field has no effect, since the initial RPM is determined by the target card and number of rotations. The card is specified in a '<number/letter><first-letter-of-suit>' manner, where <number/letter> is 2-9 for cards 2-9, T for 10, J/Q/K/A for face cards and Ace, and the suit specified as S for spades, H for hearts, D for diamonds, and C for clubs. For example, AD is Ace of diamonds, TS is 10 of spades, 7C is 7 of clubs.<br />\
+<br />\
+Demo spin<br />\
+<br />\
+The 'A' key will cause the wheel to spin in a 'demo' fashion, rotating at 1 RPM indefinitely with no wheel deceleration. Pressing the 'A' key while in demo mode returns the wheel to its normal functions.<br />\
+<br />\
+Incremental Spin<br />\
+<br />\
+If the wheel is stopeed, the '+' and '-' keys will rotate the wheel by 1 degree in the specified direction for each key press.<br />\
+<br />\
+Wheel selection<br />\
+<br />\
+The lower left of the page contains a number of different wheel images that can be selected by clicking on the thumbnail image.<br />\
+<br />\
+Information and debug logs<br />\
+<br />\
+The right side of the page contains logs with information about:<br />\
+    - the wheel position and speed<br />\
+    - 'clicker' position<br />\
+    - spin information<br />\
+    - mouse/pointer location on the page (both wheel-relative and page-relative).<br />\
+The red spin information log will show the method of the wheel spin, but most importantly will show the projected card result of the spin. Since the card result of the spin is sensitive information that should not normally be seen before the spin finishes, this red spin information log can be hidden by clicking the log window. It can be unhidden by clicking the mouse/pointer location log at the bottom right of the page.<br />\
+";
+
+var helpTxt = document.createElement("DIV");
+helpTxt.style.width = "350px";
+helpTxt.style.height = "626px";
+helpTxt.style.position = "absolute";
+helpTxt.style.left = "900px";
+helpTxt.style.top = "20px";
+helpTxt.style.color = "white";
+helpTxt.style.backgroundColor = "#000000";
+helpTxt.style.font = "17px arial bold";
+helpTxt.style.textAlign = "left";
+helpTxt.style.overflow = "scroll";
+//helpTxt.style.scrollbarColor = "#538d4e";
+helpTxt.style.scrollbarColor = "#008000";
+helpTxt.innerHTML = helpString;
+
+helpTxt.visible = false;
+
+function showHelp()
+{
+    if (helpTxt.visible) {
+        document.body.removeChild(helpTxt);
+    }
+    else {
+        document.body.appendChild(helpTxt);
+    }
+
+    helpTxt.visible = !helpTxt.visible;
+}
+
+var d = document.createElement("IMG");
+d.style.width = "60px";
+d.style.height = "60px";
+d.style.position = "absolute";
+d.style.left = "30px";
+d.style.top = "80px";
+d.addEventListener("mousedown", showHelp);
+d.src = "help.png";
+document.body.appendChild(d);
+
 // for wheel.png
 //var deck = [
 //    "3D", "7S", "9H", "6S", "4C", "JH", "2D", "TD",
@@ -73,7 +165,6 @@ var rotateimage;
 
 var framerate = 50;
 var frameinterval = 1000 / framerate;
-var rpm = 0.0;
 var rps;
 var rpi;
 var degperinterval;
@@ -82,6 +173,7 @@ var curcard = "8S";
 var curcard_lopost;
 var curcard_hipost;
 
+var rpm = 0.0;
 var rpmdecel = 2.0;  // rpm/sec
 var rpmdecelperinterval = rpmdecel / framerate;
 
@@ -313,7 +405,6 @@ function startWheel()
             rpm = 0.0;
 
             if (hyp > 0.85) {
-
                 rotateimage.rot -= deg;
 
                 if (rotateimage.rot >= 360) {
@@ -481,12 +572,14 @@ function startWheel()
     s.style.top = "235px";
     s.style.left = "187px";
     s.style.font = "bold 20px arial,serif";
+    s.style.color = "#66ffff";
     s.innerHTML = "rpm";
 
     var d = document.getElementById('decelinput');
     d.style.position = "absolute";
     d.style.top = "307px";
     d.style.font = "bold 20px arial,serif";
+    d.style.color = "#66ffff";
     d.innerHTML = "DECEL";
 
     d = document.getElementById('decelsuffixlog');
@@ -494,6 +587,7 @@ function startWheel()
     d.style.top = "305px";
     d.style.left = "150px";
     d.style.font = "bold 20px arial,serif";
+    d.style.color = "#66ffff";
     d.innerHTML = "rpm/s";
 
     d = document.getElementById('rotsuffixlog');
@@ -501,6 +595,7 @@ function startWheel()
     d.style.top = "349px";
     d.style.left = "210px";
     d.style.font = "bold 20px arial,serif";
+    d.style.color = "#66ffff";
     d.innerHTML = "rot";
 
     // rpm input
@@ -518,6 +613,7 @@ function startWheel()
     rpminput.style.left = 118 + "px";
     rpminput.style.font = "bold 20px arial,serif";
     rpminput.style.textAlign = "center";
+    rpminput.style.backgroundColor = "#66ffff";
     document.body.appendChild(rpminput);
 
     // decel input
@@ -536,6 +632,7 @@ function startWheel()
     decelinput.style.top = 320 + "px";
     decelinput.style.font = "bold 20px arial,serif";
     decelinput.style.textAlign = "center";
+    decelinput.style.backgroundColor = "#66ffff";
     document.body.appendChild(decelinput);
 
     // card input
@@ -554,6 +651,7 @@ function startWheel()
     cardinput.style.top = 365 + "px";
     cardinput.style.font = "bold 20px arial,serif";
     cardinput.style.textAlign = "center";
+    cardinput.style.backgroundColor = "#66ffff";
     document.body.appendChild(cardinput);
 
     // nspins input
@@ -572,11 +670,11 @@ function startWheel()
     nspinsinput.style.top = 365 + "px";
     nspinsinput.style.font = "bold 20px arial,serif";
     nspinsinput.style.textAlign = "center";
+    nspinsinput.style.backgroundColor = "#66ffff";
     document.body.appendChild(nspinsinput);
 
     // clicker
     clicker = document.createElement("BUTTON");
-    clicker.addEventListener("mousedown", fooButtonDownEvent);
     clicker.style.border = "2px solid #ffffff";
     clicker.style.borderRadius = "2px";
     clicker.style.width = "2px";
@@ -660,7 +758,7 @@ function wheelButton(image)
 
 function decelInput()
 {
-    rpmdecel = decelinput.value;
+    rpmdecel = Number(decelinput.value);
     rpmdecelperinterval = rpmdecel / framerate;
 }
 
@@ -671,7 +769,7 @@ function cardInput()
 
 function nspinsInput()
 {
-    nfixspins = nspinsinput.value;
+    nfixspins = Number(nspinsinput.value);
 }
 
 function stopButton()
@@ -682,12 +780,15 @@ function stopButton()
         clearInterval(rId);
         rId = null;
         rpm = 0.0;
+        decelInput();
+
+        wheelmsg.innerHTML = "  RPM: " + Math.round(rpm) + "\n  rot: " + frunc(rotateimage.rot, 1);
     }
 }
 
 function spinButton()
 {
-    rpm = rpminput.value;
+    rpm = Number(rpminput.value);
 
     projmsg.innerHTML = "spin button\ninit RPM: " + frunc(rpm, 3);
 
@@ -696,7 +797,7 @@ function spinButton()
 
 function ispinButton()
 {
-    rpm = rpminput.value;
+    rpm = Number(rpminput.value);
 
     projmsg.innerHTML = "ispin button\ninit RPM: " + frunc(rpm, 3);
 
@@ -722,7 +823,7 @@ var spin_result = {
 };
 
 //
-// Actual formula for initial RPM based on target card distance (in degrees):
+// Formula for initial RPM based on target card distance (in degrees):
 // i - rpm
 // t - seconds
 // r - revolutions
@@ -733,6 +834,7 @@ var spin_result = {
 // r = (i * i / 2) / 120
 // r = (i^2 / 2) / 120
 // r = i^2 / 240
+//
 // i^2 = 240r             // general expr is i^2 = 120 * d * r
 // i = sq/240r            //   d - deceleration rpm/s
 //
@@ -744,7 +846,7 @@ var spin_result = {
 // from left to right, and assuming a 2 rpm/s spin deceleration. In other
 // words, integrate the rotation speed vs time plot from x=0 to f(x)=0.
 //
-// Due to iterative nature of wheel spin mechanism, and rounding errors
+// Due to the iterative nature of the wheel spin mechanism, and rounding errors
 // based on lost fractional degrees for each iteration, the formula
 // can't be used to accurately model the wheel spin mechanism. Therefore,
 // a Monte Carlo exhaustive divide-and-conquer search is used.
@@ -803,7 +905,10 @@ function goButton()
 
 function projectSpin(init_rpm, result)
 {
-return;
+    if (rpmdecelperinterval == 0) {
+        return;
+    }
+
     var proj_rpm = init_rpm;
     var proj_rot = rotateimage.rot;
     var proj_rps;
@@ -841,9 +946,9 @@ function instaSpin()
 {
     var totaldeg = 0;
 
-    projmsg.innerHTML = "insta-spin\ninit RPM: " + frunc(rpminput.value, 3);
+    projmsg.innerHTML = "insta-spin\ninit RPM: " + frunc(Number(rpminput.value), 3);
 
-    projectSpin(rpminput.value, spin_result);
+    projectSpin(Number(rpminput.value), spin_result);
 
     rotateimage.rot = spin_result.projected_rot;
     rotateimage.style.rotate = rotateimage.rot + "deg";
@@ -852,7 +957,7 @@ function instaSpin()
     projmsg.innerHTML += "\nprojected rot: " + frunc(spin_result.projected_rot, 1);
     projmsg.innerHTML += "\nprojected card: " + spin_result.card + " (" + spin_result.cardindex + ")";
     totaldeg = spin_result.total_deg;
-    projmsg.innerHTML += "\ntotal rot: " + frunc(totaldeg, 1) + "\n\t\t(" + frunc(totaldeg / 360, 2) + ")";
+    projmsg.innerHTML += "\ntotal rot: " + frunc(totaldeg, 1) + " (" + frunc(totaldeg / 360, 2) + ")";
 }
 
 function spinWheel()
@@ -861,11 +966,15 @@ function spinWheel()
         rId = setInterval(rotateWheel, frameinterval);
     }
 
+    if (rpmdecelperinterval == 0) {
+        return;
+    }
+
     projectSpin(rpm, spin_result);
 
     projmsg.innerHTML += "\nprojected rot: " + frunc(spin_result.projected_rot, 1);
     projmsg.innerHTML += "\nprojected card: " + spin_result.card + " (" + spin_result.cardindex + ")";
-    projmsg.innerHTML += "\ntotal rot: " + frunc(spin_result.total_deg, 1) + "\n\t\t(" + frunc(spin_result.total_deg / 360, 3) + ")";
+    projmsg.innerHTML += "\ntotal rot: " + frunc(spin_result.total_deg, 1) + " (" + frunc(spin_result.total_deg / 360, 3) + ")";
 }
 
 function fooButtonDownEvent()
@@ -877,33 +986,37 @@ function fooButtonDownEvent()
 
 function keyDownEvent(e)
 {
-//    statusmsg.innerHTML = e.code;
+    statusmsg.innerHTML = e.code;
 
     if (e.code == "KeyS") {
         if (document.activeElement == cardinput) {
             return;
         }
 
-        rpm = rpminput.value;
+        rpm = Number(rpminput.value);
 
         projmsg.innerHTML = "spin key\ninit RPM: " + frunc(rpm, 3);
 
         spinWheel();
     }
-if (1) {
     if (e.code == "KeyA") {
         if (rId == null) {
-//            rpm = rpminput.value;
-            rpm = 10.0;
+            rpm = 1.0;
             rpmdecel = 0.0;
             rpmdecelperinterval = 0.0;
+
             spinWheel();
         }
         else {
             clearInterval(rId);
+            rId = null;
+
+            rpm = 0.0;
+            decelInput();
+
+            printCard(rotateimage.rot);
         }
     }
-}
     if (e.code == "KeyI") {
         if (rId == null) {
             instaSpin();
