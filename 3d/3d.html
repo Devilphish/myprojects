@@ -100,20 +100,37 @@ function neon_log(x, y, w, h, vskew, hskew, color, bgcolor)
     return log;
 }
 
+function frunc(x, dec_places)
+{
+     var shift = Math.pow(10, dec_places);
+     return Math.trunc(x * shift) / shift;
+}
+
 var coordmsg;
 
 function log_eye()
 {
     coordmsg.innerHTML = "eye location\n";
-    coordmsg.innerHTML += eye_coord[0] + " " + eye_coord[1] + " " + eye_coord[2] + "\n\n";
+    coordmsg.innerHTML += frunc(eye_coord[0], 1) + "\n" + frunc(eye_coord[1], 1) + "\n" + frunc(eye_coord[2], 1) + "\n\n";
     coordmsg.innerHTML += "eye vector\n";
     coordmsg.innerHTML += eye_vector.hrot + " " + eye_vector.vrot;
 }
 
+var grid_inc = 5;
+var vect_inc = 2;
+
+var shift = false;
+
 function keyDownEvent(e)
 {
 //    statusmsg.innerHTML = e.code;
+    console.log("key: " + e.code);
 
+    e.preventDefault();
+
+    if (e.code == "ShiftLeft" || e.code == "ShiftRight") {
+        shift = true;
+    }
     if (e.code == "Digit0") {
         eye_coord[0] = eye_coord_init[0];
         eye_coord[1] = eye_coord_init[1];
@@ -121,36 +138,55 @@ function keyDownEvent(e)
         eye_vector.hrot = 0;
         eye_vector.vrot = 0;
     }
+    if (e.code == "Space") {
+        if (shift) {
+            var radians = -eye_vector.hrot * Math.PI / 180;
+            eye_coord[0] -= Math.sin(radians) * grid_inc;
+            radians = -eye_vector.vrot * Math.PI / 180;
+            eye_coord[1] -= Math.sin(radians) * grid_inc;
+            radians = -eye_vector.hrot * Math.PI / 180;
+            eye_coord[2] -= Math.cos(radians) * grid_inc;
+        }
+        else {
+            var radians = -eye_vector.hrot * Math.PI / 180;
+            eye_coord[0] += Math.sin(radians) * grid_inc;
+            radians = -eye_vector.vrot * Math.PI / 180;
+            eye_coord[1] += Math.sin(radians) * grid_inc;
+            radians = -eye_vector.hrot * Math.PI / 180;
+            eye_coord[2] += Math.cos(radians) * grid_inc;
+        }
+    }
     if (e.code == "KeyA") {
-        eye_coord[0] -= 5;
+        eye_coord[0] -= grid_inc;
     }
     if (e.code == "KeyD") {
-        eye_coord[0] += 5;
+        eye_coord[0] += grid_inc;
     }
     if (e.code == "KeyW") {
-        eye_coord[1] += 5;
+        eye_coord[1] += grid_inc;
     }
     if (e.code == "KeyS") {
-        eye_coord[1] -= 5;
+        eye_coord[1] -= grid_inc;
     }
     if (e.code == "KeyQ") {
-        eye_coord[2] += 5;
+        eye_coord[2] += grid_inc;
     }
     if (e.code == "KeyZ") {
-        eye_coord[2] -= 5;
+        eye_coord[2] -= grid_inc;
     }
     if (e.code == "ArrowLeft") {
-        eye_vector.hrot += 2;
+        eye_vector.hrot += vect_inc;
     }
     if (e.code == "ArrowRight") {
-        eye_vector.hrot -= 2;
+        eye_vector.hrot -= vect_inc;
     }
     if (e.code == "ArrowUp") {
-        eye_vector.vrot -= 2;
+        eye_vector.vrot -= vect_inc;
     }
     if (e.code == "ArrowDown") {
-        eye_vector.vrot += 2;
+        eye_vector.vrot += vect_inc;
     }
+
     if (eye_vector.hrot > 180) {
         eye_vector.hrot -= 360;
     }
@@ -167,6 +203,13 @@ function keyDownEvent(e)
 
 function keyUpEvent(e)
 {
+    switch (e.code) {
+      case "ShiftLeft":
+      case "ShiftRight":
+        shift = false;
+
+        break;
+    }
 }
 
 function xlate_3d(e_xyz, p_xyz)
@@ -226,11 +269,14 @@ function threeD_to_canvasxy(point)
 {
 
     var point_vector = xlate_3d(eye_coord, point);
+
     // adjust relative to eye_vector
     point_vector.hrot += eye_vector.hrot;
-    if (point_vector.hrot > 180) point_vector.hrot -= 360;
     point_vector.vrot += eye_vector.vrot;
+
+    if (point_vector.hrot > 180) point_vector.hrot -= 360;
     if (point_vector.vrot > 180) point_vector.vrot -= 360;
+
     var canvas_xy = xlate_vector(point_vector);
     if (Math.abs(point_vector.hrot) > fov ||
         Math.abs(point_vector.vrot) > fov) {
@@ -251,6 +297,9 @@ function face_visible(point, hrot, vrot)
 {
     var point_vector = xlate_3d(eye_coord, point);
 
+    if (point_vector.hrot < 0 && hrot == 180) {
+        hrot = -180;
+    }
     if ((Math.abs(vrot) != 90 && Math.abs(hrot - point_vector.hrot) > 90) ||
         (vrot != 0 && Math.abs(vrot - point_vector.vrot) > 90)) {
         return true;
@@ -432,7 +481,7 @@ function draw_box(b)
     }
 
     // front face
-    if (face_visible(p_bfr, -180, 0)) {
+    if (face_visible(p_bfr, 180, 0)) {
         context.beginPath();
 
         canvas_xy = threeD_to_canvasxy(p_bfr);
