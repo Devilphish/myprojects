@@ -20,12 +20,12 @@ var context;
 var points = [
 ];
 
-var eye_coord_init = [ 0, 5, -10 ]
+var eye_coord_init = [ 0, 0, 0 ]
 var eye_coord = [];
 // a vector is { y-axis-rot, x-axis-rot }
 var eye_vector = { hrot: 0, vrot: 0 };
 
-var rId;
+var fill = 0;
 
 var fovinput;
 var fillinput;
@@ -116,84 +116,8 @@ function log_eye()
     coordmsg.innerHTML += eye_vector.hrot + " " + eye_vector.vrot;
 }
 
-var grid_inc = 5;
-var vect_inc = 2;
-
-var shift = false;
-
-function keyDownEvent(e)
+function refreshFrame()
 {
-//    statusmsg.innerHTML = e.code;
-    console.log("key: " + e.code);
-
-    e.preventDefault();
-
-    if (e.code == "ShiftLeft" || e.code == "ShiftRight") {
-        shift = true;
-    }
-    if (e.code == "Digit0") {
-        eye_coord[0] = eye_coord_init[0];
-        eye_coord[1] = eye_coord_init[1];
-        eye_coord[2] = eye_coord_init[2];
-        eye_vector.hrot = 0;
-        eye_vector.vrot = 0;
-    }
-    if (e.code == "Space") {
-        if (shift) {
-            var radians = -eye_vector.hrot * Math.PI / 180;
-            eye_coord[0] -= Math.sin(radians) * grid_inc;
-            radians = -eye_vector.vrot * Math.PI / 180;
-            eye_coord[1] -= Math.sin(radians) * grid_inc;
-            radians = -eye_vector.hrot * Math.PI / 180;
-            eye_coord[2] -= Math.cos(radians) * grid_inc;
-        }
-        else {
-            var radians = -eye_vector.hrot * Math.PI / 180;
-            eye_coord[0] += Math.sin(radians) * grid_inc;
-            radians = -eye_vector.vrot * Math.PI / 180;
-            eye_coord[1] += Math.sin(radians) * grid_inc;
-            radians = -eye_vector.hrot * Math.PI / 180;
-            eye_coord[2] += Math.cos(radians) * grid_inc;
-        }
-    }
-    if (e.code == "KeyA") {
-        eye_coord[0] -= grid_inc;
-    }
-    if (e.code == "KeyD") {
-        eye_coord[0] += grid_inc;
-    }
-    if (e.code == "KeyW") {
-        eye_coord[1] += grid_inc;
-    }
-    if (e.code == "KeyS") {
-        eye_coord[1] -= grid_inc;
-    }
-    if (e.code == "KeyQ") {
-        eye_coord[2] += grid_inc;
-    }
-    if (e.code == "KeyZ") {
-        eye_coord[2] -= grid_inc;
-    }
-    if (e.code == "ArrowLeft") {
-        eye_vector.hrot += vect_inc;
-    }
-    if (e.code == "ArrowRight") {
-        eye_vector.hrot -= vect_inc;
-    }
-    if (e.code == "ArrowUp") {
-        eye_vector.vrot -= vect_inc;
-    }
-    if (e.code == "ArrowDown") {
-        eye_vector.vrot += vect_inc;
-    }
-
-    if (eye_vector.hrot > 180) {
-        eye_vector.hrot -= 360;
-    }
-    if (eye_vector.hrot < -180) {
-        eye_vector.hrot += 360;
-    }
-
     context.clearRect(0, 0, 1000, 1000);
 
     log_eye();
@@ -201,48 +125,272 @@ function keyDownEvent(e)
     draw_boxes(boxes);
 }
 
+var grid_inc = 5;
+var vect_inc = 2;
+
+var shift = false;
+
+var iId = null;
+
+function moveBehind()
+{
+    var radians = -eye_vector.hrot * Math.PI / 180;
+    eye_coord[0] -= Math.sin(radians) * grid_inc;
+    radians = -eye_vector.vrot * Math.PI / 180;
+    eye_coord[1] -= Math.sin(radians) * grid_inc;
+    radians = -eye_vector.hrot * Math.PI / 180;
+    eye_coord[2] -= Math.cos(radians) * grid_inc;
+
+    refreshFrame();
+}
+
+function moveAhead()
+{
+    var radians = -eye_vector.hrot * Math.PI / 180;
+    eye_coord[0] += Math.sin(radians) * grid_inc;
+    radians = -eye_vector.vrot * Math.PI / 180;
+    eye_coord[1] += Math.sin(radians) * grid_inc;
+    radians = -eye_vector.hrot * Math.PI / 180;
+    eye_coord[2] += Math.cos(radians) * grid_inc;
+
+    refreshFrame();
+}
+
+function rotateLeft()
+{
+    eye_vector.hrot += vect_inc;
+    if (eye_vector.hrot > 180) {
+        eye_vector.hrot -= 360;
+    }
+
+    refreshFrame();
+}
+
+function rotateRight()
+{
+    eye_vector.hrot -= vect_inc;
+    if (eye_vector.hrot < -180) {
+        eye_vector.hrot += 360;
+    }
+
+    refreshFrame();
+}
+
+function rotateUp()
+{
+    eye_vector.vrot -= vect_inc;
+    if (eye_vector.vrot < -90) {
+        eye_vector.vrot = -90;
+    }
+
+    refreshFrame();
+}
+
+function rotateDown()
+{
+    eye_vector.vrot += vect_inc;
+    if (eye_vector.vrot > 90) {
+        eye_vector.vrot = 90;
+    }
+
+    refreshFrame();
+}
+
+function keyDownEvent(e)
+{
+//    statusmsg.innerHTML = e.code;
+    console.log("keydown: " + e.code);
+
+    e.preventDefault();
+    if (e.repeat) {
+        return;
+    }
+
+    switch (e.code) {
+      case "ShiftLeft":
+      case "ShiftRight":
+        shift = true;
+        break;
+      case "Digit0":
+        eye_coord[0] = eye_coord_init[0];
+        eye_coord[1] = eye_coord_init[1];
+        eye_coord[2] = eye_coord_init[2];
+        eye_vector.hrot = 0;
+        eye_vector.vrot = 0;
+        break;
+      case "Space":
+        if (shift) {
+            moveBehind();
+            if (iId != null) clearInterval(iId);
+            iId = setInterval(moveBehind, 100);
+        }
+        else {
+            moveAhead();
+            if (iId != null) clearInterval(iId);
+            iId = setInterval(moveAhead, 100);
+        }
+        break;
+      case "KeyA":
+        eye_coord[0] -= grid_inc;
+        break;
+      case "KeyD":
+        eye_coord[0] += grid_inc;
+        break;
+      case "KeyW":
+        eye_coord[1] += grid_inc;
+        break;
+      case "KeyS":
+        eye_coord[1] -= grid_inc;
+        break;
+      case "KeyQ":
+        eye_coord[2] += grid_inc;
+        break;
+      case "KeyZ":
+        eye_coord[2] -= grid_inc;
+        break;
+      case "ArrowLeft":
+        rotateLeft();
+        if (iId != null) clearInterval(iId);
+        iId = setInterval(rotateLeft, 100);
+        break;
+      case "ArrowRight":
+        rotateRight();
+        if (iId != null) clearInterval(iId);
+        iId = setInterval(rotateRight, 100);
+        break;
+      case "ArrowUp":
+        rotateUp();
+        if (iId != null) clearInterval(iId);
+        iId = setInterval(rotateUp, 100);
+        break;
+      case "ArrowDown":
+        rotateDown();
+        if (iId != null) clearInterval(iId);
+        iId = setInterval(rotateDown, 100);
+        break;
+    }
+
+    refreshFrame();
+}
+
 function keyUpEvent(e)
 {
+    console.log("keyup: " + e.code);
+
     switch (e.code) {
       case "ShiftLeft":
       case "ShiftRight":
         shift = false;
-
+        break;
+      case "Space":
+      case "ArrowLeft":
+      case "ArrowRight":
+      case "ArrowUp":
+      case "ArrowDown":
+        clearInterval(iId);
+        iId = null;
         break;
     }
 }
 
-function xlate_3d(e_xyz, p_xyz)
+function rotate_yaxis(p_xyz, hrot)
 {
-    var x = p_xyz[0] - e_xyz[0];
-    var y = p_xyz[1] - e_xyz[1];
-    var z = p_xyz[2] - e_xyz[2];
+    var p_rot = [];
+    var x = p_xyz[0];
+    var z = p_xyz[2];
+
+    var xz_vec = Math.sqrt(x ** 2 + z ** 2);
+    var yaxis_theta;
+    if (z == 0) {
+        if (x < 0) {
+            yaxis_theta = 90;
+        }
+        else {
+            yaxis_theta = -90;
+        }
+    }
+    else {
+        yaxis_theta = Math.atan(-x / z) * 90/(Math.PI/2);
+    }
+    if (z < 0) {
+        yaxis_theta += 180;
+        if (yaxis_theta > 180) yaxis_theta -= 360;
+    }
+    var yaxis_theta_prime = yaxis_theta - hrot;
+    p_rot[0] = -Math.sin(yaxis_theta_prime * Math.PI/180) * xz_vec;
+    p_rot[1] = p_xyz[1];
+    p_rot[2] = Math.cos(yaxis_theta_prime * Math.PI/180) * xz_vec;
+
+    return p_rot;
+}
+
+function rotate_xaxis(p_xyz, vrot)
+{
+    var p_rot = [];
+    var y = p_xyz[1];
+    var z = p_xyz[2];
+
+    var yz_vec = Math.sqrt(y ** 2 + z ** 2);
+    var xaxis_theta;
+    if (z == 0) {
+        if (y > 0) {
+            xaxis_theta = 90;
+        }
+        else {
+            xaxis_theta = -90;
+        }
+    }
+    else {
+        xaxis_theta = Math.atan(y / z) * 90/(Math.PI/2);
+    }
+    if (z < 0) {
+        xaxis_theta += 180;
+        if (xaxis_theta > 180) xaxis_theta -= 360;
+    }
+    var xaxis_theta_prime = xaxis_theta - -vrot;
+    p_rot[0] = p_xyz[0];
+    p_rot[1] = Math.sin(xaxis_theta_prime * Math.PI/180) * yz_vec;
+    p_rot[2] = Math.cos(xaxis_theta_prime * Math.PI/180) * yz_vec;
+
+    return p_rot;
+}
+
+function xlate_vector(p_xyz)
+{
+    var x = p_xyz[0];
+    var y = p_xyz[1];
+    var z = p_xyz[2];
 
     var h = Math.sqrt(x ** 2 + z ** 2);
-    var v = Math.sqrt(y ** 2 + h ** 2);
+    var v = Math.sqrt(y ** 2 + z ** 2);
 
     var theta_h;
     if (h == 0) {
         theta_h = 0;
     }
     else {
-        theta_h = Math.asin(x / h) * 90 / (Math.PI / 2);
+        theta_h = Math.asin(x / h) * 90/(Math.PI/2);
     }
     var theta_v;
     if (v == 0) {
         theta_v = 0;
     }
     else {
-        theta_v = Math.asin(y / v) * 90 / (Math.PI / 2);
+        theta_v = Math.asin(y / v) * 90/(Math.PI/2);
     }
+if (1) {
+    if (z < 0) {
+        theta_v = 180 - theta_v;
+        if (theta_v > 180) theta_v -= 360;
+//        theta_h = 180 - theta_h;
+//        if (theta_h > 180) theta_h -= 360;
+    }
+}
+if (1) {
+// why is this not needed?
     if (z < 0) {
         theta_h = 180 - theta_h;
         if (theta_h > 180) theta_h -= 360;
-    }
-if (0) {
-// why is this not needed?
-    if (y < 0) {
-        theta_v = 180 - theta_v;
     }
 }
 
@@ -254,9 +402,28 @@ if (0) {
     return p_v;
 }
 
+function xlate_3d(e_xyz, p_xyz)
+{
+    var p_prime;
+    var p_rel = [];
+    p_rel[0] = p_xyz[0] - e_xyz[0];
+    p_rel[1] = p_xyz[1] - e_xyz[1];
+    p_rel[2] = p_xyz[2] - e_xyz[2];
+
+    //
+    // For horizontal rotation (left/right arrow):
+    // rotate y-axis first to model camera swing on y-axis
+    // rotate x-axis first to model camera swing from vrot
+    //
+    p_prime = rotate_yaxis(p_rel, eye_vector.hrot);
+    p_prime = rotate_xaxis(p_prime, eye_vector.vrot);
+
+    return xlate_vector(p_prime);
+}
+
 var fov = 20;
 
-function xlate_vector(p_v)
+function xlate_canvasxy(p_v)
 {
     var c_xy = {};
     c_xy.x = p_v.hrot * 500 / fov;
@@ -270,23 +437,21 @@ function threeD_to_canvasxy(point)
 
     var point_vector = xlate_3d(eye_coord, point);
 
-    // adjust relative to eye_vector
-    point_vector.hrot += eye_vector.hrot;
-    point_vector.vrot += eye_vector.vrot;
-
     if (point_vector.hrot > 180) point_vector.hrot -= 360;
+    else if (point_vector.hrot < -180) point_vector.hrot += 360;
     if (point_vector.vrot > 180) point_vector.vrot -= 360;
+    else if (point_vector.vrot < -180) point_vector.vrot += 360;
 
-    var canvas_xy = xlate_vector(point_vector);
+    var canvas_xy = xlate_canvasxy(point_vector);
     if (Math.abs(point_vector.hrot) > fov ||
         Math.abs(point_vector.vrot) > fov) {
-        canvas_xy.out_of_frame = true;
+        canvas_xy.in_frame = false;
     }
     else {
-        canvas_xy.out_of_frame = false;
+        canvas_xy.in_frame = true;
     }
 
-    canvas_xy.x += 500;
+    canvas_xy.x = 500 + canvas_xy.x;
     canvas_xy.y = 500 - canvas_xy.y;
     canvas_xy.r = point_vector.r;
 
@@ -295,12 +460,14 @@ function threeD_to_canvasxy(point)
 
 function face_visible(point, hrot, vrot)
 {
-    var point_vector = xlate_3d(eye_coord, point);
+    var p_rel = [];
+    p_rel[0] = point[0] - eye_coord[0];
+    p_rel[1] = point[1] - eye_coord[1];
+    p_rel[2] = point[2] - eye_coord[2];
 
-    if (point_vector.hrot < 0 && hrot == 180) {
-        hrot = -180;
-    }
-    if ((Math.abs(vrot) != 90 && Math.abs(hrot - point_vector.hrot) > 90) ||
+    var point_vector = xlate_vector(p_rel);
+
+    if ((Math.abs(vrot) != 90 && Math.abs(hrot + point_vector.hrot) > 90) ||
         (vrot != 0 && Math.abs(vrot - point_vector.vrot) > 90)) {
         return true;
     }
@@ -309,6 +476,7 @@ function face_visible(point, hrot, vrot)
     }
 }
 
+if (1) {
 var boxes = [
     { xyz: [ -10, 15, 75 ], whd: [ 10, 30, 70 ],
       color: "#80b3ff", borderColor: "#70a3ef" },
@@ -327,6 +495,76 @@ var boxes = [
     { xyz: [  10, 5, 10 ], whd: [ 10, 10, 10 ],
       color: "#e580ff", borderColor: "#d570ef" },
 ];
+}
+if (0) {
+var boxes = [
+    { xyz: [ -100, 15,  0 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+    { xyz: [  100, 15,  0 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+
+    { xyz: [ -100, 15, 100 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+    { xyz: [  100, 15, 100 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+
+    { xyz: [ -100, 15, 200 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+    { xyz: [  100, 15, 200 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+
+    { xyz: [ -100, 15, 300 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+    { xyz: [  100, 15, 300 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+
+    { xyz: [ -100, 15, 400 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+    { xyz: [  100, 15, 400 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+
+    { xyz: [ -100, 15, 500 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+    { xyz: [  100, 15, 500 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+
+    { xyz: [ -100, 15, 600 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+    { xyz: [  100, 15, 600 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+
+    { xyz: [ -100, 15, 700 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+    { xyz: [  100, 15, 700 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+
+    { xyz: [ -100, 15, 800 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+    { xyz: [  100, 15, 800 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+
+    { xyz: [ -100, 15, 900 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+    { xyz: [  100, 15, 900 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+
+    { xyz: [ -110, 15, 990 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+    { xyz: [   90, 15, 1010 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+
+    { xyz: [ -125, 15, 1065 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+    { xyz: [   75, 15, 1110 ], whd: [ 5, 30, 5 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+];
+}
+if (0) {
+var boxes = [
+    { xyz: [ 10, 10, 10 ], whd: [ 10, 10, 10 ],
+      color: "#80b3ff", borderColor: "#70a3ef" },
+];
+}
 
 function draw_boxes(b)
 {
@@ -334,9 +572,9 @@ function draw_boxes(b)
 
     for (var i = 0; i < b.length; i++) {
         var point = [ b[i].xyz[0], eye_coord[1], b[i].xyz[2] ];
+//        var point = [ b[i].xyz[0], b[i].xyz[1], b[i].xyz[2] ];
         var canvas_xy = threeD_to_canvasxy(point);
-//        if (!canvas_xy.out_of_frame) {
-        if (1) {
+        if (canvas_xy.in_frame) {
             canvas_xy.box = b[i];
             visible_boxes.push(canvas_xy);
         }
@@ -346,8 +584,6 @@ function draw_boxes(b)
         draw_box(visible_boxes[i].box);
     }
 }
-
-var fill = 0;
 
 function draw_box(b)
 {
@@ -421,7 +657,7 @@ function draw_box(b)
     }
 
     // left face
-    if (face_visible(p_bbl, -90, 0)) {
+    if (face_visible(p_bbl, 90, 0)) {
         context.beginPath();
 
         canvas_xy = threeD_to_canvasxy(p_bbl);
@@ -441,7 +677,7 @@ function draw_box(b)
     }
 
     // right face
-    if (face_visible(p_bbr, 90, 0)) {
+    if (face_visible(p_bbr, -90, 0)) {
         context.beginPath();
 
         canvas_xy = threeD_to_canvasxy(p_bbr);
@@ -501,7 +737,7 @@ function draw_box(b)
     }
 }
 
-var point_radius = 1;
+var point_radius = 3;
 
 function draw_points()
 {
@@ -510,7 +746,13 @@ function draw_points()
     for (var i = 0; i < points.length; i++) {
         var point = points[i];
         var canvas_xy = threeD_to_canvasxy(point);
-        if (!canvas_xy.out_of_frame) {
+        if (canvas_xy.in_frame) {
+            if (point.length < 4) {
+                canvas_xy.color = "#80ff00";
+            }
+            else {
+                canvas_xy.color = point[3];
+            }
             visible_points.push(canvas_xy);
         }
     }
@@ -520,16 +762,14 @@ function draw_points()
     for (var i = 0; i < visible_points.length; i++) {
         var canvas_xy = visible_points[i];
 
+        context.fillStyle = canvas_xy.color;
+        context.strokeStyle = canvas_xy.color;
         context.beginPath();
         context.arc(canvas_xy.x, canvas_xy.y, point_radius, 0, 2 * Math.PI);
         if (fill) {
-//            context.fillStyle = point[3];
-            context.fillStyle = points[0][3];
             context.fill();
         }
         else {
-//            context.strokeStyle = point[3];
-            context.strokeStyle = points[0][3];
             context.stroke();
         }
     }
@@ -539,27 +779,21 @@ function fovInput()
 {
     fov = Number(fovinput.value);
 
-    context.clearRect(0, 0, 1000, 1000);
-    draw_points();
-    draw_boxes(boxes);
+    refreshFrame();
 }
 
 function fillInput()
 {
     fill = this.checked;
 
-    context.clearRect(0, 0, 1000, 1000);
-    draw_points();
-    draw_boxes(boxes);
+    refreshFrame();
 }
 
 function point_radiusInput()
 {
     point_radius = Number(point_radiusinput.value);
 
-    context.clearRect(0, 0, 1000, 1000);
-    draw_points();
-    draw_boxes(boxes);
+    refreshFrame();
 }
 
 function startView()
@@ -623,6 +857,7 @@ function startView()
     fillinput.addEventListener("input", fillInput);
     fillinput.setAttribute("type", "checkbox");
     fillinput.setAttribute("value", fill);
+    fillinput.setAttribute("checked", true);
     fillinput.style.border = "10px solid #ffffff";
     fillinput.style.borderRadius = "2px";
     fillinput.style.width = "50px";
@@ -643,7 +878,47 @@ function startView()
     context = canvas.getContext("2d");
 
 if (1) {
-    points.push([ 0, 0, 10, "#80ff00" ]);
+    points.push([ 0, 0, 100, "#ff0000" ]);
+    points.push([ 0, 5, 100, "#ff0000" ]);
+    points.push([ 0, 10, 100, "#ff0000" ]);
+    points.push([ 0, -10, 100, "#ff0000" ]);
+    points.push([ 0, -5, 100, "#ff0000" ]);
+    points.push([ 5, 0, 100, "#ff0000" ]);
+    points.push([ 10, 0, 100, "#ff0000" ]);
+    points.push([ -10, 0, 100, "#ff0000" ]);
+    points.push([ -5, 0, 100, "#ff0000" ]);
+    points.push([ 5, 5, 100, "#ff0000" ]);
+    points.push([ 5, -5, 100, "#ff0000" ]);
+    points.push([ -5, 5, 100, "#ff0000" ]);
+    points.push([ -5, -5, 100, "#ff0000" ]);
+
+    points.push([ 0, -100, 0, "#ff0000" ]);
+    points.push([ 5, -100, 0, "#ff0000" ]);
+    points.push([ 10, -100, 0, "#ff0000" ]);
+    points.push([ -10, -100, 0, "#ff0000" ]);
+    points.push([ -5, -100, 0, "#ff0000" ]);
+    points.push([ 0, -100, 5, "#ff0000" ]);
+    points.push([ 0, -100, 10, "#ff0000" ]);
+    points.push([ 0, -100, -10, "#ff0000" ]);
+    points.push([ 0, -100, -5, "#ff0000" ]);
+    points.push([ 5, -100, 5, "#ff0000" ]);
+    points.push([ 5, -100, -5, "#ff0000" ]);
+    points.push([ -5, -100, 5, "#ff0000" ]);
+    points.push([ -5, -100, -5, "#ff0000" ]);
+
+    points.push([ 100, 0, 0, "#ff0000" ]);
+    points.push([ 100, 0, 5, "#ff0000" ]);
+    points.push([ 100, 0, 10, "#ff0000" ]);
+    points.push([ 100, 0, -10, "#ff0000" ]);
+    points.push([ 100, 0, -5, "#ff0000" ]);
+    points.push([ 100, 5, 0, "#ff0000" ]);
+    points.push([ 100, 10, 0, "#ff0000" ]);
+    points.push([ 100, -10, 0, "#ff0000" ]);
+    points.push([ 100, -5, 0, "#ff0000" ]);
+    points.push([ 100, 5, 5, "#ff0000" ]);
+    points.push([ 100, 5, -5, "#ff0000" ]);
+    points.push([ 100, -5, 5, "#ff0000" ]);
+    points.push([ 100, -5, -5, "#ff0000" ]);
 }
 if (0) {
     points.push([ -10, -10, -10 ]);
@@ -673,10 +948,9 @@ if (0) {
 }
 if (1) {
     for (var i = 0; i < 10000; i++) {
-        var x = Math.floor((Math.random() * 600) + 1) - 300;
-//        var y = Math.floor((Math.random() * 600) + 1) - 300;
+        var x = Math.floor((Math.random() * 6000) + 1) - 3000;
         var y = 0
-        var z = Math.floor((Math.random() * 600) + 1) - 300;
+        var z = Math.floor((Math.random() * 6000) + 1) - 3000;
         var point = [ x, y, z, "#80ff00" ];
         points.push(point);
     }
@@ -688,7 +962,7 @@ if (0) {
         }
     }
 }
-if (1) {
+if (0) {
     for (var z = 100; z < 200; z++) {
         for (var y = -10; y <= 10; y++) {
             for (var x = 100; x <= 120; x++) {
@@ -698,11 +972,7 @@ if (1) {
     }
 }
 
-    context.clearRect(0, 0, 1000, 1000);
-
-    log_eye();
-    draw_points();
-    draw_boxes(boxes);
+    refreshFrame();
 }
 
 </script>
