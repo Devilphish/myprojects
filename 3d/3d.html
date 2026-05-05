@@ -17,8 +17,9 @@ canvas {
 var canvas;
 var context;
 
-var points = [
-];
+var points = [];
+
+var visible_objects = [];
 
 var eye_coord_init = [ 0, 0, 0 ]
 var eye_coord = [];
@@ -121,37 +122,71 @@ function refreshFrame()
     context.clearRect(0, 0, 1000, 1000);
 
     log_eye();
+
+    visible_objects.length = 0;
     draw_points();
     draw_boxes(boxes);
+    draw_spheres(sphere);
+    visible_objects.sort(function(a,b) {return b.r - a.r});
+
+    for (var i = 0; i < visible_objects.length; i++) {
+        var canvas_xy = visible_objects[i];
+        if (canvas_xy.box != undefined) {
+            draw_box(canvas_xy.box);
+        }
+        else if (visible_objects[i].radius != undefined) {
+            draw_sphere(canvas_xy);
+        }
+        else if (visible_objects[i].color != undefined) {
+            draw_point(canvas_xy);
+        }
+    }
+
+    context.strokeStyle = "#808080";
+    context.beginPath();
+    context.moveTo(500, 502);
+    context.lineTo(500, 510);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(500, 498);
+    context.lineTo(500, 490);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(502, 500);
+    context.lineTo(510, 500);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(498, 500);
+    context.lineTo(490, 500);
+    context.stroke();
 }
 
 var grid_inc = 5;
 var vect_inc = 2;
 
 var shift = false;
-
+var key = [];
+var move = 0;
 var iId = null;
 
-function moveBehind()
+function moveAhead()
 {
-    var radians = -eye_vector.hrot * Math.PI / 180;
-    eye_coord[0] -= Math.sin(radians) * grid_inc;
-    radians = -eye_vector.vrot * Math.PI / 180;
-    eye_coord[1] -= Math.sin(radians) * grid_inc;
-    radians = -eye_vector.hrot * Math.PI / 180;
-    eye_coord[2] -= Math.cos(radians) * grid_inc;
+    var h_radians = -eye_vector.hrot * Math.PI/180;
+    var v_radians = -eye_vector.vrot * Math.PI/180;
+    eye_coord[0] += Math.sin(h_radians) * Math.cos(v_radians) * grid_inc;
+    eye_coord[1] += Math.sin(v_radians) * grid_inc;
+    eye_coord[2] += Math.cos(h_radians) * Math.cos(v_radians) * grid_inc;
 
     refreshFrame();
 }
 
-function moveAhead()
+function moveBehind()
 {
-    var radians = -eye_vector.hrot * Math.PI / 180;
-    eye_coord[0] += Math.sin(radians) * grid_inc;
-    radians = -eye_vector.vrot * Math.PI / 180;
-    eye_coord[1] += Math.sin(radians) * grid_inc;
-    radians = -eye_vector.hrot * Math.PI / 180;
-    eye_coord[2] += Math.cos(radians) * grid_inc;
+    var h_radians = -eye_vector.hrot * Math.PI/180;
+    var v_radians = -eye_vector.vrot * Math.PI/180;
+    eye_coord[0] -= Math.sin(h_radians) * Math.cos(v_radians) * grid_inc;
+    eye_coord[1] -= Math.sin(v_radians) * grid_inc;
+    eye_coord[2] -= Math.cos(h_radians) * Math.cos(v_radians) * grid_inc;
 
     refreshFrame();
 }
@@ -196,6 +231,42 @@ function rotateDown()
     refreshFrame();
 }
 
+function animateEye()
+{
+    if (key["Space"]) {
+        if (shift) {
+            moveBehind();
+        }
+        else {
+            moveAhead();
+        }
+    }
+    if (key["ArrowLeft"]) {
+        rotateLeft();
+    }
+    if (key["ArrowRight"]) {
+        rotateRight();
+    }
+    if (key["ArrowUp"]) {
+        rotateUp();
+    }
+    if (key["ArrowDown"]) {
+        rotateDown();
+    }
+}
+
+function serviceMoveKey(e)
+{
+    console.log("move: " + move);
+    move++;
+    key[e.code] = true;
+    if (iId != null) {
+        clearInterval(iId);
+        iId = null;
+    }
+    iId = setInterval(animateEye, 100);
+}
+
 function keyDownEvent(e)
 {
 //    statusmsg.innerHTML = e.code;
@@ -218,17 +289,24 @@ function keyDownEvent(e)
         eye_vector.hrot = 0;
         eye_vector.vrot = 0;
         break;
+      case "KeyG":
+        anim_orb = !anim_orb;
+        if (anim_orb) {
+            oId = setInterval(orbit_interval , 100);
+        }
+        else {
+            clearInterval(oId);
+            oId = null;
+        }
+        break;
       case "Space":
         if (shift) {
             moveBehind();
-            if (iId != null) clearInterval(iId);
-            iId = setInterval(moveBehind, 100);
         }
         else {
             moveAhead();
-            if (iId != null) clearInterval(iId);
-            iId = setInterval(moveAhead, 100);
         }
+        serviceMoveKey(e);
         break;
       case "KeyA":
         eye_coord[0] -= grid_inc;
@@ -250,23 +328,19 @@ function keyDownEvent(e)
         break;
       case "ArrowLeft":
         rotateLeft();
-        if (iId != null) clearInterval(iId);
-        iId = setInterval(rotateLeft, 100);
+        serviceMoveKey(e);
         break;
       case "ArrowRight":
         rotateRight();
-        if (iId != null) clearInterval(iId);
-        iId = setInterval(rotateRight, 100);
+        serviceMoveKey(e);
         break;
       case "ArrowUp":
         rotateUp();
-        if (iId != null) clearInterval(iId);
-        iId = setInterval(rotateUp, 100);
+        serviceMoveKey(e);
         break;
       case "ArrowDown":
         rotateDown();
-        if (iId != null) clearInterval(iId);
-        iId = setInterval(rotateDown, 100);
+        serviceMoveKey(e);
         break;
     }
 
@@ -287,7 +361,11 @@ function keyUpEvent(e)
       case "ArrowRight":
       case "ArrowUp":
       case "ArrowDown":
-        clearInterval(iId);
+        key[e.code] = false;
+        move--;
+        if (move == 0) {
+            clearInterval(iId);
+        }
         iId = null;
         break;
     }
@@ -476,6 +554,40 @@ function face_visible(point, hrot, vrot)
     }
 }
 
+function xlate_vector_to_3d()
+{
+    var p_xyz = [];
+
+    p_xyz[0] = -Math.sin(vec.hrot * Math.PI/180) * vec.r;
+    p_xyz[1] = Math.sin(vec.vrot * Math.PI/180) * vec.r
+    p_xyz[2] = Math.cos(vec.hrot * Math.PI/180) * vec.r;
+
+    return p_xyz;
+}
+
+function animate_orbit(orbit_xyz, radial, deg_delta)
+{
+    radial.hrot += deg_delta;
+    if (radial.hrot > 180) radial.hrot -= 360;
+    if (radial.hrot < -180) radial.hrot += 360;
+
+    var p_xyz = xlate_vector_to_3d(radial);
+    orbit_xyz[0] = p_xyz[0];
+    orbit_xyz[1] = p_xyz[1];
+    orbit_xyz[2] = p_xyz[2];
+}
+
+var deg_delta = 1;
+var anim_orb = false;
+var vec = { hrot: 0, vrot: 0, r: 200 };
+var oId = null;
+
+function orbit_interval()
+{
+    animate_orbit(sphere, vec, deg_delta);
+    refreshFrame();
+}
+
 if (1) {
 var boxes = [
     { xyz: [ -10, 15, 75 ], whd: [ 10, 30, 70 ],
@@ -568,25 +680,21 @@ var boxes = [
 
 function draw_boxes(b)
 {
-    var visible_boxes = [];
-
     for (var i = 0; i < b.length; i++) {
+        // extend box center to eye's y coord for in-frame determination
         var point = [ b[i].xyz[0], eye_coord[1], b[i].xyz[2] ];
-//        var point = [ b[i].xyz[0], b[i].xyz[1], b[i].xyz[2] ];
         var canvas_xy = threeD_to_canvasxy(point);
         if (canvas_xy.in_frame) {
             canvas_xy.box = b[i];
-            visible_boxes.push(canvas_xy);
+            visible_objects.push(canvas_xy);
         }
-        visible_boxes.sort(function(a,b) {return b.r - a.r});
-    }
-    for (var i = 0; i < visible_boxes.length; i++) {
-        draw_box(visible_boxes[i].box);
     }
 }
 
 function draw_box(b)
 {
+    var canvas_xy;
+
     var p_tbl = [ b.xyz[0] - b.whd[0] / 2,
                   b.xyz[1] + b.whd[1] / 2,
                   b.xyz[2] + b.whd[2] / 2 ];
@@ -611,7 +719,6 @@ function draw_box(b)
     var p_bfl = [ b.xyz[0] - b.whd[0] / 2,
                   b.xyz[1] - b.whd[1] / 2,
                   b.xyz[2] - b.whd[2] / 2 ];
-    var canvas_xy;
 
     context.fillStyle = b.color;
     context.strokeStyle = b.borderColor;
@@ -741,8 +848,6 @@ var point_radius = 3;
 
 function draw_points()
 {
-    var visible_points = [];
-
     for (var i = 0; i < points.length; i++) {
         var point = points[i];
         var canvas_xy = threeD_to_canvasxy(point);
@@ -753,25 +858,50 @@ function draw_points()
             else {
                 canvas_xy.color = point[3];
             }
-            visible_points.push(canvas_xy);
+            visible_objects.push(canvas_xy);
         }
     }
+}
 
-    visible_points.sort(function(a,b) {return b.r - a.r});
+function draw_point(p_canvas_xy)
+{
+    context.fillStyle = p_canvas_xy.color;
+    context.strokeStyle = p_canvas_xy.color;
+    context.beginPath();
+    context.arc(p_canvas_xy.x, p_canvas_xy.y, point_radius, 0, 2*Math.PI);
+    if (fill) {
+        context.fill();
+    }
+    else {
+        context.stroke();
+    }
+}
 
-    for (var i = 0; i < visible_points.length; i++) {
-        var canvas_xy = visible_points[i];
+var sphere = [ 0, 0, 200, 10, "#80ff00" ];
 
-        context.fillStyle = canvas_xy.color;
-        context.strokeStyle = canvas_xy.color;
-        context.beginPath();
-        context.arc(canvas_xy.x, canvas_xy.y, point_radius, 0, 2 * Math.PI);
-        if (fill) {
-            context.fill();
-        }
-        else {
-            context.stroke();
-        }
+function draw_spheres(s)
+{
+    var s_radius = s[3];
+    var canvas_xy = threeD_to_canvasxy(s);
+    if (canvas_xy.in_frame) {
+        var canvas_radius_angle = Math.atan(s_radius / canvas_xy.r) * 90/(Math.PI/2);
+        canvas_xy.radius = canvas_radius_angle * 500 / fov;
+        canvas_xy.color = s[4];
+        visible_objects.push(canvas_xy);
+    }
+}
+
+function draw_sphere(s_canvas_xy)
+{
+    context.fillStyle = s_canvas_xy.color;
+    context.strokeStyle = s_canvas_xy.color;
+    context.beginPath();
+    context.arc(s_canvas_xy.x, s_canvas_xy.y, s_canvas_xy.radius, 0, 2*Math.PI);
+    if (fill) {
+        context.fill();
+    }
+    else {
+        context.stroke();
     }
 }
 
@@ -798,6 +928,12 @@ function point_radiusInput()
 
 function startView()
 {
+    key["ArrowLeft"] = false;
+    key["ArrowRight"] = false;
+    key["ArrowUp"] = false;
+    key["ArrowDown"] = false;
+    key["Space"] = false;
+
     window.addEventListener('keydown', keyDownEvent);
     window.addEventListener('keyup', keyUpEvent);
 
@@ -878,6 +1014,8 @@ function startView()
     context = canvas.getContext("2d");
 
 if (1) {
+    points.push([ -10, -10, 10, "#ff0000" ]);
+
     points.push([ 0, 0, 100, "#ff0000" ]);
     points.push([ 0, 5, 100, "#ff0000" ]);
     points.push([ 0, 10, 100, "#ff0000" ]);
@@ -962,7 +1100,7 @@ if (0) {
         }
     }
 }
-if (0) {
+if (1) {
     for (var z = 100; z < 200; z++) {
         for (var y = -10; y <= 10; y++) {
             for (var x = 100; x <= 120; x++) {
